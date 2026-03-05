@@ -2,7 +2,11 @@
   "permissions": {
     "allow": [
       "Bash(npm create:*)",
-      "Bash(npm:*)"
+      "Bash(npm:*)",
+      "Bash(npx tsc:*)",
+      "Bash(curl:*)",
+      "Bash(grep:*)",
+      "Bash(ls:*)"
     ]
   }
 }

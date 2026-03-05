@@ -8,6 +8,7 @@ export default async function BlogIndex() {
     where: { status: "PUBLISHED" },
     orderBy: { publishedAt: "desc" },
     take: 20,
+    include: { author: true },
   });
 
   return (

@@ -15,7 +15,7 @@ const createPostSchema = z.object({
   ogImage: z.string().optional(),
 });
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   try {
     const posts = await prisma.post.findMany({
       include: { author: true, tags: true, categories: true },
@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "Invalid request body", details: error.errors },
+        { error: "Invalid request body", details: error.issues },
         { status: 400 }
       );
     }
