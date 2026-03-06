@@ -8,10 +8,11 @@ export const revalidate = 60; // ISR: revalidate every 60 seconds
 export async function generateMetadata({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
+  const { slug } = await params;
   const post = await prisma.post.findUnique({
-    where: { slug: params.slug },
+    where: { slug },
   });
 
   if (!post || post.status !== "PUBLISHED") {
@@ -43,10 +44,11 @@ export async function generateStaticParams() {
 export default async function BlogPost({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }) {
+  const { slug } = await params;
   const post = await prisma.post.findUnique({
-    where: { slug: params.slug },
+    where: { slug },
     include: { author: true },
   });
 

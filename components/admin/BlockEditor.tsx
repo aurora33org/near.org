@@ -46,19 +46,19 @@ export default function BlockEditor({ content, onChange }: BlockEditorProps) {
   });
 
   if (!editor) {
-    return <div className="text-gray-500">Loading editor...</div>;
+    return <div className="text-muted-foreground">Loading editor...</div>;
   }
 
   const buttonClass =
-    "p-2 rounded border border-gray-300 hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed";
-  const activeButtonClass = "bg-gray-200 border-gray-400";
+    "p-2 rounded border border-border hover:bg-secondary/50 transition disabled:opacity-50 disabled:cursor-not-allowed text-foreground";
+  const activeButtonClass = "bg-secondary border-primary/30";
 
   return (
     <div className="space-y-2">
-      <label className="block text-sm font-medium">Content</label>
+      <label className="block text-sm font-medium text-foreground">Content</label>
 
       {/* Toolbar */}
-      <div className="sticky top-[53px] z-[5] flex flex-wrap gap-1 border border-gray-300 rounded-t-lg bg-gray-50 p-2">
+      <div className="sticky top-[53px] z-[5] flex flex-wrap gap-1 border border-border rounded-t-lg bg-muted p-2">
         <button
           type="button"
           onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
@@ -92,7 +92,7 @@ export default function BlockEditor({ content, onChange }: BlockEditorProps) {
           <Heading3 size={18} />
         </button>
 
-        <div className="w-px bg-gray-300" />
+        <div className="w-px bg-border" />
 
         <button
           type="button"
@@ -112,7 +112,7 @@ export default function BlockEditor({ content, onChange }: BlockEditorProps) {
           <Italic size={18} />
         </button>
 
-        <div className="w-px bg-gray-300" />
+        <div className="w-px bg-border" />
 
         <button
           type="button"
@@ -136,7 +136,7 @@ export default function BlockEditor({ content, onChange }: BlockEditorProps) {
           <ListOrdered size={18} />
         </button>
 
-        <div className="w-px bg-gray-300" />
+        <div className="w-px bg-border" />
 
         <button
           type="button"
@@ -174,10 +174,10 @@ export default function BlockEditor({ content, onChange }: BlockEditorProps) {
       </div>
 
       {/* Editor */}
-      <div className="border border-t-0 border-gray-300 rounded-b-lg overflow-hidden">
+      <div className="border border-t-0 border-border rounded-b-lg overflow-hidden bg-background">
         <EditorContent
           editor={editor}
-          className="prose max-w-none p-4 focus:outline-none"
+          className="prose dark:prose-invert max-w-none p-4 focus:outline-none"
           style={{
             minHeight: "60vh",
           }}

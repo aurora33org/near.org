@@ -4,6 +4,11 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import BlockEditor from "@/components/admin/BlockEditor";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, ChevronDown, ChevronUp, Check } from "lucide-react";
 
 export default function EditPostPage() {
@@ -101,38 +106,38 @@ export default function EditPostPage() {
 
   if (isLoading) {
     return (
-      <div className="-m-8 flex flex-col h-screen bg-gray-50">
+      <div className="-m-8 flex flex-col h-screen bg-background">
         {/* Header skeleton */}
-        <div className="sticky top-0 z-20 border-b bg-white shadow-sm">
+        <div className="sticky top-0 z-20 border-b border-border bg-card shadow-sm">
           <div className="flex items-center justify-between h-[53px] px-6">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-5 h-5 bg-gray-200 rounded animate-pulse" />
-              <div className="w-12 h-4 bg-gray-200 rounded animate-pulse" />
-              <div className="w-1 h-4 bg-gray-200 rounded animate-pulse" />
-              <div className="w-32 h-4 bg-gray-200 rounded animate-pulse flex-1" />
+              <Skeleton className="w-5 h-5 rounded" />
+              <Skeleton className="w-12 h-4 rounded" />
+              <Skeleton className="w-1 h-4 rounded" />
+              <Skeleton className="w-32 h-4 rounded flex-1" />
             </div>
             <div className="flex items-center gap-3">
-              <div className="w-24 h-8 bg-gray-200 rounded animate-pulse" />
-              <div className="w-20 h-8 bg-gray-200 rounded animate-pulse" />
+              <Skeleton className="w-24 h-8 rounded" />
+              <Skeleton className="w-20 h-8 rounded" />
             </div>
           </div>
         </div>
 
         {/* Content skeleton */}
         <div className="flex flex-1 overflow-hidden">
-          <div className="flex-1 flex flex-col overflow-auto">
+          <div className="flex-1 flex flex-col overflow-auto bg-background">
             <div className="p-6 space-y-4">
-              <div className="w-2/3 h-12 bg-gray-200 rounded animate-pulse" />
-              <div className="w-1/3 h-4 bg-gray-200 rounded animate-pulse" />
+              <Skeleton className="w-2/3 h-12 rounded" />
+              <Skeleton className="w-1/3 h-4 rounded" />
               <div className="mt-6 space-y-2">
-                <div className="w-full h-96 bg-gray-200 rounded animate-pulse" />
+                <Skeleton className="w-full h-96 rounded" />
               </div>
             </div>
           </div>
-          <div className="w-72 border-l bg-white p-6 space-y-6">
-            <div className="w-full h-10 bg-gray-200 rounded animate-pulse" />
-            <div className="w-full h-10 bg-gray-200 rounded animate-pulse" />
-            <div className="w-full h-24 bg-gray-200 rounded animate-pulse" />
+          <div className="w-72 border-l border-border bg-card p-6 space-y-6">
+            <Skeleton className="w-full h-10 rounded" />
+            <Skeleton className="w-full h-10 rounded" />
+            <Skeleton className="w-full h-24 rounded" />
           </div>
         </div>
       </div>
@@ -143,50 +148,51 @@ export default function EditPostPage() {
   const isPublished = status === "PUBLISHED";
 
   return (
-    <div className="-m-8 flex flex-col h-screen bg-gray-50">
+    <div className="-m-8 flex flex-col h-screen bg-background">
       {/* STICKY HEADER */}
-      <div className="sticky top-0 z-20 border-b bg-white shadow-sm">
+      <div className="sticky top-0 z-20 border-b border-border bg-card shadow-sm">
         <div className="flex items-center justify-between h-[53px] px-6">
           <div className="flex items-center gap-3 min-w-0">
             <Link
               href="/admin/posts"
-              className="text-gray-500 hover:text-gray-700 transition flex-shrink-0"
+              className="text-muted-foreground hover:text-foreground transition flex-shrink-0"
               title="Back to Posts"
             >
               <ArrowLeft size={20} />
             </Link>
-            <span className="text-sm text-gray-600">Posts</span>
-            <span className="text-sm text-gray-400">/</span>
-            <span className="text-sm font-medium text-gray-800 truncate">
+            <span className="text-sm text-muted-foreground">Posts</span>
+            <span className="text-sm text-muted-foreground/50">/</span>
+            <span className="text-sm font-medium text-foreground truncate">
               {title}
             </span>
           </div>
 
           <div className="flex items-center gap-3 ml-4">
             {savedMessage && (
-              <div className="flex items-center gap-1 text-sm text-green-600">
+              <div className="flex items-center gap-1 text-sm text-primary">
                 <Check size={16} />
                 {savedMessage}
               </div>
             )}
             {!isPublished && (
-              <button
+              <Button
                 type="button"
                 onClick={() => handleSubmit("DRAFT")}
                 disabled={isSaving}
-                className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                variant="outline"
+                size="sm"
               >
                 {isSaving ? "Saving..." : "Save Draft"}
-              </button>
+              </Button>
             )}
-            <button
+            <Button
               type="button"
               onClick={() => handleSubmit(isPublished ? "PUBLISHED" : "PUBLISHED")}
               disabled={isSaving}
-              className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+              size="sm"
             >
               {isSaving ? "Saving..." : isPublished ? "Update" : "Publish"}
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -194,7 +200,7 @@ export default function EditPostPage() {
       {/* MAIN LAYOUT */}
       <div className="flex flex-1 overflow-hidden">
         {/* LEFT PANEL - Editor */}
-        <div className="flex-1 flex flex-col overflow-auto">
+        <div className="flex-1 flex flex-col overflow-auto bg-background">
           <div className="p-6 space-y-4">
             {/* Title */}
             <div>
@@ -203,13 +209,13 @@ export default function EditPostPage() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Post title..."
-                className="w-full text-3xl font-bold border-0 bg-transparent focus:outline-none resize-none overflow-hidden"
+                className="w-full text-3xl font-bold border-0 bg-transparent text-foreground placeholder-muted-foreground focus:outline-none resize-none overflow-hidden"
                 rows={1}
               />
             </div>
 
             {/* Slug preview */}
-            <div className="text-sm text-gray-500 font-mono">
+            <div className="text-sm text-muted-foreground font-mono">
               /blog/{displaySlug}
             </div>
 
@@ -221,17 +227,18 @@ export default function EditPostPage() {
         </div>
 
         {/* RIGHT PANEL - Metadata (Sticky) */}
-        <aside className="w-72 border-l bg-white overflow-y-auto sticky top-[53px] h-[calc(100vh-53px)]">
+        <aside className="w-72 border-l border-border bg-card overflow-y-auto sticky top-[53px] h-[calc(100vh-53px)]">
           <div className="p-6 space-y-6">
             {/* Status Card */}
             <div className="space-y-2">
-              <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide">
+              <Label htmlFor="status" className="text-xs font-semibold uppercase tracking-wide">
                 Status
-              </label>
+              </Label>
               <select
+                id="status"
                 value={status}
                 onChange={(e) => setStatus(e.target.value as any)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-border rounded-[var(--radius)] px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
               >
                 <option value="DRAFT">Draft</option>
                 <option value="PUBLISHED">Published</option>
@@ -240,40 +247,40 @@ export default function EditPostPage() {
 
             {/* URL Slug Card */}
             <div className="space-y-2">
-              <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide">
+              <Label htmlFor="slug" className="text-xs font-semibold uppercase tracking-wide">
                 URL Slug
-              </label>
-              <input
+              </Label>
+              <Input
+                id="slug"
                 type="text"
                 value={slug}
                 onChange={(e) => setSlug(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <div className="text-xs text-gray-500 font-mono">
+              <div className="text-xs text-muted-foreground font-mono">
                 /blog/{displaySlug}
               </div>
             </div>
 
             {/* Excerpt Card */}
             <div className="space-y-2">
-              <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide">
+              <Label htmlFor="excerpt" className="text-xs font-semibold uppercase tracking-wide">
                 Excerpt
-              </label>
-              <textarea
+              </Label>
+              <Textarea
+                id="excerpt"
                 value={excerpt}
                 onChange={(e) => setExcerpt(e.target.value)}
                 placeholder="Brief summary shown in listings"
                 rows={3}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
               />
             </div>
 
             {/* SEO Accordion */}
-            <div className="border-t pt-6">
+            <div className="border-t border-border pt-6">
               <button
                 type="button"
                 onClick={() => setIsSeoOpen(!isSeoOpen)}
-                className="w-full flex items-center justify-between text-xs font-semibold text-gray-600 uppercase tracking-wide hover:text-gray-900 transition"
+                className="w-full flex items-center justify-between text-xs font-semibold text-muted-foreground uppercase tracking-wide hover:text-foreground transition"
               >
                 <span>SEO</span>
                 {isSeoOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -282,28 +289,28 @@ export default function EditPostPage() {
               {isSeoOpen && (
                 <div className="mt-4 space-y-4">
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                    <Label htmlFor="seoTitle" className="text-xs font-medium mb-1">
                       SEO Title
-                    </label>
-                    <input
+                    </Label>
+                    <Input
+                      id="seoTitle"
                       type="text"
                       value={seoTitle}
                       onChange={(e) => setSeoTitle(e.target.value)}
                       placeholder="Optimized title for search engines"
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                    <Label htmlFor="seoDesc" className="text-xs font-medium mb-1">
                       Meta Description
-                    </label>
-                    <textarea
+                    </Label>
+                    <Textarea
+                      id="seoDesc"
                       value={seoDesc}
                       onChange={(e) => setSeoDesc(e.target.value)}
                       placeholder="Description for search results (160 chars)"
                       rows={2}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                     />
                   </div>
                 </div>
