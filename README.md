@@ -1,249 +1,139 @@
-# NEAR.org Website
+# NEAR.org CMS
 
-A comprehensive marketing website and CMS for NEAR Protocol built with Next.js 15, Tailwind CSS, and PostgreSQL.
+A comprehensive marketing website & CMS for NEAR Protocol built with Next.js 15, Tailwind CSS v4 (TweakCN theme), PostgreSQL, and TipTap editor.
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 - Node.js 18+ and npm
-- PostgreSQL 12+
+- PostgreSQL 12+ (or Docker)
 
-### Installation
+### Setup (5 minutes)
 
-1. **Install dependencies:**
 ```bash
+# 1. Install dependencies
 npm install
-```
 
-2. **Set up environment variables:**
-Copy `.env.example` to `.env` and update with your configuration:
-```bash
+# 2. Set up environment variables
 cp .env.example .env
-```
+# Update DATABASE_URL and generate NEXTAUTH_SECRET with: openssl rand -hex 32
 
-Update the following in `.env`:
-- `DATABASE_URL`: Your PostgreSQL connection string
-- `NEXTAUTH_SECRET`: Generate with `openssl rand -hex 32`
-
-3. **Set up the database:**
-```bash
+# 3. Initialize database
 npm run prisma:migrate
 npm run prisma:seed
-```
 
-This will:
-- Create all tables in PostgreSQL
-- Seed the database with demo admin and editor users
-- Create demo categories and tags
-
-4. **Start the development server:**
-```bash
+# 4. Start dev server
 npm run dev
 ```
 
-Visit `http://localhost:3000` in your browser.
+Visit `http://localhost:3000` (site) or `http://localhost:3000/admin` (CMS)
 
-## 📝 Default Credentials
-
-For local development, the seed script creates:
-
-| Email | Password | Role |
-|-------|----------|------|
-| admin@example.com | password | Admin |
-| editor@example.com | password | Editor |
-
-Access the CMS at `http://localhost:3000/admin`
+### Default Credentials
+- Email: `admin@example.com`
+- Password: `password`
 
 ## 📁 Project Structure
 
 ```
-near/org/
-├── app/
-│   ├── (site)/              # Public website
-│   │   ├── page.tsx         # Home page
-│   │   ├── about/           # About section
-│   │   ├── founders/        # For Founders section
-│   │   ├── developers/      # For Developers section
-│   │   ├── tech/            # Tech Stack section
-│   │   ├── community/       # Community section
-│   │   ├── blog/            # Blog
-│   │   └── layout.tsx       # Site layout with Nav & Footer
-│   │
-│   ├── (admin)/             # CMS Admin
-│   │   ├── login/           # Login page
-│   │   ├── dashboard/       # Admin dashboard
-│   │   ├── posts/           # Blog posts management
-│   │   ├── pages/           # Pages management
-│   │   ├── media/           # Media library
-│   │   ├── users/           # User management (Admin only)
-│   │   └── layout.tsx       # Admin layout
-│   │
-│   ├── api/                 # API Routes
-│   │   ├── auth/            # NextAuth endpoints
-│   │   └── posts/           # Post CRUD endpoints
-│   │
-│   └── globals.css          # Global styles
-│
-├── lib/
-│   ├── auth.ts              # NextAuth configuration
-│   ├── prisma.ts            # Prisma client singleton
-│   └── utils.ts             # Utility functions
-│
-├── prisma/
-│   ├── schema.prisma        # Database schema
-│   └── seed.ts              # Database seeding script
-│
-└── components/              # Reusable React components
+app/
+├── (site)/          # Public website (home, about, blog, etc.)
+├── (admin)/         # CMS admin (dashboard, posts, users)
+└── api/             # API endpoints (auth, CRUD)
+
+lib/
+├── auth.ts         # NextAuth v5 configuration
+├── prisma.ts       # Database client
+└── utils.ts        # Utilities
+
+prisma/
+├── schema.prisma   # Database schema
+└── seed.ts         # Demo data
+
+components/
+├── admin/          # Admin UI (BlockEditor, ThemeProvider)
+└── ui/             # shadcn/ui components
 ```
 
 ## 🛠 Tech Stack
 
 | Layer | Technology |
 |-------|------------|
-| Framework | Next.js 15 (App Router) |
+| Framework | Next.js 16 (App Router, TypeScript) |
+| Styling | Tailwind CSS v4 + TweakCN theme (NEAR green primary) |
 | Database | PostgreSQL + Prisma ORM |
-| UI Framework | Tailwind CSS |
-| Authentication | NextAuth.js v5 |
-| Form Validation | Zod + react-hook-form |
-| Rich Text Editing | TipTap (coming soon) |
-| Media Storage | Uploadthing (coming soon) |
+| Auth | NextAuth.js v5 (JWT + Credentials) |
+| Editor | TipTap v3 (block-based rich text) |
+| UI Components | shadcn/ui |
+| Media | Uploadthing (configured) |
 
-## 📚 Features
+## ✨ Features
 
 ### Public Site
-- **Home Page**: Landing page with hero section
-- **Blog**: Blog index and individual post pages with ISR (Incremental Static Regeneration)
-- **Multiple Sections**: About, Founders, Developers, Tech Stack, Community
-- **Responsive Design**: Mobile-friendly layout
-- **SEO**: Meta tags, Open Graph, sitemap generation
+- 📄 Multiple landing pages (Home, About, Founders, Developers, Tech, Community)
+- 📝 Blog with ISR (60s revalidate)
+- 🎨 Responsive design with TweakCN theme
+- 🌙 Dark mode support
+- 📊 SEO optimized
 
-### CMS (Admin)
-- **Authentication**: Email + password login with NextAuth
-- **Blog Management**: Create, edit, publish blog posts
-- **Page Management**: Create editable content pages
-- **SEO Fields**: Title, description, OG image per post/page
-- **Role-Based Access**: Admin, Editor, Viewer roles
-- **User Management**: Admin can create and manage users
+### CMS Admin
+- 🔐 Email + password authentication with role-based access
+- ✍️ TipTap block editor for rich content
+- 📸 Media library with Uploadthing
+- 📋 Blog & page management (create, edit, publish, delete)
+- 👥 User management (admin-only)
+- 🎨 Dark/light mode toggle
 
-## 🔑 Key Features to Implement
+## 🔑 Commands
 
-### Phase 2 - CMS Core (In Progress)
-- [ ] TipTap block editor integration
-- [ ] Uploadthing media library
-- [ ] Draft preview system
-- [ ] Content scheduling
-- [ ] Media upload and storage
+```bash
+npm run dev              # Start dev server
+npm run build           # Production build
+npm run start           # Run production
+npm run prisma:migrate  # Database migrations
+npm run prisma:seed     # Seed demo data
+npm run prisma:studio   # Database admin UI
+```
 
-### Phase 3 - CMS Pages
-- [ ] Editable pages CRUD
-- [ ] Page hierarchy
-- [ ] Dynamic page rendering
+## 📚 Documentation
 
-### Phase 4 - Public Site Enhancement
-- [ ] Blog post rendering with TipTap
-- [ ] SEO improvements
-- [ ] Analytics integration
-- [ ] Performance optimization
-
-### Phase 5 - Complex Pages
-- [ ] For Founders (detailed page)
-- [ ] For Developers (detailed page)
-- [ ] Tech Stack (detailed page)
-- [ ] About NEAR (detailed page)
-
-## 📦 Database Schema
-
-### Users
-- `id`: UUID
-- `email`: Unique email
-- `password`: bcrypt hash
-- `name`: Display name
-- `role`: ADMIN | EDITOR | VIEWER
-- `createdAt`, `updatedAt`: Timestamps
-
-### Posts
-- `id`: UUID
-- `title`: Post title
-- `slug`: Unique URL slug
-- `content`: TipTap JSON blocks
-- `excerpt`: Short summary
-- `status`: DRAFT | PUBLISHED | ARCHIVED
-- `author`: Reference to User
-- `publishedAt`: Publication timestamp
-- `seoTitle`, `seoDesc`, `ogImage`: SEO fields
-
-### Pages
-- Similar to Posts, but for editable content pages
-- Used for community pages and other marketing content
-
-## 🔐 Authentication
-
-Uses NextAuth.js v5 with:
-- Credentials provider (email + password)
-- Prisma adapter for database session storage
-- JWT session strategy
-- Role-based access control (RBAC)
+- **DOCS.md** - Complete architecture, implementation guide, Phase 2 checklist
+- **[Prisma](https://prisma.io)** - Database ORM
+- **[NextAuth.js](https://next-auth.js.org)** - Authentication
+- **[TipTap](https://tiptap.dev)** - Rich text editor
 
 ## 🚀 Deployment
 
-### Railway Setup
+Push to GitHub and deploy to Railway.app:
+1. Set `DATABASE_URL`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL` in Railway
+2. Auto-deploys on git push
 
-1. Push code to GitHub
-2. Connect repository to Railway
-3. Set environment variables:
-   - `DATABASE_URL`: Railway PostgreSQL connection
-   - `NEXTAUTH_SECRET`: Secure random string
-   - `NEXTAUTH_URL`: Production domain
+## 📊 Database Schema
 
-4. Deploy!
+**User** - Authentication (email, password hash, role)
+**Post** - Blog posts (title, slug, content, status, SEO fields)
+**Page** - CMS pages (similar to Post)
+**Media** - File metadata (url, filename, mimeType)
+**Category & Tag** - Post taxonomy
 
-## 📖 Development
+## 🔐 Roles
 
-### Create a New Blog Post
-1. Login at `/admin/login`
-2. Go to "Blog Posts"
-3. Click "+ New Post"
-4. Fill in title, content, and SEO fields
-5. Save and publish
+| Role | Permissions |
+|------|------------|
+| ADMIN | Full access, user management |
+| EDITOR | Create/edit content |
+| VIEWER | Read-only |
 
-### Add a New Page Section
-1. Create new directory in `app/(site)/[section]/`
-2. Add `page.tsx` with your content
-3. Update navigation in `app/(site)/layout.tsx`
+## 🎨 Current Phase
 
-### Database Migrations
-```bash
-# Create new migration
-npx prisma migrate dev --name migration_name
+✅ **Phase 1**: Foundation (Auth, DB, Blog, Admin scaffold)
+✅ **Phase 2**: CMS Core (TipTap editor, Media, Dark mode, shadcn/ui)
+⏳ **Phase 3**: Page management system
+⏳ **Phase 4**: SEO & blog rendering enhancements
 
-# Reset database (deletes data!)
-npx prisma migrate reset
+## 📖 Next Steps
 
-# View database with Prisma Studio
-npm run prisma:studio
-```
-
-## 🐛 Troubleshooting
-
-### Database Connection Issues
-- Ensure PostgreSQL is running
-- Check `DATABASE_URL` in `.env`
-- Run `npx prisma db push` to sync schema
-
-### NextAuth Login Not Working
-- Verify `NEXTAUTH_SECRET` is set
-- Check email/password are correct
-- Clear browser cookies
-
-### Build Errors
-- Clear `.next` directory: `rm -rf .next`
-- Reinstall dependencies: `rm -rf node_modules && npm install`
-- Run Prisma code generation: `npx prisma generate`
-
-## 📞 Support
-
-For issues and feature requests, please open an issue on GitHub.
+See **DOCS.md** for detailed Phase 2 checklist and architecture overview.
 
 ---
 
-Built with ❤️ for NEAR Protocol
+Built with ❤️ for NEAR Protocol | [GitHub](https://github.com/aurora33org/near.org)
