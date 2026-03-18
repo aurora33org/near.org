@@ -29,6 +29,9 @@ export default function SiteLayout({
             <Link href="/community" className="text-sm hover:text-gray-600">
               Community
             </Link>
+            <Link href="/ecosystem" className="text-sm hover:text-gray-600">
+              Ecosystem
+            </Link>
             <Link href="/blog" className="text-sm hover:text-gray-600">
               Blog
             </Link>
@@ -54,6 +57,9 @@ export default function SiteLayout({
                 </li>
                 <li>
                   <Link href="/about/vision">Vision</Link>
+                </li>
+                <li>
+                  <Link href="/ecosystem">Ecosystem</Link>
                 </li>
               </ul>
             </div>
