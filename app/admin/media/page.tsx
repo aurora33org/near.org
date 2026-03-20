@@ -28,7 +28,7 @@ export default function MediaPage() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [dragOver, setDragOver] = useState(false);
-  const [oversizedFile, setOversizedFile] = useState<File | null>(null);
+  const [oversizedFiles, setOversizedFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   async function fetchMedia(p: number, append = false) {
@@ -46,27 +46,34 @@ export default function MediaPage() {
 
   function closeUploadModal() {
     setShowUploadModal(false);
-    setOversizedFile(null);
+    setOversizedFiles([]);
     setDragOver(false);
   }
 
-  function handleFileSelected(file: File) {
+  function handleFilesSelected(files: File[]) {
+    if (files.length === 0) return;
     const WEB_OPTIMAL_BYTES = 500 * 1024;
-    if (file.size > WEB_OPTIMAL_BYTES) {
-      setOversizedFile(file);
+    const ok = files.filter((f) => f.size <= WEB_OPTIMAL_BYTES);
+    const oversized = files.filter((f) => f.size > WEB_OPTIMAL_BYTES);
+
+    if (ok.length > 0) handleUploadMany(ok);
+    if (oversized.length > 0) {
+      setOversizedFiles(oversized);
     } else {
       closeUploadModal();
-      handleUpload(file);
     }
   }
 
   async function handleUpload(file: File) {
+    const formData = new FormData();
+    formData.append("file", file);
+    await fetch("/api/upload", { method: "POST", body: formData });
+  }
+
+  async function handleUploadMany(files: File[]) {
     setIsUploading(true);
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
-      if (!res.ok) return;
+      await Promise.all(files.map((f) => handleUpload(f)));
       await fetchMedia(1);
     } finally {
       setIsUploading(false);
@@ -215,17 +222,19 @@ export default function MediaPage() {
 
             {/* Body */}
             <div className="p-6">
-              {oversizedFile ? (
+              {oversizedFiles.length > 0 ? (
                 /* Warning view */
                 <div className="space-y-5">
                   <div className="flex gap-3">
                     <AlertTriangle className="w-6 h-6 text-yellow-500 shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-semibold text-base">This image may slow down your site</p>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        <span className="font-medium text-foreground">{oversizedFile.name}</span> is{" "}
-                        {(oversizedFile.size / (1024 * 1024)).toFixed(2)} MB. For fast page loads,
-                        images should be under 500 KB. Compress or resize it first using{" "}
+                    <div className="space-y-3 flex-1">
+                      <p className="font-semibold text-base">
+                        {oversizedFiles.length === 1
+                          ? "This image may slow down your site"
+                          : `${oversizedFiles.length} images may slow down your site`}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        For fast page loads, images should be under 500 KB. Compress or resize them first using{" "}
                         <a
                           href="https://croma.aurora33.live"
                           target="_blank"
@@ -236,15 +245,23 @@ export default function MediaPage() {
                         </a>
                         .
                       </p>
+                      <ul className="space-y-1">
+                        {oversizedFiles.map((f) => (
+                          <li key={f.name} className="flex items-center justify-between text-sm rounded-lg border border-border px-3 py-2">
+                            <span className="font-medium truncate mr-3">{f.name}</span>
+                            <span className="text-muted-foreground shrink-0">{(f.size / (1024 * 1024)).toFixed(2)} MB</span>
+                          </li>
+                        ))}
+                      </ul>
                     </div>
                   </div>
                   <div className="flex gap-3 pt-1">
                     <button
                       type="button"
-                      onClick={() => setOversizedFile(null)}
+                      onClick={() => setOversizedFiles([])}
                       className="flex-1 text-sm px-4 py-2 rounded-lg border border-border hover:bg-muted transition"
                     >
-                      Choose another image
+                      Choose other images
                     </button>
                   </div>
                 </div>
@@ -256,8 +273,8 @@ export default function MediaPage() {
                   onDrop={(e) => {
                     e.preventDefault();
                     setDragOver(false);
-                    const file = e.dataTransfer.files?.[0];
-                    if (file) handleFileSelected(file);
+                    const files = Array.from(e.dataTransfer.files);
+                    if (files.length) handleFilesSelected(files);
                   }}
                   onClick={() => fileInputRef.current?.click()}
                   className={`min-h-[480px] flex flex-col items-center justify-center gap-4 rounded-xl border-2 border-dashed cursor-pointer transition ${
@@ -267,17 +284,18 @@ export default function MediaPage() {
                   }`}
                 >
                   <Image className="w-16 h-16 opacity-30" />
-                  <p className="text-xl font-semibold">Drop your image here</p>
+                  <p className="text-xl font-semibold">Drop your images here</p>
                   <p className="text-base">or click to browse</p>
                   <p className="text-sm text-muted-foreground mt-2">JPEG · PNG · WebP · GIF · SVG</p>
                   <input
                     ref={fileInputRef}
                     type="file"
+                    multiple
                     accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml"
                     className="hidden"
                     onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) handleFileSelected(file);
+                      const files = Array.from(e.target.files ?? []);
+                      if (files.length) handleFilesSelected(files);
                       e.target.value = "";
                     }}
                   />
