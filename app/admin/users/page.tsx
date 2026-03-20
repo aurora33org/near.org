@@ -21,35 +21,35 @@ export default async function UsersPage() {
     <div>
       <h1 className="text-4xl font-bold mb-8">Users</h1>
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-background border border-border rounded-lg overflow-hidden">
         <table className="w-full">
-          <thead className="bg-gray-50 border-b">
+          <thead className="bg-muted/50 border-b border-border">
             <tr>
-              <th className="px-6 py-3 text-left font-medium text-gray-700">Name</th>
-              <th className="px-6 py-3 text-left font-medium text-gray-700">Email</th>
-              <th className="px-6 py-3 text-left font-medium text-gray-700">Role</th>
-              <th className="px-6 py-3 text-left font-medium text-gray-700">Created</th>
+              <th className="px-6 py-3 text-left font-medium text-muted-foreground">Name</th>
+              <th className="px-6 py-3 text-left font-medium text-muted-foreground">Email</th>
+              <th className="px-6 py-3 text-left font-medium text-muted-foreground">Role</th>
+              <th className="px-6 py-3 text-left font-medium text-muted-foreground">Created</th>
             </tr>
           </thead>
-          <tbody className="divide-y">
+          <tbody className="divide-y divide-border">
             {users.map((user) => (
-              <tr key={user.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 font-medium">{user.name}</td>
-                <td className="px-6 py-4 text-sm">{user.email}</td>
+              <tr key={user.id} className="hover:bg-muted/40 transition-colors">
+                <td className="px-6 py-4 font-medium text-foreground">{user.name}</td>
+                <td className="px-6 py-4 text-sm text-muted-foreground">{user.email}</td>
                 <td className="px-6 py-4">
                   <span
                     className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
                       user.role === "ADMIN"
-                        ? "bg-red-100 text-red-800"
+                        ? "bg-destructive/10 text-destructive"
                         : user.role === "EDITOR"
-                        ? "bg-blue-100 text-blue-800"
-                        : "bg-gray-100 text-gray-800"
+                        ? "bg-primary/10 text-primary"
+                        : "bg-muted text-muted-foreground"
                     }`}
                   >
                     {user.role}
                   </span>
                 </td>
-                <td className="px-6 py-4 text-sm">
+                <td className="px-6 py-4 text-sm text-muted-foreground">
                   {new Date(user.createdAt).toLocaleDateString()}
                 </td>
               </tr>

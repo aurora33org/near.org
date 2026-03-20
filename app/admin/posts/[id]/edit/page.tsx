@@ -32,6 +32,10 @@ export default function EditPostPage() {
   const [ogImage, setOgImage] = useState("");
   const [isSeoOpen, setIsSeoOpen] = useState(false);
   const [savedMessage, setSavedMessage] = useState("");
+  const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
+  const [tags, setTags] = useState<{ id: string; name: string }[]>([]);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
 
   async function handleCoverImageUpload(file: File) {
     const formData = new FormData();
@@ -51,11 +55,16 @@ export default function EditPostPage() {
   }, [title]);
 
   useEffect(() => {
-    async function fetchPost() {
+    async function fetchAll() {
       try {
-        const response = await fetch(`/api/posts/${postId}`);
-        if (!response.ok) throw new Error("Failed to fetch post");
-        const post = await response.json();
+        const [postRes, catRes, tagRes] = await Promise.all([
+          fetch(`/api/posts/${postId}`),
+          fetch("/api/categories"),
+          fetch("/api/tags"),
+        ]);
+
+        if (!postRes.ok) throw new Error("Failed to fetch post");
+        const post = await postRes.json();
 
         setTitle(post.title);
         setSlug(post.slug);
@@ -66,18 +75,22 @@ export default function EditPostPage() {
         setSeoTitle(post.seoTitle || "");
         setSeoDesc(post.seoDesc || "");
         setOgImage(post.ogImage || "");
+        setSelectedCategoryIds((post.categories ?? []).map((c: any) => c.id));
+        setSelectedTagIds((post.tags ?? []).map((t: any) => t.id));
+
+        if (catRes.ok) setCategories(await catRes.json());
+        if (tagRes.ok) setTags(await tagRes.json());
       } catch (err) {
         console.error(err);
         setSavedMessage("Error loading post");
         setTimeout(() => setSavedMessage(""), 3000);
-        // Redirect after delay
         setTimeout(() => router.push("/admin/posts"), 2000);
       } finally {
         setIsLoading(false);
       }
     }
 
-    fetchPost();
+    fetchAll();
   }, [postId, router]);
 
   async function handleSubmit(statusOverride?: "DRAFT" | "PUBLISHED") {
@@ -98,6 +111,8 @@ export default function EditPostPage() {
           seoTitle,
           seoDesc,
           ogImage,
+          categoryIds: selectedCategoryIds,
+          tagIds: selectedTagIds,
         }),
       });
 
@@ -357,6 +372,52 @@ export default function EditPostPage() {
                 rows={3}
               />
             </div>
+
+            {/* Categories */}
+            {categories.length > 0 && (
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold uppercase tracking-wide">Categories</Label>
+                <div className="max-h-40 overflow-y-auto space-y-1 border border-border rounded-[var(--radius)] p-2">
+                  {categories.map((cat) => (
+                    <label key={cat.id} className="flex items-center gap-2 text-sm cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={selectedCategoryIds.includes(cat.id)}
+                        onChange={(e) =>
+                          setSelectedCategoryIds((prev) =>
+                            e.target.checked ? [...prev, cat.id] : prev.filter((id) => id !== cat.id)
+                          )
+                        }
+                      />
+                      {cat.name}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Tags */}
+            {tags.length > 0 && (
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold uppercase tracking-wide">Tags</Label>
+                <div className="max-h-40 overflow-y-auto space-y-1 border border-border rounded-[var(--radius)] p-2">
+                  {tags.map((tag) => (
+                    <label key={tag.id} className="flex items-center gap-2 text-sm cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={selectedTagIds.includes(tag.id)}
+                        onChange={(e) =>
+                          setSelectedTagIds((prev) =>
+                            e.target.checked ? [...prev, tag.id] : prev.filter((id) => id !== tag.id)
+                          )
+                        }
+                      />
+                      {tag.name}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* SEO Accordion */}
             <div className="border-t border-border pt-6">

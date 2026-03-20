@@ -13,6 +13,8 @@ const createPostSchema = z.object({
   seoDesc: z.string().optional(),
   coverImage: z.string().optional(),
   ogImage: z.string().optional(),
+  categoryIds: z.array(z.string()).optional(),
+  tagIds: z.array(z.string()).optional(),
 });
 
 export async function GET(req: NextRequest) {
@@ -70,12 +72,20 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const { categoryIds, tagIds, ...postData } = data;
+
     const post = await prisma.post.create({
       data: {
-        ...data,
+        ...postData,
         authorId: session.user.id,
         publishedAt:
           data.status === "PUBLISHED" ? new Date() : null,
+        categories: categoryIds?.length
+          ? { connect: categoryIds.map((id) => ({ id })) }
+          : undefined,
+        tags: tagIds?.length
+          ? { connect: tagIds.map((id) => ({ id })) }
+          : undefined,
       },
       include: { author: true },
     });

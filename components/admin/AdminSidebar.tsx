@@ -47,6 +47,7 @@ export function AdminSidebar({ children, role, userName }: AdminSidebarProps) {
           {navLink("/admin/posts", "Blog Posts")}
           {navLink("/admin/pages", "Pages")}
           {navLink("/admin/media", "Media Library", true)}
+          {navLink("/admin/categories", "Categories & Tags", true)}
           {role === "ADMIN" && navLink("/admin/users", "Users", true)}
         </nav>
 

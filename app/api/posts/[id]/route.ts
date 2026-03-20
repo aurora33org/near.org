@@ -13,6 +13,8 @@ const updatePostSchema = z.object({
   seoDesc: z.string().optional(),
   coverImage: z.string().optional(),
   ogImage: z.string().optional(),
+  categoryIds: z.array(z.string()).optional(),
+  tagIds: z.array(z.string()).optional(),
 });
 
 export async function GET(
@@ -83,14 +85,22 @@ export async function PUT(
       }
     }
 
+    const { categoryIds, tagIds, ...postData } = data;
+
     const updatedPost = await prisma.post.update({
       where: { id },
       data: {
-        ...data,
+        ...postData,
         publishedAt:
           data.status === "PUBLISHED" && post.status !== "PUBLISHED"
             ? new Date()
             : post.publishedAt,
+        categories: categoryIds !== undefined
+          ? { set: categoryIds.map((id) => ({ id })) }
+          : undefined,
+        tags: tagIds !== undefined
+          ? { set: tagIds.map((id) => ({ id })) }
+          : undefined,
       },
       include: { author: true },
     });
