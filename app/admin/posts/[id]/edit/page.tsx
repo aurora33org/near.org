@@ -9,13 +9,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, ChevronDown, ChevronUp, Check } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronUp, Check, ImageIcon, X, Eye } from "lucide-react";
+import { PostDeleteButton } from "@/components/admin/PostDeleteButton";
 
 export default function EditPostPage() {
   const router = useRouter();
   const params = useParams();
   const postId = params.id as string;
   const titleInputRef = useRef<HTMLTextAreaElement>(null);
+  const coverImageInputRef = useRef<HTMLInputElement>(null);
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -24,10 +26,21 @@ export default function EditPostPage() {
   const [excerpt, setExcerpt] = useState("");
   const [content, setContent] = useState<any>({ type: "doc", content: [] });
   const [status, setStatus] = useState<"DRAFT" | "PUBLISHED">("DRAFT");
+  const [coverImage, setCoverImage] = useState("");
   const [seoTitle, setSeoTitle] = useState("");
   const [seoDesc, setSeoDesc] = useState("");
+  const [ogImage, setOgImage] = useState("");
   const [isSeoOpen, setIsSeoOpen] = useState(false);
   const [savedMessage, setSavedMessage] = useState("");
+
+  async function handleCoverImageUpload(file: File) {
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await fetch("/api/upload", { method: "POST", body: formData });
+    if (!res.ok) return;
+    const { url } = await res.json();
+    setCoverImage(url);
+  }
 
   // Auto-resize title textarea
   useEffect(() => {
@@ -49,8 +62,10 @@ export default function EditPostPage() {
         setExcerpt(post.excerpt || "");
         setContent(post.content || { type: "doc", content: [] });
         setStatus(post.status);
+        setCoverImage(post.coverImage || "");
         setSeoTitle(post.seoTitle || "");
         setSeoDesc(post.seoDesc || "");
+        setOgImage(post.ogImage || "");
       } catch (err) {
         console.error(err);
         setSavedMessage("Error loading post");
@@ -79,8 +94,10 @@ export default function EditPostPage() {
           excerpt,
           content,
           status: finalStatus,
+          coverImage,
           seoTitle,
           seoDesc,
+          ogImage,
         }),
       });
 
@@ -174,6 +191,18 @@ export default function EditPostPage() {
                 {savedMessage}
               </div>
             )}
+            <Button
+              type="button"
+              asChild
+              variant="ghost"
+              size="sm"
+              title="Preview post"
+            >
+              <a href={`/admin/posts/${postId}/preview`} target="_blank" rel="noopener noreferrer">
+                <Eye size={16} className="mr-1" />
+                Preview
+              </a>
+            </Button>
             {!isPublished && (
               <Button
                 type="button"
@@ -193,6 +222,11 @@ export default function EditPostPage() {
             >
               {isSaving ? "Saving..." : isPublished ? "Update" : "Publish"}
             </Button>
+            <PostDeleteButton
+              postId={postId}
+              postTitle={title}
+              redirectAfter="/admin/posts"
+            />
           </div>
         </div>
       </div>
@@ -229,6 +263,44 @@ export default function EditPostPage() {
         {/* RIGHT PANEL - Metadata (Sticky) */}
         <aside className="w-72 border-l border-border bg-card overflow-y-auto sticky top-[53px] h-[calc(100vh-53px)]">
           <div className="p-6 space-y-6">
+            {/* Cover Image */}
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold uppercase tracking-wide">Featured Image</Label>
+              {coverImage ? (
+                <div className="relative">
+                  <img src={coverImage} alt="Cover" className="w-full rounded-lg object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => setCoverImage("")}
+                    className="absolute top-1 right-1 bg-black/50 hover:bg-black/70 text-white rounded p-0.5 transition"
+                    title="Remove image"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => coverImageInputRef.current?.click()}
+                  className="w-full border-2 border-dashed border-border rounded-lg py-6 flex flex-col items-center gap-2 text-muted-foreground hover:border-primary/50 hover:text-foreground transition"
+                >
+                  <ImageIcon size={20} />
+                  <span className="text-xs">Upload image</span>
+                </button>
+              )}
+              <input
+                ref={coverImageInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleCoverImageUpload(file);
+                  e.target.value = "";
+                }}
+              />
+            </div>
+
             {/* Status Card */}
             <div className="space-y-2">
               <Label htmlFor="status" className="text-xs font-semibold uppercase tracking-wide">
@@ -311,6 +383,19 @@ export default function EditPostPage() {
                       onChange={(e) => setSeoDesc(e.target.value)}
                       placeholder="Description for search results (160 chars)"
                       rows={2}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="ogImage" className="text-xs font-medium mb-1">
+                      OG Image URL
+                    </Label>
+                    <Input
+                      id="ogImage"
+                      type="text"
+                      value={ogImage}
+                      onChange={(e) => setOgImage(e.target.value)}
+                      placeholder="https://... (Open Graph image)"
                     />
                   </div>
                 </div>

@@ -15,14 +15,31 @@ const createPostSchema = z.object({
   ogImage: z.string().optional(),
 });
 
-export async function GET(_req: NextRequest) {
+export async function GET(req: NextRequest) {
   try {
-    const posts = await prisma.post.findMany({
-      include: { author: true, tags: true, categories: true },
-      orderBy: { createdAt: "desc" },
-    });
+    const session = await auth();
+    const url = new URL(req.url);
+    const page = Math.max(1, Number(url.searchParams.get("page") ?? 1));
+    const limit = Math.min(100, Math.max(1, Number(url.searchParams.get("limit") ?? 20)));
+    const skip = (page - 1) * limit;
 
-    return NextResponse.json(posts);
+    const where =
+      session?.user?.id && (session.user as any)?.role !== "ADMIN"
+        ? { authorId: session.user.id }
+        : {};
+
+    const [posts, total] = await Promise.all([
+      prisma.post.findMany({
+        where,
+        include: { author: true, tags: true, categories: true },
+        orderBy: { createdAt: "desc" },
+        take: limit,
+        skip,
+      }),
+      prisma.post.count({ where }),
+    ]);
+
+    return NextResponse.json({ posts, total, page, limit });
   } catch (error) {
     return NextResponse.json(
       { error: "Failed to fetch posts" },

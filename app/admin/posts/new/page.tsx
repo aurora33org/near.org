@@ -8,21 +8,33 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, ChevronDown, ChevronUp, Check } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronUp, Check, ImageIcon, X } from "lucide-react";
 
 export default function NewPostPage() {
   const router = useRouter();
   const titleInputRef = useRef<HTMLTextAreaElement>(null);
+  const coverImageInputRef = useRef<HTMLInputElement>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
   const [excerpt, setExcerpt] = useState("");
   const [content, setContent] = useState<any>({ type: "doc", content: [] });
   const [status, setStatus] = useState<"DRAFT" | "PUBLISHED">("DRAFT");
+  const [coverImage, setCoverImage] = useState("");
   const [seoTitle, setSeoTitle] = useState("");
   const [seoDesc, setSeoDesc] = useState("");
+  const [ogImage, setOgImage] = useState("");
   const [isSeoOpen, setIsSeoOpen] = useState(false);
   const [savedMessage, setSavedMessage] = useState("");
+
+  async function handleCoverImageUpload(file: File) {
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await fetch("/api/upload", { method: "POST", body: formData });
+    if (!res.ok) return;
+    const { url } = await res.json();
+    setCoverImage(url);
+  }
 
   // Auto-resize title textarea
   useEffect(() => {
@@ -47,8 +59,10 @@ export default function NewPostPage() {
           excerpt,
           content,
           status: finalStatus,
+          coverImage,
           seoTitle,
           seoDesc,
+          ogImage,
         }),
       });
 
@@ -152,6 +166,44 @@ export default function NewPostPage() {
         {/* RIGHT PANEL - Metadata (Sticky) */}
         <aside className="w-72 border-l border-border bg-card overflow-y-auto sticky top-[53px] h-[calc(100vh-53px)]">
           <div className="p-6 space-y-6">
+            {/* Cover Image */}
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold uppercase tracking-wide">Featured Image</Label>
+              {coverImage ? (
+                <div className="relative">
+                  <img src={coverImage} alt="Cover" className="w-full rounded-lg object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => setCoverImage("")}
+                    className="absolute top-1 right-1 bg-black/50 hover:bg-black/70 text-white rounded p-0.5 transition"
+                    title="Remove image"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => coverImageInputRef.current?.click()}
+                  className="w-full border-2 border-dashed border-border rounded-lg py-6 flex flex-col items-center gap-2 text-muted-foreground hover:border-primary/50 hover:text-foreground transition"
+                >
+                  <ImageIcon size={20} />
+                  <span className="text-xs">Upload image</span>
+                </button>
+              )}
+              <input
+                ref={coverImageInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleCoverImageUpload(file);
+                  e.target.value = "";
+                }}
+              />
+            </div>
+
             {/* Status Card */}
             <div className="space-y-2">
               <Label htmlFor="status" className="text-xs font-semibold uppercase tracking-wide">
@@ -235,6 +287,19 @@ export default function NewPostPage() {
                       onChange={(e) => setSeoDesc(e.target.value)}
                       placeholder="Description for search results (160 chars)"
                       rows={2}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="ogImage" className="text-xs font-medium mb-1">
+                      OG Image URL
+                    </Label>
+                    <Input
+                      id="ogImage"
+                      type="text"
+                      value={ogImage}
+                      onChange={(e) => setOgImage(e.target.value)}
+                      placeholder="https://... (Open Graph image)"
                     />
                   </div>
                 </div>
