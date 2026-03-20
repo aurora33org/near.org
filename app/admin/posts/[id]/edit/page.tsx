@@ -250,7 +250,18 @@ export default function EditPostPage() {
 
             {/* Slug preview */}
             <div className="text-sm text-muted-foreground font-mono">
-              /blog/{displaySlug}
+              {isPublished ? (
+                <a
+                  href={`/blog/${displaySlug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-foreground hover:underline transition"
+                >
+                  /blog/{displaySlug} ↗
+                </a>
+              ) : (
+                <span>/blog/{displaySlug}</span>
+              )}
             </div>
 
             {/* Editor */}
