@@ -337,7 +337,7 @@ export default function EditPostClient() {
                 id="status"
                 value={status}
                 onChange={(e) => setStatus(e.target.value as any)}
-                className="w-full border border-border rounded-[var(--radius)] px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                className="w-full border border-border/70 rounded-[var(--radius)] px-3 py-2 text-sm bg-muted/30 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
               >
                 <option value="DRAFT">Draft</option>
                 <option value="PUBLISHED">Published</option>
@@ -355,7 +355,7 @@ export default function EditPostClient() {
                   type="datetime-local"
                   value={publishedAt}
                   onChange={(e) => setPublishedAt(e.target.value)}
-                  className="w-full border border-border rounded-[var(--radius)] px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  className="w-full border border-border/70 rounded-[var(--radius)] px-3 py-2 text-sm bg-muted/30 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                 />
                 <p className="text-xs text-muted-foreground">Leave empty to publish immediately.</p>
               </div>
@@ -371,6 +371,7 @@ export default function EditPostClient() {
                 type="text"
                 value={slug}
                 onChange={(e) => setSlug(e.target.value)}
+                className="bg-muted/30 border-border/70"
               />
               <div className="text-xs text-muted-foreground font-mono">
                 /blog/{displaySlug}
@@ -388,6 +389,7 @@ export default function EditPostClient() {
                 onChange={(e) => setExcerpt(e.target.value)}
                 placeholder="Brief summary shown in listings"
                 rows={3}
+                className="bg-muted/30 border-border/70"
               />
             </div>
 
@@ -395,7 +397,7 @@ export default function EditPostClient() {
             {categories.length > 0 && (
               <div className="space-y-2">
                 <Label className="text-xs font-semibold uppercase tracking-wide">Categories</Label>
-                <div className="max-h-40 overflow-y-auto space-y-1 border border-border rounded-[var(--radius)] p-2">
+                <div className="max-h-40 overflow-y-auto space-y-1 border border-border/70 rounded-[var(--radius)] p-2 bg-muted/30">
                   {categories.map((cat) => (
                     <label key={cat.id} className="flex items-center gap-2 text-sm cursor-pointer">
                       <input
@@ -418,7 +420,7 @@ export default function EditPostClient() {
             {tags.length > 0 && (
               <div className="space-y-2">
                 <Label className="text-xs font-semibold uppercase tracking-wide">Tags</Label>
-                <div className="max-h-40 overflow-y-auto space-y-1 border border-border rounded-[var(--radius)] p-2">
+                <div className="max-h-40 overflow-y-auto space-y-1 border border-border/70 rounded-[var(--radius)] p-2 bg-muted/30">
                   {tags.map((tag) => (
                     <label key={tag.id} className="flex items-center gap-2 text-sm cursor-pointer">
                       <input
@@ -460,6 +462,7 @@ export default function EditPostClient() {
                       value={seoTitle}
                       onChange={(e) => setSeoTitle(e.target.value)}
                       placeholder="Optimized title for search engines"
+                      className="bg-muted/30 border-border/70"
                     />
                   </div>
 
@@ -473,6 +476,7 @@ export default function EditPostClient() {
                       onChange={(e) => setSeoDesc(e.target.value)}
                       placeholder="Description for search results (160 chars)"
                       rows={2}
+                      className="bg-muted/30 border-border/70"
                     />
                   </div>
 
@@ -486,6 +490,7 @@ export default function EditPostClient() {
                       value={ogImage}
                       onChange={(e) => setOgImage(e.target.value)}
                       placeholder="https://... (Open Graph image)"
+                      className="bg-muted/30 border-border/70"
                     />
                   </div>
                 </div>
