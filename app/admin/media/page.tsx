@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
+import { Image, AlertTriangle } from "lucide-react";
 
 interface MediaItem {
   id: string;
@@ -25,6 +26,9 @@ export default function MediaPage() {
   const [editAlt, setEditAlt] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+  const [oversizedFile, setOversizedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   async function fetchMedia(p: number, append = false) {
@@ -39,6 +43,22 @@ export default function MediaPage() {
   useEffect(() => {
     fetchMedia(1).finally(() => setIsLoading(false));
   }, []);
+
+  function closeUploadModal() {
+    setShowUploadModal(false);
+    setOversizedFile(null);
+    setDragOver(false);
+  }
+
+  function handleFileSelected(file: File) {
+    const WEB_OPTIMAL_BYTES = 500 * 1024;
+    if (file.size > WEB_OPTIMAL_BYTES) {
+      setOversizedFile(file);
+    } else {
+      closeUploadModal();
+      handleUpload(file);
+    }
+  }
 
   async function handleUpload(file: File) {
     setIsUploading(true);
@@ -103,22 +123,11 @@ export default function MediaPage() {
       <div className="flex justify-between items-center">
         <h1 className="text-4xl font-bold">Media Library</h1>
         <Button
-          onClick={() => fileInputRef.current?.click()}
+          onClick={() => setShowUploadModal(true)}
           disabled={isUploading}
         >
           {isUploading ? "Uploading..." : "Upload Image"}
         </Button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml"
-          className="hidden"
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) handleUpload(file);
-            e.target.value = "";
-          }}
-        />
       </div>
 
       {isLoading ? (
@@ -130,10 +139,10 @@ export default function MediaPage() {
       ) : items.length === 0 ? (
         <button
           type="button"
-          onClick={() => fileInputRef.current?.click()}
+          onClick={() => setShowUploadModal(true)}
           className="w-full border-2 border-dashed border-border rounded-lg py-24 flex flex-col items-center gap-3 text-muted-foreground hover:border-primary/50 hover:text-foreground transition"
         >
-          <span className="text-4xl">🖼️</span>
+          <Image className="w-10 h-10 opacity-40" />
           <span className="text-sm">No media yet. Click to upload your first image.</span>
         </button>
       ) : (
@@ -181,6 +190,102 @@ export default function MediaPage() {
             </div>
           )}
         </>
+      )}
+
+      {showUploadModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+          onClick={closeUploadModal}
+        >
+          <div
+            className="relative bg-background border border-border rounded-2xl shadow-xl w-full max-w-3xl mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+              <h2 className="text-lg font-semibold">Upload Image</h2>
+              <button
+                type="button"
+                onClick={closeUploadModal}
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition text-xl leading-none"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-6">
+              {oversizedFile ? (
+                /* Warning view */
+                <div className="space-y-5">
+                  <div className="flex gap-3">
+                    <AlertTriangle className="w-6 h-6 text-yellow-500 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-semibold text-base">This image may slow down your site</p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        <span className="font-medium text-foreground">{oversizedFile.name}</span> is{" "}
+                        {(oversizedFile.size / (1024 * 1024)).toFixed(2)} MB. For fast page loads,
+                        images should be under 500 KB. Compress or resize it first using{" "}
+                        <a
+                          href="https://croma.aurora33.live"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary underline hover:no-underline"
+                        >
+                          croma.aurora33.live
+                        </a>
+                        .
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-3 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setOversizedFile(null)}
+                      className="flex-1 text-sm px-4 py-2 rounded-lg border border-border hover:bg-muted transition"
+                    >
+                      Choose another image
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                /* Drop zone */
+                <div
+                  onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                  onDragLeave={() => setDragOver(false)}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setDragOver(false);
+                    const file = e.dataTransfer.files?.[0];
+                    if (file) handleFileSelected(file);
+                  }}
+                  onClick={() => fileInputRef.current?.click()}
+                  className={`min-h-[480px] flex flex-col items-center justify-center gap-4 rounded-xl border-2 border-dashed cursor-pointer transition ${
+                    dragOver
+                      ? "border-primary bg-primary/5 text-foreground"
+                      : "border-border text-muted-foreground hover:border-primary/50 hover:text-foreground"
+                  }`}
+                >
+                  <Image className="w-16 h-16 opacity-30" />
+                  <p className="text-xl font-semibold">Drop your image here</p>
+                  <p className="text-base">or click to browse</p>
+                  <p className="text-sm text-muted-foreground mt-2">JPEG · PNG · WebP · GIF · SVG</p>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleFileSelected(file);
+                      e.target.value = "";
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       )}
 
       {selectedItem && (
