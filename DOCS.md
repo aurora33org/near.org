@@ -224,12 +224,13 @@ npm run prisma:studio
 - [x] Refactor admin pages with semantic components
 - [x] Update BlockEditor styling for dark mode
 
-### Media Upload (TODO - Phase 2b)
-- [ ] Setup Uploadthing account & credentials
-- [ ] Create `lib/media.ts` helpers
-- [ ] Create `app/api/media/route.ts` endpoint
+### Media Upload ✅ DONE (Phase 2b)
+- [x] Cloudflare R2 bucket configured (`cms-test` for staging)
+- [x] `app/api/upload/route.ts` — POST endpoint, auth-protected, 10MB limit
+- [x] Supports: JPEG, PNG, WebP, GIF, SVG
+- [x] Returns public URL via `R2_PUBLIC_URL` env var
 - [ ] Build `components/admin/MediaPicker.tsx`
-- [ ] Integrate into post editor for image uploads
+- [ ] Integrate MediaPicker into post editor for image uploads
 
 ### Draft Preview (TODO - Phase 2b)
 - [ ] Create preview mode route
@@ -318,5 +319,5 @@ rm -rf .next && npm run dev
 
 ---
 
-**Last Updated**: Phase 2 (Tailwind v4 + TweakCN + shadcn/ui + Dark Mode)
-**Next Phase**: Media upload, draft preview, SEO enhancements
+**Last Updated**: Phase 2b (Cloudflare R2 media upload)
+**Next Phase**: MediaPicker component, draft preview, SEO enhancements

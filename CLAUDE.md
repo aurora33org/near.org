@@ -44,6 +44,7 @@ Next.js 16 (App Router, TypeScript)
 └── CORE SYSTEMS
     ├── lib/auth.ts - NextAuth.js v5 config (JWT + credentials)
     ├── lib/prisma.ts - Prisma singleton client
+    ├── lib/airtable.ts - Airtable client for ecosystem partners
     ├── middleware.ts - Route protection for /admin/*
     └── prisma/schema.prisma - Database schema
 ```
@@ -75,7 +76,7 @@ Next.js 16 (App Router, TypeScript)
 | **Auth** | NextAuth.js v5 (JWT + Credentials) |
 | **Editor** | TipTap v3 (block-based with syntax highlighting) |
 | **UI Kit** | shadcn/ui (new-york style) |
-| **Media Upload** | Uploadthing (SDK installed, not yet integrated) |
+| **Media Upload** | Cloudflare R2 (S3-compatible, via `@aws-sdk/client-s3`) |
 
 ## Project Structure
 
@@ -84,7 +85,8 @@ app/
 ├── (site)/                      # Public website routes
 │   ├── page.tsx                 # Home page
 │   ├── layout.tsx               # Navbar, footer
-│   ├── about, founders, developers, tech, community/
+│   ├── about, founders, developers, tech, community, ecosystem/
+│   │   └── ecosystem/ fetches partners from Airtable via lib/airtable.ts (ISR 60s)
 │   └── blog/
 │       ├── page.tsx             # Blog index
 │       └── [slug]/page.tsx       # Dynamic post (ISR)
@@ -109,6 +111,7 @@ app/
 lib/
 ├── auth.ts                      # NextAuth config with CredentialsProvider
 ├── prisma.ts                    # Prisma singleton client
+├── airtable.ts                  # getEcosystemPartners() — fetches from Airtable API
 └── utils.ts                     # Utilities
 
 components/
@@ -123,6 +126,29 @@ prisma/
 └── seed.ts                      # Demo data seeding
 
 types/                           # Custom TypeScript types
+```
+
+## Environment Variables
+
+Required in `.env.local`:
+
+```bash
+DATABASE_URL=           # PostgreSQL connection string
+AUTH_SECRET=            # NextAuth.js secret (random string)
+NEXTAUTH_URL=           # e.g. http://localhost:3000
+
+# Cloudflare R2 (media uploads)
+S3_ENDPOINT=            # https://<account_id>.r2.cloudflarestorage.com
+S3_REGION=auto
+S3_BUCKET=              # R2 bucket name
+S3_ACCESS_KEY_ID=       # R2 API token Access Key ID
+S3_SECRET_ACCESS_KEY=   # R2 API token Secret Access Key
+R2_PUBLIC_URL=          # https://pub-<hash>.r2.dev (or custom domain)
+
+# Airtable (ecosystem page — page renders empty if unset, no crash)
+AIRTABLE_API_KEY=
+AIRTABLE_BASE_ID=
+AIRTABLE_ECOSYSTEM_TABLE=
 ```
 
 ## Important Patterns
@@ -216,7 +242,7 @@ rm -rf .next && npm run dev # Clear Next.js cache
 
 **Media**
 - id, url, filename, mimeType, size, alt
-- For Uploadthing integration (not yet implemented)
+- Uploads go to Cloudflare R2 via `app/api/upload/route.ts`
 
 **Category, Tag**
 - Taxonomy for posts (not yet implemented in UI)
@@ -275,11 +301,11 @@ TweakCN theme is defined via Tailwind CSS v4's `@config` directive. To customize
 
 ## Next Steps (Incomplete Features)
 
-- [ ] **Uploadthing Integration**: Media upload in post editor
+- [x] **Media Upload**: Cloudflare R2 via `app/api/upload/route.ts` (S3-compatible)
 - [ ] **Draft Preview**: Preview posts before publishing
 - [ ] **Page Management**: CRUD for CMS pages
 - [ ] **Categories & Tags**: UI for taxonomy management
-- [ ] **RSS Feed**: /feed.xml generation
+- [ ] **RSS Feed**: /feed.xml generation (`feed` and `rss` packages already installed)
 - [ ] **SEO**: Sitemap, robots.txt, Open Graph
 
 See `DOCS.md` for detailed Phase 2 checklist and architecture deep-dive.
@@ -295,4 +321,4 @@ See `DOCS.md` for detailed Phase 2 checklist and architecture deep-dive.
 
 ---
 
-**Last Updated**: Phase 2 (TipTap, Tailwind v4, TweakCN, Dark Mode)
+**Last Updated**: Phase 2 (TipTap, Tailwind v4, TweakCN, Dark Mode, Airtable ecosystem)
