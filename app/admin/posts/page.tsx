@@ -97,6 +97,11 @@ export default async function PostsPage({
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
+                          {post.status === "PUBLISHED" && (
+                            <Button asChild variant="ghost" size="sm">
+                              <Link href={`/blog/${post.slug}`} target="_blank">View</Link>
+                            </Button>
+                          )}
                           <Button asChild variant="ghost" size="sm">
                             <Link href={`/admin/posts/${post.id}/edit`}>Edit</Link>
                           </Button>
