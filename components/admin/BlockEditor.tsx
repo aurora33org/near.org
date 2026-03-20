@@ -4,7 +4,9 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
+import Image from "@tiptap/extension-image";
 import { createLowlight } from "lowlight";
+import { useRef } from "react";
 import {
   Bold,
   Italic,
@@ -16,6 +18,7 @@ import {
   Code,
   Link as LinkIcon,
   Minus,
+  ImageIcon,
 } from "lucide-react";
 
 interface BlockEditorProps {
@@ -25,6 +28,7 @@ interface BlockEditorProps {
 
 export default function BlockEditor({ content, onChange }: BlockEditorProps) {
   const lowlight = createLowlight();
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   const editor = useEditor({
     extensions: [
@@ -37,6 +41,7 @@ export default function BlockEditor({ content, onChange }: BlockEditorProps) {
       CodeBlockLowlight.configure({
         lowlight,
       }),
+      Image,
     ],
     content,
     immediatelyRender: false,
@@ -44,6 +49,15 @@ export default function BlockEditor({ content, onChange }: BlockEditorProps) {
       onChange(editor.getJSON());
     },
   });
+
+  async function handleEditorImageUpload(file: File) {
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await fetch("/api/upload", { method: "POST", body: formData });
+    if (!res.ok) return;
+    const { url } = await res.json();
+    editor?.chain().focus().setImage({ src: url }).run();
+  }
 
   if (!editor) {
     return <div className="text-muted-foreground">Loading editor...</div>;
@@ -171,6 +185,27 @@ export default function BlockEditor({ content, onChange }: BlockEditorProps) {
         >
           <Minus size={18} />
         </button>
+
+        <button
+          type="button"
+          onClick={() => imageInputRef.current?.click()}
+          className={buttonClass}
+          title="Insert Image"
+        >
+          <ImageIcon size={18} />
+        </button>
+
+        <input
+          ref={imageInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) handleEditorImageUpload(file);
+            e.target.value = "";
+          }}
+        />
       </div>
 
       {/* Editor */}

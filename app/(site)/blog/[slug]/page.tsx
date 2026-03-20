@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
+import { renderBlocks } from "@/lib/tiptap-renderer";
 
 export const revalidate = 60; // ISR: revalidate every 60 seconds
 
@@ -81,26 +82,8 @@ export default async function BlogPost({
         />
       )}
 
-      {/* TODO: Render TipTap JSON to HTML */}
       <div className="prose prose-lg max-w-none">
-        {content?.content?.map((block: any, index: number) => {
-          if (block.type === "paragraph") {
-            return (
-              <p key={index}>
-                {block.content?.map((inline: any) => inline.text).join("")}
-              </p>
-            );
-          }
-          if (block.type === "heading") {
-            const HeadingTag = `h${block.attrs?.level || 2}` as any;
-            return (
-              <HeadingTag key={index}>
-                {block.content?.map((inline: any) => inline.text).join("")}
-              </HeadingTag>
-            );
-          }
-          return <div key={index}>Unsupported block type: {block.type}</div>;
-        })}
+        {renderBlocks(content?.content ?? [])}
       </div>
     </article>
   );
