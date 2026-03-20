@@ -398,30 +398,6 @@ export default function MediaPage() {
                   </button>
                   </div>
 
-                  {confirmDelete && (
-                    <div className="rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-3 space-y-2">
-                      <p className="text-sm font-medium text-destructive">
-                        Delete this file? This action cannot be undone.
-                      </p>
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setConfirmDelete(false)}
-                          className="flex-1 text-sm px-3 py-2 rounded-lg border border-border hover:bg-muted transition"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(selectedItem.id)}
-                          className="flex-1 text-sm px-3 py-2 rounded-lg bg-destructive text-destructive-foreground hover:bg-destructive/90 transition"
-                        >
-                          Yes, delete
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
                   <hr className="border-border" />
                   <button
                     type="button"
@@ -435,6 +411,41 @@ export default function MediaPage() {
               </div>
             </div>
           </div>
+          </div>
+        </div>
+      )}
+
+      {confirmDelete && selectedItem && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40"
+          onClick={() => setConfirmDelete(false)}
+        >
+          <div
+            className="bg-background border border-border rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6 space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="space-y-1">
+              <p className="font-semibold text-base">Delete this file?</p>
+              <p className="text-sm text-muted-foreground">
+                <span className="font-medium text-foreground">{selectedItem.filename}</span> will be permanently removed. This action cannot be undone.
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setConfirmDelete(false)}
+                className="flex-1 text-sm px-4 py-2 rounded-lg border border-border hover:bg-muted transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDelete(selectedItem.id)}
+                className="flex-1 text-sm px-4 py-2 rounded-lg bg-destructive text-destructive-foreground hover:bg-destructive/90 transition"
+              >
+                Yes, delete
+              </button>
+            </div>
           </div>
         </div>
       )}
