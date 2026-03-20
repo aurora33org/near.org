@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { PostDeleteButton } from "@/components/admin/PostDeleteButton";
+import { DuplicatePostButton } from "@/components/admin/DuplicatePostButton";
 
 const PAGE_SIZE = 20;
 const VALID_STATUSES = ["DRAFT", "PUBLISHED", "ARCHIVED"] as const;
@@ -128,17 +129,26 @@ export default async function PostsPage({
                       </td>
                       <td className="px-6 py-4 text-sm">{post.author.name}</td>
                       <td className="px-6 py-4">
-                        <Badge
-                          variant={
-                            post.status === "PUBLISHED"
-                              ? "default"
-                              : post.status === "DRAFT"
-                              ? "secondary"
-                              : "outline"
-                          }
-                        >
-                          {post.status}
-                        </Badge>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Badge
+                            variant={
+                              post.status === "PUBLISHED"
+                                ? "default"
+                                : post.status === "DRAFT"
+                                ? "secondary"
+                                : "outline"
+                            }
+                          >
+                            {post.status}
+                          </Badge>
+                          {post.status === "PUBLISHED" &&
+                            post.publishedAt &&
+                            new Date(post.publishedAt) > new Date() && (
+                              <Badge variant="outline" className="text-yellow-600 border-yellow-400">
+                                SCHEDULED
+                              </Badge>
+                            )}
+                        </div>
                       </td>
                       <td className="px-6 py-4 text-sm">
                         {new Date(post.createdAt).toLocaleDateString()}
@@ -154,10 +164,13 @@ export default async function PostsPage({
                             <Link href={`/admin/posts/${post.id}/edit`}>Edit</Link>
                           </Button>
                           {userRole !== "VIEWER" && (
-                            <PostDeleteButton
-                              postId={post.id}
-                              postTitle={post.title}
-                            />
+                            <>
+                              <DuplicatePostButton postId={post.id} />
+                              <PostDeleteButton
+                                postId={post.id}
+                                postTitle={post.title}
+                              />
+                            </>
                           )}
                         </div>
                       </td>

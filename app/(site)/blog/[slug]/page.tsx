@@ -16,7 +16,7 @@ export async function generateMetadata({
     where: { slug },
   });
 
-  if (!post || post.status !== "PUBLISHED") {
+  if (!post || post.status !== "PUBLISHED" || (post.publishedAt && post.publishedAt > new Date())) {
     return {};
   }
 
@@ -33,7 +33,7 @@ export async function generateMetadata({
 
 export async function generateStaticParams() {
   const posts = await prisma.post.findMany({
-    where: { status: "PUBLISHED" },
+    where: { status: "PUBLISHED", publishedAt: { lte: new Date() } },
     select: { slug: true },
   });
 
@@ -53,7 +53,7 @@ export default async function BlogPost({
     include: { author: true },
   });
 
-  if (!post || post.status !== "PUBLISHED") {
+  if (!post || post.status !== "PUBLISHED" || (post.publishedAt && post.publishedAt > new Date())) {
     notFound();
   }
 

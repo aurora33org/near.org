@@ -3,9 +3,15 @@ import { ExternalLink } from "lucide-react";
 import { getEcosystemPartners } from "@/lib/airtable";
 
 export const metadata: Metadata = {
-  title: "Ecosystem | NEAR",
+  title: "Ecosystem | NEAR Protocol",
   description:
     "Explore the vibrant ecosystem of companies and projects building on NEAR Protocol.",
+  openGraph: {
+    title: "Ecosystem | NEAR Protocol",
+    description: "Explore the vibrant ecosystem of companies and projects building on NEAR Protocol.",
+    type: "website",
+  },
+  twitter: { card: "summary_large_image" },
 };
 
 // Get first two initials of company name for fallback avatar

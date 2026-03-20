@@ -1,3 +1,18 @@
+import { Metadata } from "next";
+
+export function generateMetadata(): Metadata {
+  return {
+    title: "Community | NEAR Protocol",
+    description: "Join the NEAR community and connect with builders, investors, and enthusiasts.",
+    openGraph: {
+      title: "Community | NEAR Protocol",
+      description: "Join the NEAR community and connect with builders, investors, and enthusiasts.",
+      type: "website",
+    },
+    twitter: { card: "summary_large_image" },
+  };
+}
+
 export default function Community() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-20">

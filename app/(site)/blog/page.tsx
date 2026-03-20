@@ -27,15 +27,18 @@ export default async function BlogIndex({
   const page = Math.max(1, Number(pageParam ?? 1));
   const skip = (page - 1) * PAGE_SIZE;
 
+  const now = new Date();
+  const publishedWhere = { status: "PUBLISHED" as const, publishedAt: { lte: now } };
+
   const [posts, total] = await Promise.all([
     prisma.post.findMany({
-      where: { status: "PUBLISHED" },
+      where: publishedWhere,
       orderBy: { publishedAt: "desc" },
       take: PAGE_SIZE,
       skip,
       include: { author: true },
     }),
-    prisma.post.count({ where: { status: "PUBLISHED" } }),
+    prisma.post.count({ where: publishedWhere }),
   ]);
 
   const totalPages = Math.ceil(total / PAGE_SIZE);

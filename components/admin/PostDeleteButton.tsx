@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2, AlertTriangle } from "lucide-react";
+import { toast } from "sonner";
 
 export function PostDeleteButton({
   postId,
@@ -32,7 +33,7 @@ export function PostDeleteButton({
       const res = await fetch(`/api/posts/${postId}`, { method: "DELETE" });
       if (!res.ok) {
         const err = await res.json();
-        alert(`Failed to delete: ${err.error}`);
+        toast.error(`Failed to delete: ${err.error}`);
         return;
       }
       closeModal();

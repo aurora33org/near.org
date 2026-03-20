@@ -92,3 +92,14 @@ model Tag {
   slug  String @unique
   posts Post[]
 }
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String
+  userEmail   String
+  action      String   // "CREATE" | "UPDATE" | "DELETE"
+  entityType  String   // "POST" | "MEDIA"
+  entityId    String
+  entityTitle String
+  createdAt   DateTime @default(now())
+}

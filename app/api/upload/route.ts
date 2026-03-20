@@ -24,10 +24,30 @@ const EXT_MAP: Record<string, string> = {
   "image/svg+xml": "svg",
 };
 
+const uploadRateLimit = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT = 20;
+const WINDOW_MS = 60_000;
+
+function checkRateLimit(userId: string): boolean {
+  const now = Date.now();
+  const entry = uploadRateLimit.get(userId);
+  if (!entry || now > entry.resetAt) {
+    uploadRateLimit.set(userId, { count: 1, resetAt: now + WINDOW_MS });
+    return true;
+  }
+  if (entry.count >= RATE_LIMIT) return false;
+  entry.count++;
+  return true;
+}
+
 export async function POST(req: Request) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  if (!checkRateLimit(session.user.id)) {
+    return NextResponse.json({ error: "Too many uploads. Try again in a minute." }, { status: 429 });
   }
 
   let formData: FormData;

@@ -15,6 +15,7 @@ const updatePostSchema = z.object({
   ogImage: z.string().optional(),
   categoryIds: z.array(z.string()).optional(),
   tagIds: z.array(z.string()).optional(),
+  publishedAt: z.string().optional().nullable(),
 });
 
 export async function GET(
@@ -85,16 +86,19 @@ export async function PUT(
       }
     }
 
-    const { categoryIds, tagIds, ...postData } = data;
+    const { categoryIds, tagIds, publishedAt, ...postData } = data;
+
+    const resolvedPublishedAt = data.publishedAt
+      ? new Date(data.publishedAt)
+      : data.status === "PUBLISHED" && post.status !== "PUBLISHED"
+      ? new Date()
+      : post.publishedAt;
 
     const updatedPost = await prisma.post.update({
       where: { id },
       data: {
         ...postData,
-        publishedAt:
-          data.status === "PUBLISHED" && post.status !== "PUBLISHED"
-            ? new Date()
-            : post.publishedAt,
+        publishedAt: resolvedPublishedAt,
         categories: categoryIds !== undefined
           ? { set: categoryIds.map((id) => ({ id })) }
           : undefined,
@@ -104,6 +108,19 @@ export async function PUT(
       },
       include: { author: true },
     });
+
+    try {
+      await (prisma as any).auditLog.create({
+        data: {
+          userId: session.user.id,
+          userEmail: session.user.email ?? "",
+          action: "UPDATE",
+          entityType: "POST",
+          entityId: updatedPost.id,
+          entityTitle: updatedPost.title,
+        },
+      });
+    } catch {}
 
     return NextResponse.json(updatedPost);
   } catch (error) {
@@ -153,6 +170,19 @@ export async function DELETE(
     await prisma.post.delete({
       where: { id },
     });
+
+    try {
+      await (prisma as any).auditLog.create({
+        data: {
+          userId: session.user.id,
+          userEmail: session.user.email ?? "",
+          action: "DELETE",
+          entityType: "POST",
+          entityId: post.id,
+          entityTitle: post.title,
+        },
+      });
+    } catch {}
 
     return NextResponse.json({ success: true });
   } catch (error) {

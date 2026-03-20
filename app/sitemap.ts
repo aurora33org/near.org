@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma";
 
+export const revalidate = 60;
+
 const BASE_URL = "https://near.org";
 
 export default async function sitemap() {

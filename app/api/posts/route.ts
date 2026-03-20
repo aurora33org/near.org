@@ -15,6 +15,7 @@ const createPostSchema = z.object({
   ogImage: z.string().optional(),
   categoryIds: z.array(z.string()).optional(),
   tagIds: z.array(z.string()).optional(),
+  publishedAt: z.string().optional().nullable(),
 });
 
 export async function GET(req: NextRequest) {
@@ -72,14 +73,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { categoryIds, tagIds, ...postData } = data;
+    const { categoryIds, tagIds, publishedAt, ...postData } = data;
+
+    const resolvedPublishedAt = data.status === "PUBLISHED"
+      ? (publishedAt ? new Date(publishedAt) : new Date())
+      : null;
 
     const post = await prisma.post.create({
       data: {
         ...postData,
         authorId: session.user.id,
-        publishedAt:
-          data.status === "PUBLISHED" ? new Date() : null,
+        publishedAt: resolvedPublishedAt,
         categories: categoryIds?.length
           ? { connect: categoryIds.map((id) => ({ id })) }
           : undefined,
@@ -89,6 +93,19 @@ export async function POST(req: NextRequest) {
       },
       include: { author: true },
     });
+
+    try {
+      await (prisma as any).auditLog.create({
+        data: {
+          userId: session.user.id,
+          userEmail: session.user.email ?? "",
+          action: "CREATE",
+          entityType: "POST",
+          entityId: post.id,
+          entityTitle: post.title,
+        },
+      });
+    } catch {}
 
     return NextResponse.json(post, { status: 201 });
   } catch (error) {

@@ -46,5 +46,19 @@ export async function DELETE(
   }
 
   await prisma.media.delete({ where: { id } });
+
+  try {
+    await (prisma as any).auditLog.create({
+      data: {
+        userId: session.user.id,
+        userEmail: session.user.email ?? "",
+        action: "DELETE",
+        entityType: "MEDIA",
+        entityId: media.id,
+        entityTitle: media.filename,
+      },
+    });
+  } catch {}
+
   return NextResponse.json({ success: true });
 }
