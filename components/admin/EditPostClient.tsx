@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, ChevronDown, ChevronUp, ImageIcon, X, Eye } from "lucide-react";
 import { PostDeleteButton } from "@/components/admin/PostDeleteButton";
+import SharePreviewButton from "@/components/admin/SharePreviewButton";
 import { toast } from "sonner";
 
 function toDatetimeLocalString(date: string | null | undefined): string {
@@ -219,6 +220,7 @@ export default function EditPostClient() {
                 Preview
               </a>
             </Button>
+            <SharePreviewButton postId={postId} postTitle={title} />
             {!isPublished && (
               <Button
                 type="button"
