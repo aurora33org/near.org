@@ -1,7 +1,7 @@
 export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
-import { S3Client, PutObjectCommand, PutBucketAclCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { auth } from "@/lib/auth";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml"];
@@ -54,24 +54,15 @@ export async function POST(req: Request) {
   const key = `uploads/${crypto.randomUUID()}.${ext}`;
   const buffer = Buffer.from(await file.arrayBuffer());
 
-  // Ensure bucket is publicly readable (Tigris is private by default)
-  await s3.send(new PutBucketAclCommand({
-    Bucket: process.env.S3_BUCKET,
-    ACL: "public-read",
-  }));
-
   await s3.send(
     new PutObjectCommand({
       Bucket: process.env.S3_BUCKET,
       Key: key,
       Body: buffer,
       ContentType: file.type,
-      ACL: "public-read",
     })
   );
 
-  // Virtual-hosted style URL: https://bucket.hostname/key
-  const endpointHostname = new URL(process.env.S3_ENDPOINT!).hostname;
-  const url = `https://${process.env.S3_BUCKET}.${endpointHostname}/${key}`;
+  const url = `${process.env.R2_PUBLIC_URL}/${key}`;
   return NextResponse.json({ url }, { status: 201 });
 }
