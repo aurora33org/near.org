@@ -60,11 +60,11 @@ export default function EditPostClient() {
 
   // Initialize contentEditable title div once when post loads
   useEffect(() => {
-    if (titleInputRef.current && title && !titleInitialized.current) {
+    if (!isLoading && titleInputRef.current && title && !titleInitialized.current) {
       titleInputRef.current.textContent = title;
       titleInitialized.current = true;
     }
-  }, [title]);
+  }, [title, isLoading]);
 
   useEffect(() => {
     async function fetchAll() {
