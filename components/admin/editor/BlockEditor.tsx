@@ -52,7 +52,7 @@ export default function BlockEditor({ content, onChange }: BlockEditorProps) {
         <TableControls editor={editor} />
 
         {/* Bubble Menu */}
-        <EditorBubbleMenu editor={editor} />
+        <EditorBubbleMenu editor={editor} openMediaPicker={openMediaPicker} />
 
         {/* Editor Content */}
         <EditorContent

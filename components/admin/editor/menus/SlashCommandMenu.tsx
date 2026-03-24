@@ -109,8 +109,11 @@ export const SlashCommandMenu = forwardRef<any, SlashCommandMenuProps>(
                   onClick={() => command(item)}
                   onMouseEnter={() => setSelectedIndex(index)}
                 >
-                  <div className="flex items-center justify-center w-8 h-8 rounded border border-border bg-muted/50 shrink-0">
-                    <Icon size={16} />
+                  <div
+                    className="flex items-center justify-center w-8 h-8 rounded border border-border bg-muted/50 shrink-0"
+                    style={item.color ? { backgroundColor: item.color, borderColor: "transparent" } : undefined}
+                  >
+                    <Icon size={16} style={item.color ? { color: "rgba(0,0,0,0.5)" } : undefined} />
                   </div>
                   <div className="min-w-0">
                     <div className="font-medium truncate">{item.title}</div>

@@ -14,6 +14,8 @@ import {
   Columns2,
   Columns3,
   FileCode,
+  Palette,
+  Highlighter,
   type LucideIcon,
 } from "lucide-react";
 import type { Editor } from "@tiptap/react";
@@ -22,7 +24,8 @@ export interface SlashCommandItem {
   title: string;
   description: string;
   icon: LucideIcon;
-  category: "text" | "lists" | "media" | "advanced";
+  color?: string;
+  category: "text" | "lists" | "media" | "advanced" | "colors";
   searchTerms: string[];
   command: (editor: Editor, openMediaPicker?: () => void) => void;
 }
@@ -157,6 +160,105 @@ export const slashCommandItems: SlashCommandItem[] = [
     searchTerms: ["html", "raw", "embed", "code", "custom"],
     command: (editor) => editor.chain().focus().insertRawHtml().run(),
   },
+  // Colors — text
+  {
+    title: "Default Color",
+    description: "Remove text color",
+    icon: Palette,
+    category: "colors",
+    searchTerms: ["color", "text", "default", "reset", "remove"],
+    command: (editor) => editor.chain().focus().unsetColor().run(),
+  },
+  {
+    title: "Red Text",
+    description: "Red text color",
+    icon: Palette,
+    color: "#ef4444",
+    category: "colors",
+    searchTerms: ["color", "text", "red"],
+    command: (editor) => editor.chain().focus().setColor("#ef4444").run(),
+  },
+  {
+    title: "Blue Text",
+    description: "Blue text color",
+    icon: Palette,
+    color: "#3b82f6",
+    category: "colors",
+    searchTerms: ["color", "text", "blue"],
+    command: (editor) => editor.chain().focus().setColor("#3b82f6").run(),
+  },
+  {
+    title: "Green Text",
+    description: "Green text color",
+    icon: Palette,
+    color: "#22c55e",
+    category: "colors",
+    searchTerms: ["color", "text", "green"],
+    command: (editor) => editor.chain().focus().setColor("#22c55e").run(),
+  },
+  {
+    title: "Purple Text",
+    description: "Purple text color",
+    icon: Palette,
+    color: "#a855f7",
+    category: "colors",
+    searchTerms: ["color", "text", "purple"],
+    command: (editor) => editor.chain().focus().setColor("#a855f7").run(),
+  },
+  {
+    title: "Orange Text",
+    description: "Orange text color",
+    icon: Palette,
+    color: "#f97316",
+    category: "colors",
+    searchTerms: ["color", "text", "orange"],
+    command: (editor) => editor.chain().focus().setColor("#f97316").run(),
+  },
+  // Colors — background / highlight
+  {
+    title: "No Highlight",
+    description: "Remove background highlight",
+    icon: Highlighter,
+    category: "colors",
+    searchTerms: ["highlight", "background", "remove", "none"],
+    command: (editor) => editor.chain().focus().unsetHighlight().run(),
+  },
+  {
+    title: "Yellow Highlight",
+    description: "Yellow background",
+    icon: Highlighter,
+    color: "#fef08a",
+    category: "colors",
+    searchTerms: ["highlight", "background", "yellow"],
+    command: (editor) => editor.chain().focus().toggleHighlight({ color: "#fef08a" }).run(),
+  },
+  {
+    title: "Green Highlight",
+    description: "Green background",
+    icon: Highlighter,
+    color: "#bbf7d0",
+    category: "colors",
+    searchTerms: ["highlight", "background", "green"],
+    command: (editor) => editor.chain().focus().toggleHighlight({ color: "#bbf7d0" }).run(),
+  },
+  {
+    title: "Blue Highlight",
+    description: "Blue background",
+    icon: Highlighter,
+    color: "#bfdbfe",
+    category: "colors",
+    searchTerms: ["highlight", "background", "blue"],
+    command: (editor) => editor.chain().focus().toggleHighlight({ color: "#bfdbfe" }).run(),
+  },
+  {
+    title: "Pink Highlight",
+    description: "Pink background",
+    icon: Highlighter,
+    color: "#fbcfe8",
+    category: "colors",
+    searchTerms: ["highlight", "background", "pink"],
+    command: (editor) => editor.chain().focus().toggleHighlight({ color: "#fbcfe8" }).run(),
+  },
 ];
 
 const categoryLabels: Record<string, string> = {
@@ -164,6 +266,7 @@ const categoryLabels: Record<string, string> = {
   lists: "Lists",
   media: "Media",
   advanced: "Advanced",
+  colors: "Colors",
 };
 
 export function getGroupedItems(query: string) {
@@ -178,7 +281,7 @@ export function getGroupedItems(query: string) {
   });
 
   const groups: { label: string; items: SlashCommandItem[] }[] = [];
-  const categoryOrder = ["text", "lists", "media", "advanced"];
+  const categoryOrder = ["text", "lists", "media", "advanced", "colors"];
 
   for (const cat of categoryOrder) {
     const items = filtered.filter((item) => item.category === cat);

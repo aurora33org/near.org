@@ -16,18 +16,26 @@ import {
   AlignLeft,
   AlignCenter,
   AlignRight,
+  Quote,
+  LayoutGrid,
 } from "lucide-react";
+import { SlashCommandMenu } from "./SlashCommandMenu";
+import type { SlashCommandItem } from "../SlashCommandItems";
 
 interface EditorBubbleMenuProps {
   editor: Editor;
+  openMediaPicker?: () => void;
 }
 
-export default function EditorBubbleMenu({ editor }: EditorBubbleMenuProps) {
+export default function EditorBubbleMenu({ editor, openMediaPicker }: EditorBubbleMenuProps) {
   const [showMenu, setShowMenu] = useState(false);
   const [showLinkInput, setShowLinkInput] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
+  const [showCommandPalette, setShowCommandPalette] = useState(false);
+  const [commandQuery, setCommandQuery] = useState("");
   const menuRef = useRef<HTMLDivElement>(null);
+  const paletteRef = useRef<HTMLDivElement>(null);
 
   const updatePosition = useCallback(() => {
     const { from, to } = editor.state.selection;
@@ -85,6 +93,18 @@ export default function EditorBubbleMenu({ editor }: EditorBubbleMenuProps) {
     };
   }, [editor, updatePosition]);
 
+  useEffect(() => {
+    if (!showCommandPalette) return;
+    function onMouseDown(e: MouseEvent) {
+      if (paletteRef.current && !paletteRef.current.contains(e.target as Node)) {
+        setShowCommandPalette(false);
+        setCommandQuery("");
+      }
+    }
+    document.addEventListener("mousedown", onMouseDown);
+    return () => document.removeEventListener("mousedown", onMouseDown);
+  }, [showCommandPalette]);
+
   const setLink = useCallback(() => {
     if (linkUrl) {
       editor.chain().focus().setLink({ href: linkUrl }).run();
@@ -107,6 +127,36 @@ export default function EditorBubbleMenu({ editor }: EditorBubbleMenuProps) {
       className="absolute z-50 animate-in fade-in duration-150"
       style={{ top: menuPos.top, left: menuPos.left }}
     >
+      {showCommandPalette && (
+        <div
+          ref={paletteRef}
+          className="absolute bottom-full mb-1 left-0 z-50"
+        >
+          <div className="rounded-lg border border-border bg-card shadow-lg overflow-hidden w-72">
+            <div className="p-2 border-b border-border">
+              <input
+                type="text"
+                value={commandQuery}
+                onChange={(e) => setCommandQuery(e.target.value)}
+                placeholder="Search commands..."
+                className="w-full text-sm bg-transparent outline-none text-foreground placeholder-muted-foreground"
+                autoFocus
+              />
+            </div>
+            <div className="max-h-72 overflow-y-auto">
+              <SlashCommandMenu
+                items={[]}
+                query={commandQuery}
+                command={(item: SlashCommandItem) => {
+                  item.command(editor, openMediaPicker);
+                  setShowCommandPalette(false);
+                  setCommandQuery("");
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
       <div className="flex items-center gap-0.5 rounded-lg border border-border bg-card shadow-lg p-1">
         {showLinkInput ? (
           <div className="flex items-center gap-1 px-1">
@@ -135,6 +185,21 @@ export default function EditorBubbleMenu({ editor }: EditorBubbleMenuProps) {
           </div>
         ) : (
           <>
+            <button
+              type="button"
+              onMouseDown={(e) => {
+                e.preventDefault();
+                setShowCommandPalette((v) => !v);
+                setCommandQuery("");
+              }}
+              className={`${btnClass} ${showCommandPalette ? activeClass : ""}`}
+              title="More options"
+            >
+              <LayoutGrid size={16} />
+            </button>
+
+            <div className="w-px h-5 bg-border mx-0.5" />
+
             <button
               type="button"
               onMouseDown={(e) => {
@@ -225,6 +290,17 @@ export default function EditorBubbleMenu({ editor }: EditorBubbleMenuProps) {
               title="Strikethrough"
             >
               <Strikethrough size={16} />
+            </button>
+            <button
+              type="button"
+              onMouseDown={(e) => {
+                e.preventDefault();
+                editor.chain().focus().toggleBlockquote().run();
+              }}
+              className={`${btnClass} ${editor.isActive("blockquote") ? activeClass : ""}`}
+              title="Blockquote"
+            >
+              <Quote size={16} />
             </button>
             <button
               type="button"

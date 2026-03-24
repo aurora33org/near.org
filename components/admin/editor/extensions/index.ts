@@ -11,6 +11,9 @@ import TaskItem from "@tiptap/extension-task-item";
 import Placeholder from "@tiptap/extension-placeholder";
 import Underline from "@tiptap/extension-underline";
 import TextAlign from "@tiptap/extension-text-align";
+import { TextStyle } from "@tiptap/extension-text-style";
+import { Color } from "@tiptap/extension-color";
+import { Highlight } from "@tiptap/extension-highlight";
 import { createLowlight } from "lowlight";
 import { SlashCommand } from "./SlashCommand";
 import { RawHtmlBlock } from "./RawHtmlBlock";
@@ -46,6 +49,9 @@ export function getExtensions() {
     }),
     Underline,
     TextAlign.configure({ types: ["heading", "paragraph"] }),
+    TextStyle,
+    Color,
+    Highlight.configure({ multicolor: true }),
     SlashCommand,
     RawHtmlBlock,
     ColumnLayout,
