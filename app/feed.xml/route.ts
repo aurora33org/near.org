@@ -1,11 +1,13 @@
 import { Feed } from "feed";
 import { prisma } from "@/lib/prisma";
 
+export const revalidate = 60;
+
 const BASE_URL = "https://near.org";
 
 export async function GET() {
   const posts = await prisma.post.findMany({
-    where: { status: "PUBLISHED" },
+    where: { status: "PUBLISHED", publishedAt: { lte: new Date() } },
     orderBy: { publishedAt: "desc" },
     take: 20,
     include: { author: true },

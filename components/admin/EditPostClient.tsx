@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import BlockEditor from "@/components/admin/BlockEditor";
+import MediaPickerModal from "@/components/admin/MediaPickerModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,6 +31,7 @@ export default function EditPostClient() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isCoverPickerOpen, setIsCoverPickerOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
   const [excerpt, setExcerpt] = useState("");
@@ -122,9 +124,9 @@ export default function EditPostClient() {
           ogImage,
           categoryIds: selectedCategoryIds,
           tagIds: selectedTagIds,
-          publishedAt: finalStatus === "PUBLISHED" && publishedAt
-            ? new Date(publishedAt).toISOString()
-            : undefined,
+          publishedAt: finalStatus === "PUBLISHED"
+            ? (publishedAt ? new Date(publishedAt).toISOString() : new Date().toISOString())
+            : (publishedAt ? new Date(publishedAt).toISOString() : undefined),
         }),
       });
 
@@ -308,14 +310,23 @@ export default function EditPostClient() {
                   </button>
                 </div>
               ) : (
-                <button
-                  type="button"
-                  onClick={() => coverImageInputRef.current?.click()}
-                  className="w-full border-2 border-dashed border-border rounded-lg py-6 flex flex-col items-center gap-2 text-muted-foreground hover:border-primary/50 hover:text-foreground transition"
-                >
-                  <ImageIcon size={20} />
-                  <span className="text-xs">Upload image</span>
-                </button>
+                <div className="space-y-2">
+                  <button
+                    type="button"
+                    onClick={() => coverImageInputRef.current?.click()}
+                    className="w-full border-2 border-dashed border-border rounded-lg py-6 flex flex-col items-center gap-2 text-muted-foreground hover:border-primary/50 hover:text-foreground transition"
+                  >
+                    <ImageIcon size={20} />
+                    <span className="text-xs">Upload image</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsCoverPickerOpen(true)}
+                    className="w-full text-xs text-muted-foreground hover:text-foreground transition text-center"
+                  >
+                    Or pick from library →
+                  </button>
+                </div>
               )}
               <input
                 ref={coverImageInputRef}
@@ -327,6 +338,11 @@ export default function EditPostClient() {
                   if (file) handleCoverImageUpload(file);
                   e.target.value = "";
                 }}
+              />
+              <MediaPickerModal
+                open={isCoverPickerOpen}
+                onClose={() => setIsCoverPickerOpen(false)}
+                onSelect={(url) => setCoverImage(url)}
               />
             </div>
 
@@ -346,22 +362,24 @@ export default function EditPostClient() {
               </select>
             </div>
 
-            {/* Publish Date (only when PUBLISHED) */}
-            {status === "PUBLISHED" && (
-              <div className="space-y-2">
-                <Label htmlFor="publishedAt" className="text-xs font-semibold uppercase tracking-wide">
-                  Publish Date
-                </Label>
-                <input
-                  id="publishedAt"
-                  type="datetime-local"
-                  value={publishedAt}
-                  onChange={(e) => setPublishedAt(e.target.value)}
-                  className="w-full border border-border/70 rounded-[var(--radius)] px-3 py-2 text-sm bg-muted/30 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-                />
-                <p className="text-xs text-muted-foreground">Leave empty to publish immediately.</p>
-              </div>
-            )}
+            {/* Publish Date */}
+            <div className="space-y-2">
+              <Label htmlFor="publishedAt" className="text-xs font-semibold uppercase tracking-wide">
+                Publish Date
+              </Label>
+              <input
+                id="publishedAt"
+                type="datetime-local"
+                value={publishedAt}
+                onChange={(e) => setPublishedAt(e.target.value)}
+                className="w-full border border-border/70 rounded-[var(--radius)] px-3 py-2 text-sm bg-muted/30 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 dark:[color-scheme:dark]"
+              />
+              <p className="text-xs text-muted-foreground">
+                {status === "DRAFT"
+                  ? "Set a future date to schedule. Post won't appear until then."
+                  : "Leave empty to publish immediately."}
+              </p>
+            </div>
 
             {/* URL Slug Card */}
             <div className="space-y-2">
@@ -396,9 +414,16 @@ export default function EditPostClient() {
             </div>
 
             {/* Categories */}
-            {categories.length > 0 && (
-              <div className="space-y-2">
-                <Label className="text-xs font-semibold uppercase tracking-wide">Categories</Label>
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold uppercase tracking-wide">Categories</Label>
+              {categories.length === 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  No categories yet.{" "}
+                  <Link href="/admin/categories" className="underline hover:text-foreground transition">
+                    Create categories →
+                  </Link>
+                </p>
+              ) : (
                 <div className="max-h-40 overflow-y-auto space-y-1 border border-border/70 rounded-[var(--radius)] p-2 bg-muted/30">
                   {categories.map((cat) => (
                     <label key={cat.id} className="flex items-center gap-2 text-sm cursor-pointer">
@@ -415,13 +440,20 @@ export default function EditPostClient() {
                     </label>
                   ))}
                 </div>
-              </div>
-            )}
+              )}
+            </div>
 
             {/* Tags */}
-            {tags.length > 0 && (
-              <div className="space-y-2">
-                <Label className="text-xs font-semibold uppercase tracking-wide">Tags</Label>
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold uppercase tracking-wide">Tags</Label>
+              {tags.length === 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  No tags yet.{" "}
+                  <Link href="/admin/categories" className="underline hover:text-foreground transition">
+                    Manage tags →
+                  </Link>
+                </p>
+              ) : (
                 <div className="max-h-40 overflow-y-auto space-y-1 border border-border/70 rounded-[var(--radius)] p-2 bg-muted/30">
                   {tags.map((tag) => (
                     <label key={tag.id} className="flex items-center gap-2 text-sm cursor-pointer">
@@ -438,8 +470,8 @@ export default function EditPostClient() {
                     </label>
                   ))}
                 </div>
-              </div>
-            )}
+              )}
+            </div>
 
             {/* SEO Accordion */}
             <div className="border-t border-border pt-6">
