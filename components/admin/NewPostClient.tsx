@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import BlockEditor from "@/components/admin/BlockEditor";
+import BlockEditor from "@/components/admin/editor/BlockEditor";
 import MediaPickerModal from "@/components/admin/MediaPickerModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,7 +20,7 @@ export default function NewPostClient() {
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
   const [excerpt, setExcerpt] = useState("");
-  const [content, setContent] = useState<any>({ type: "doc", content: [] });
+  const [content, setContent] = useState<any>({ type: "doc", content: [{ type: "paragraph" }] });
   const [status, setStatus] = useState<"DRAFT" | "PUBLISHED">("DRAFT");
   const [coverImage, setCoverImage] = useState("");
   const [seoTitle, setSeoTitle] = useState("");
