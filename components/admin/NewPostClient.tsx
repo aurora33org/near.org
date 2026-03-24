@@ -155,7 +155,7 @@ export default function NewPostClient() {
       <div className="flex flex-1 overflow-hidden">
         {/* LEFT PANEL - Editor */}
         <div className="flex-1 flex flex-col overflow-auto bg-background">
-          <div className="p-6 space-y-4">
+          <div className="p-6 space-y-4 max-w-4xl mx-auto w-full">
             {/* Title */}
             <div>
               <textarea
@@ -167,6 +167,7 @@ export default function NewPostClient() {
                 rows={1}
               />
             </div>
+            <hr className="border-border" />
 
             {/* Slug preview */}
             <div className="text-sm text-muted-foreground font-mono">
@@ -181,7 +182,7 @@ export default function NewPostClient() {
         </div>
 
         {/* RIGHT PANEL - Metadata (Sticky) */}
-        <aside className="w-72 border-l border-border bg-card overflow-y-auto sticky top-[53px] h-[calc(100vh-53px)]">
+        <aside className="w-[380px] min-[1480px]:w-[28rem] shrink-0 border-l border-border bg-card overflow-y-auto sticky top-[53px] h-[calc(100vh-53px)]">
           <div className="p-6 space-y-6">
             {/* Cover Image */}
             <div className="space-y-2">
