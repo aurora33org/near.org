@@ -84,7 +84,7 @@ export const DragHandle = Extension.create({
             const nodeRect = domNode.getBoundingClientRect();
             currentNodePos = nodePos;
             wrapperEl.style.display = "flex";
-            wrapperEl.style.top = `${nodeRect.top}px`;
+            wrapperEl.style.top = `${nodeRect.top + 4}px`;
             wrapperEl.style.left = `${nodeRect.left - 48}px`;
           }
 
