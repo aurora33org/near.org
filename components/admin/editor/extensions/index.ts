@@ -50,7 +50,7 @@ export function getExtensions() {
     Underline,
     TextAlign.configure({ types: ["heading", "paragraph"] }),
     TextStyle,
-    Color,
+    Color.configure({ types: ["textStyle"] }),
     Highlight.configure({ multicolor: true }),
     SlashCommand,
     RawHtmlBlock,
