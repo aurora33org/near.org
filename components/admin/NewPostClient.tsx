@@ -22,7 +22,6 @@ import { toast } from "sonner";
 export default function NewPostClient() {
   const router = useRouter();
   const titleInputRef = useRef<HTMLDivElement>(null);
-  const coverImageInputRef = useRef<HTMLInputElement>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
@@ -43,15 +42,6 @@ export default function NewPostClient() {
   const [heroBgColor, setHeroBgColor] = useState("#ffffff");
   const [heroBgImage, setHeroBgImage] = useState("");
   const [isHeroBgPickerOpen, setIsHeroBgPickerOpen] = useState(false);
-
-  async function handleCoverImageUpload(file: File) {
-    const formData = new FormData();
-    formData.append("file", file);
-    const res = await fetch("/api/upload", { method: "POST", body: formData });
-    if (!res.ok) return;
-    const { url } = await res.json();
-    setCoverImage(url);
-  }
 
   useEffect(() => {
     Promise.all([fetch("/api/categories"), fetch("/api/tags")]).then(
@@ -219,35 +209,15 @@ export default function NewPostClient() {
                       </button>
                     </div>
                   ) : (
-                    <div className="space-y-2">
-                      <button
-                        type="button"
-                        onClick={() => coverImageInputRef.current?.click()}
-                        className="w-full border-2 border-dashed border-border rounded-lg py-6 flex flex-col items-center gap-2 text-muted-foreground hover:border-primary/50 hover:text-foreground transition"
-                      >
-                        <ImageIcon size={20} />
-                        <span className="text-xs">Upload image</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setIsCoverPickerOpen(true)}
-                        className="w-full text-xs text-muted-foreground hover:text-foreground transition text-center"
-                      >
-                        Or pick from library →
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsCoverPickerOpen(true)}
+                      className="w-full border-2 border-dashed border-border rounded-lg py-6 flex flex-col items-center gap-2 text-muted-foreground hover:border-primary/50 hover:text-foreground transition"
+                    >
+                      <ImageIcon size={20} />
+                      <span className="text-xs">Pick or upload image</span>
+                    </button>
                   )}
-                  <input
-                    ref={coverImageInputRef}
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp,image/gif"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) handleCoverImageUpload(file);
-                      e.target.value = "";
-                    }}
-                  />
                   <MediaPickerModal
                     open={isCoverPickerOpen}
                     onClose={() => setIsCoverPickerOpen(false)}
