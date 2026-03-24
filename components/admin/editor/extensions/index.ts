@@ -15,6 +15,7 @@ import { createLowlight } from "lowlight";
 import { SlashCommand } from "./SlashCommand";
 import { RawHtmlBlock } from "./RawHtmlBlock";
 import { ColumnLayout, Column } from "./ColumnLayout";
+import { DragHandle } from "./DragHandle";
 
 const lowlight = createLowlight();
 
@@ -49,5 +50,6 @@ export function getExtensions() {
     RawHtmlBlock,
     ColumnLayout,
     Column,
+    DragHandle,
   ];
 }
