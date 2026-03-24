@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import { renderBlocks } from "@/lib/tiptap-renderer";
+import { extractExcerpt } from "@/lib/excerpt";
 
 export const revalidate = 60; // ISR: revalidate every 60 seconds
 
@@ -23,10 +24,10 @@ export async function generateMetadata({
 
   return {
     title: post.seoTitle || post.title,
-    description: post.seoDesc || post.excerpt,
+    description: post.seoDesc || post.excerpt || extractExcerpt(post.content),
     openGraph: {
       title: post.seoTitle || post.title,
-      description: post.seoDesc || post.excerpt || "",
+      description: post.seoDesc || post.excerpt || extractExcerpt(post.content),
       images: post.ogImage ? [{ url: post.ogImage }] : [],
     },
   };
@@ -90,7 +91,7 @@ export default async function BlogPost({
       </div>
 
       {/* CONTENT */}
-      <div className="max-w-4xl mx-auto px-4 py-12">
+      <div className="max-w-3xl mx-auto px-4 py-12">
         <div className="prose prose-lg max-w-none">
           {renderBlocks(content?.content ?? [])}
         </div>

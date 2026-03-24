@@ -14,7 +14,7 @@ import { toast } from "sonner";
 
 export default function NewPostClient() {
   const router = useRouter();
-  const titleInputRef = useRef<HTMLTextAreaElement>(null);
+  const titleInputRef = useRef<HTMLDivElement>(null);
   const coverImageInputRef = useRef<HTMLInputElement>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [title, setTitle] = useState("");
@@ -55,13 +55,6 @@ export default function NewPostClient() {
     );
   }, []);
 
-  // Auto-resize title textarea
-  useEffect(() => {
-    if (titleInputRef.current) {
-      titleInputRef.current.style.height = "auto";
-      titleInputRef.current.style.height = titleInputRef.current.scrollHeight + "px";
-    }
-  }, [title]);
 
   async function handleSubmit(statusOverride?: "DRAFT" | "PUBLISHED") {
     setIsLoading(true);
@@ -157,16 +150,14 @@ export default function NewPostClient() {
         <div className="flex-1 flex flex-col overflow-auto bg-background">
           <div className="p-6 space-y-4 max-w-4xl mx-auto w-full">
             {/* Title */}
-            <div>
-              <textarea
-                ref={titleInputRef}
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Post title..."
-                className="w-full text-3xl font-bold border-0 bg-transparent text-foreground placeholder-muted-foreground focus:outline-none resize-none overflow-hidden"
-                rows={1}
-              />
-            </div>
+            <div
+              ref={titleInputRef}
+              contentEditable
+              suppressContentEditableWarning
+              onInput={(e) => setTitle(e.currentTarget.textContent ?? "")}
+              data-placeholder="Post title..."
+              className="w-full text-3xl font-bold bg-transparent text-foreground focus:outline-none outline-none break-words empty:before:content-[attr(data-placeholder)] empty:before:text-muted-foreground empty:before:pointer-events-none"
+            />
             <hr className="border-border" />
 
             {/* Slug preview */}

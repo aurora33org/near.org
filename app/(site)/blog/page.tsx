@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { prisma } from "@/lib/prisma";
+import { extractExcerpt } from "@/lib/excerpt";
 import { Metadata } from "next";
 
 export const revalidate = 60;
@@ -85,11 +86,12 @@ export default async function BlogIndex({
                       {post.title}
                     </h2>
                   </Link>
-                  {post.excerpt && (
-                    <p className="text-gray-600 text-sm line-clamp-3 flex-1">
-                      {post.excerpt}
-                    </p>
-                  )}
+                  {(() => {
+                    const text = post.excerpt || extractExcerpt(post.content);
+                    return text ? (
+                      <p className="text-gray-600 text-sm line-clamp-3 flex-1">{text}</p>
+                    ) : null;
+                  })()}
                   <Link
                     href={`/blog/${post.slug}`}
                     className="mt-4 text-sm text-blue-600 hover:underline font-medium"
