@@ -43,6 +43,8 @@ model Post {
   authorId    String
   categories  Category[]
   tags        Tag[]
+  heroBgColor     String?            // CSS color for hero background, e.g. "#4ade80"
+  heroBgImage     String?            // URL of hero background image
   publishedAt     DateTime?
   previewToken    String?   @unique  // null = sharing disabled; UUID generated on demand
   previewPassword String?            // plaintext; low-security gating only

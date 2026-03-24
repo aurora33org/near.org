@@ -32,6 +32,9 @@ export default function EditPostClient() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isCoverPickerOpen, setIsCoverPickerOpen] = useState(false);
+  const [heroBgColor, setHeroBgColor] = useState("#ffffff");
+  const [heroBgImage, setHeroBgImage] = useState("");
+  const [isHeroBgPickerOpen, setIsHeroBgPickerOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
   const [excerpt, setExcerpt] = useState("");
@@ -89,6 +92,8 @@ export default function EditPostClient() {
         setSelectedCategoryIds((post.categories ?? []).map((c: any) => c.id));
         setSelectedTagIds((post.tags ?? []).map((t: any) => t.id));
         setPublishedAt(toDatetimeLocalString(post.publishedAt));
+        setHeroBgColor(post.heroBgColor || "#ffffff");
+        setHeroBgImage(post.heroBgImage || "");
 
         if (catRes.ok) setCategories(await catRes.json());
         if (tagRes.ok) setTags(await tagRes.json());
@@ -122,6 +127,8 @@ export default function EditPostClient() {
           seoTitle,
           seoDesc,
           ogImage,
+          heroBgColor: heroBgColor && heroBgColor !== "#ffffff" ? heroBgColor : undefined,
+          heroBgImage: heroBgImage || undefined,
           categoryIds: selectedCategoryIds,
           tagIds: selectedTagIds,
           publishedAt: finalStatus === "PUBLISHED"
@@ -132,7 +139,7 @@ export default function EditPostClient() {
 
       if (!response.ok) {
         const error = await response.json();
-        toast.error(error.message || "Failed to save post");
+        toast.error(error.error || error.message || "Failed to save post");
         return;
       }
 
@@ -471,6 +478,80 @@ export default function EditPostClient() {
                   ))}
                 </div>
               )}
+            </div>
+
+            {/* Hero Background */}
+            <div className="space-y-3">
+              <Label className="text-xs font-semibold uppercase tracking-wide">Hero Background</Label>
+
+              {/* Color picker */}
+              <div className="space-y-1">
+                <span className="text-xs text-muted-foreground">Color</span>
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-8 h-8 rounded border border-border cursor-pointer overflow-hidden flex-shrink-0"
+                    style={{ backgroundColor: heroBgColor || "#ffffff" }}
+                  >
+                    <input
+                      type="color"
+                      value={heroBgColor || "#ffffff"}
+                      onChange={(e) => setHeroBgColor(e.target.value)}
+                      className="opacity-0 w-full h-full cursor-pointer"
+                      title="Pick hero background color"
+                    />
+                  </div>
+                  <input
+                    type="text"
+                    value={heroBgColor}
+                    onChange={(e) => setHeroBgColor(e.target.value)}
+                    placeholder="#ffffff"
+                    maxLength={9}
+                    className="text-xs font-mono flex-1 bg-transparent border border-border/70 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary/50 text-foreground"
+                  />
+                  {heroBgColor !== "#ffffff" && (
+                    <button
+                      type="button"
+                      onClick={() => setHeroBgColor("#ffffff")}
+                      className="text-muted-foreground hover:text-foreground transition"
+                      title="Reset to white"
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Background image */}
+              <div className="space-y-1">
+                <span className="text-xs text-muted-foreground">Background Image</span>
+                {heroBgImage ? (
+                  <div className="relative">
+                    <img src={heroBgImage} alt="Hero bg" className="w-full h-20 rounded-lg object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => setHeroBgImage("")}
+                      className="absolute top-1 right-1 bg-black/50 hover:bg-black/70 text-white rounded p-0.5 transition"
+                      title="Remove image"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setIsHeroBgPickerOpen(true)}
+                    className="w-full border-2 border-dashed border-border rounded-lg py-3 flex items-center justify-center gap-2 text-muted-foreground hover:border-primary/50 hover:text-foreground transition text-xs"
+                  >
+                    <ImageIcon size={14} />
+                    Pick background image
+                  </button>
+                )}
+                <MediaPickerModal
+                  open={isHeroBgPickerOpen}
+                  onClose={() => setIsHeroBgPickerOpen(false)}
+                  onSelect={(url) => setHeroBgImage(url)}
+                />
+              </div>
             </div>
 
             {/* SEO Accordion */}

@@ -13,6 +13,8 @@ const createPostSchema = z.object({
   seoDesc: z.string().optional(),
   coverImage: z.string().optional(),
   ogImage: z.string().optional(),
+  heroBgColor: z.string().optional(),
+  heroBgImage: z.string().optional(),
   categoryIds: z.array(z.string()).optional(),
   tagIds: z.array(z.string()).optional(),
   publishedAt: z.string().optional().nullable(),
