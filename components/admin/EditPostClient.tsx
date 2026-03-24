@@ -22,6 +22,13 @@ function toDatetimeLocalString(date: string | null | undefined): string {
   return d.toISOString().slice(0, 16);
 }
 
+function expandHexColor(color: string): string {
+  if (/^#[0-9a-fA-F]{3}$/.test(color)) {
+    return "#" + color[1] + color[1] + color[2] + color[2] + color[3] + color[3];
+  }
+  return color;
+}
+
 export default function EditPostClient() {
   const router = useRouter();
   const params = useParams();
@@ -93,7 +100,7 @@ export default function EditPostClient() {
         setSelectedCategoryIds((post.categories ?? []).map((c: any) => c.id));
         setSelectedTagIds((post.tags ?? []).map((t: any) => t.id));
         setPublishedAt(toDatetimeLocalString(post.publishedAt));
-        setHeroBgColor(post.heroBgColor || "#ffffff");
+        setHeroBgColor(expandHexColor(post.heroBgColor || "#ffffff"));
         setHeroBgImage(post.heroBgImage || "");
 
         if (catRes.ok) setCategories(await catRes.json());
@@ -128,8 +135,8 @@ export default function EditPostClient() {
           seoTitle,
           seoDesc,
           ogImage,
-          heroBgColor: heroBgColor && heroBgColor !== "#ffffff" ? heroBgColor : undefined,
-          heroBgImage: heroBgImage || undefined,
+          heroBgColor: heroBgColor,
+          heroBgImage: heroBgImage,
           categoryIds: selectedCategoryIds,
           tagIds: selectedTagIds,
           publishedAt: finalStatus === "PUBLISHED"
@@ -397,6 +404,7 @@ export default function EditPostClient() {
                           type="text"
                           value={heroBgColor}
                           onChange={(e) => setHeroBgColor(e.target.value)}
+                          onBlur={(e) => setHeroBgColor(expandHexColor(e.target.value))}
                           placeholder="#ffffff"
                           maxLength={9}
                           className="text-xs font-mono flex-1 bg-transparent border border-border/70 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary/50 text-foreground"

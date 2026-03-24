@@ -1,6 +1,13 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+
+function expandHexColor(color: string): string {
+  if (/^#[0-9a-fA-F]{3}$/.test(color)) {
+    return "#" + color[1] + color[1] + color[2] + color[2] + color[3] + color[3];
+  }
+  return color;
+}
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import BlockEditor from "@/components/admin/editor/BlockEditor";
@@ -74,8 +81,8 @@ export default function NewPostClient() {
           seoTitle,
           seoDesc,
           ogImage,
-          heroBgColor: heroBgColor && heroBgColor !== "#ffffff" ? heroBgColor : undefined,
-          heroBgImage: heroBgImage || undefined,
+          heroBgColor: heroBgColor,
+          heroBgImage: heroBgImage,
           categoryIds: selectedCategoryIds,
           tagIds: selectedTagIds,
           publishedAt: finalStatus === "PUBLISHED"
@@ -271,6 +278,7 @@ export default function NewPostClient() {
                           type="text"
                           value={heroBgColor}
                           onChange={(e) => setHeroBgColor(e.target.value)}
+                          onBlur={(e) => setHeroBgColor(expandHexColor(e.target.value))}
                           placeholder="#ffffff"
                           maxLength={9}
                           className="text-xs font-mono flex-1 bg-transparent border border-border/70 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary/50 text-foreground"
