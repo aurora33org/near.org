@@ -11,7 +11,7 @@ interface SidebarProfileMenuProps {
   role: string;
 }
 
-export function SidebarProfileMenu({ userName, userEmail, role }: SidebarProfileMenuProps) {
+export function SidebarProfileMenu({ userName, role }: SidebarProfileMenuProps) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
