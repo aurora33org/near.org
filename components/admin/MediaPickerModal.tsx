@@ -267,12 +267,12 @@ export default function MediaPickerModal({
                 <p className="text-sm text-muted-foreground">
                   Large images slow down page load. Consider compressing it first at{" "}
                   <a
-                    href="https://squoosh.app"
+                    href="https://croma.aurora33.live"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-primary underline"
                   >
-                    squoosh.app
+                    croma.aurora33.live
                   </a>
                   .
                 </p>
