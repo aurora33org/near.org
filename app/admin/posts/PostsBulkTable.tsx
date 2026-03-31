@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PostDeleteButton } from "@/components/admin/PostDeleteButton";
@@ -28,6 +29,9 @@ export function PostsBulkTable({ posts, userRole }: PostsBulkTableProps) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isPending, startTransition] = useTransition();
   const [bulkError, setBulkError] = useState("");
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteStep, setDeleteStep] = useState<1 | 2>(1);
+  const [deleteConfirmInput, setDeleteConfirmInput] = useState("");
 
   const allSelected = posts.length > 0 && posts.every((p) => selectedIds.has(p.id));
   const someSelected = selectedIds.size > 0;
@@ -49,6 +53,18 @@ export function PostsBulkTable({ posts, userRole }: PostsBulkTableProps) {
     });
   }
 
+  function openBulkDeleteModal() {
+    setDeleteStep(1);
+    setDeleteConfirmInput("");
+    setShowDeleteModal(true);
+  }
+
+  function closeBulkDeleteModal() {
+    setShowDeleteModal(false);
+    setDeleteStep(1);
+    setDeleteConfirmInput("");
+  }
+
   async function handleBulkAction(action: "publish" | "archive" | "delete") {
     setBulkError("");
     const res = await fetch("/api/posts/bulk", {
@@ -63,6 +79,11 @@ export function PostsBulkTable({ posts, userRole }: PostsBulkTableProps) {
     }
     setSelectedIds(new Set());
     startTransition(() => router.refresh());
+  }
+
+  async function confirmBulkDelete() {
+    closeBulkDeleteModal();
+    await handleBulkAction("delete");
   }
 
   return (
@@ -176,9 +197,126 @@ export function PostsBulkTable({ posts, userRole }: PostsBulkTableProps) {
             <Button variant="outline" size="sm" disabled={isPending} onClick={() => handleBulkAction("archive")}>
               Archive
             </Button>
-            <Button variant="destructive" size="sm" disabled={isPending} onClick={() => handleBulkAction("delete")}>
+            <Button variant="destructive" size="sm" disabled={isPending} onClick={openBulkDeleteModal}>
               Delete
             </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk delete confirmation modal */}
+      {showDeleteModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+          onClick={closeBulkDeleteModal}
+        >
+          <div
+            className="bg-background border border-border rounded-2xl shadow-xl w-full max-w-md mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-destructive" />
+                <h2 className="text-base font-semibold">
+                  {deleteStep === 1
+                    ? `Delete ${selectedIds.size} ${selectedIds.size === 1 ? "post" : "posts"}?`
+                    : "Confirm permanent deletion"}
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={closeBulkDeleteModal}
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition text-xl leading-none"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="px-6 py-5 space-y-5 text-left">
+              {deleteStep === 1 ? (
+                <>
+                  <p className="text-sm font-medium text-foreground">
+                    {selectedIds.size} {selectedIds.size === 1 ? "post" : "posts"} selected
+                  </p>
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground">
+                      Before continuing, understand what this action involves:
+                    </p>
+                    <ul className="space-y-2 text-sm">
+                      <li className="flex gap-2">
+                        <span className="text-destructive mt-0.5 shrink-0">•</span>
+                        <span>All selected posts will be <strong>permanently deleted</strong> from the database — there is no recovery or undo.</span>
+                      </li>
+                      <li className="flex gap-2">
+                        <span className="text-destructive mt-0.5 shrink-0">•</span>
+                        <span>Their public URLs <code className="text-xs bg-muted px-1 py-0.5 rounded">/blog/[slug]</code> will immediately return 404.</span>
+                      </li>
+                      <li className="flex gap-2">
+                        <span className="text-destructive mt-0.5 shrink-0">•</span>
+                        <span>All content, metadata, SEO fields, and OG image references will be lost.</span>
+                      </li>
+                      <li className="flex gap-2">
+                        <span className="text-destructive mt-0.5 shrink-0">•</span>
+                        <span>Any external links or bookmarks pointing to these posts will break permanently.</span>
+                      </li>
+                    </ul>
+                  </div>
+                  <div className="flex gap-3 pt-1">
+                    <button
+                      type="button"
+                      onClick={closeBulkDeleteModal}
+                      className="flex-1 text-sm px-4 py-2 rounded-lg border border-border hover:bg-muted transition"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDeleteStep(2)}
+                      className="flex-1 inline-flex items-center justify-center gap-2 text-sm px-4 py-2 rounded-lg bg-destructive text-destructive-foreground hover:bg-destructive/90 transition"
+                    >
+                      <AlertTriangle className="w-4 h-4" />
+                      Continue →
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm text-muted-foreground">
+                    This is your final confirmation. Type{" "}
+                    <code className="text-xs bg-muted px-1 py-0.5 rounded font-semibold text-foreground">delete</code>{" "}
+                    to unlock the delete button. Pasting is not allowed.
+                  </p>
+                  <input
+                    type="text"
+                    value={deleteConfirmInput}
+                    onChange={(e) => setDeleteConfirmInput(e.target.value)}
+                    onPaste={(e) => e.preventDefault()}
+                    onCopy={(e) => e.preventDefault()}
+                    onCut={(e) => e.preventDefault()}
+                    placeholder='Type "delete" here…'
+                    className="w-full text-sm border border-border rounded-lg px-3 py-2 bg-background focus:outline-none focus:ring-1 focus:ring-destructive"
+                    autoFocus
+                  />
+                  <div className="flex gap-3 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => { setDeleteStep(1); setDeleteConfirmInput(""); }}
+                      className="flex-1 text-sm px-4 py-2 rounded-lg border border-border hover:bg-muted transition"
+                    >
+                      ← Back
+                    </button>
+                    <button
+                      type="button"
+                      disabled={deleteConfirmInput !== "delete" || isPending}
+                      onClick={confirmBulkDelete}
+                      className="flex-1 text-sm px-4 py-2 rounded-lg bg-destructive text-destructive-foreground hover:bg-destructive/90 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      {isPending ? "Deleting…" : "Delete permanently"}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
       )}
