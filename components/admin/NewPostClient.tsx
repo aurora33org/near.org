@@ -8,6 +8,15 @@ function expandHexColor(color: string): string {
   }
   return color;
 }
+
+function titleToSlug(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "")
+    .replace(/-+/g, "-")      // collapse multiple dashes
+    .replace(/^-+|-+$/g, ""); // trim leading/trailing dashes
+}
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import BlockEditor from "@/components/admin/editor/BlockEditor";
@@ -63,7 +72,7 @@ export default function NewPostClient() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title,
-          slug: slug || title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""),
+          slug: slug || titleToSlug(title),
           excerpt,
           content,
           status: finalStatus,
@@ -97,7 +106,7 @@ export default function NewPostClient() {
     }
   }
 
-  const displaySlug = slug || title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+  const displaySlug = slug || titleToSlug(title);
 
   return (
     <div className="-m-8 flex flex-col h-screen bg-background">
