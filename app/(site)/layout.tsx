@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import PillNavClient from "@/components/site/PillNavClient";
+import PageTransition from "@/components/site/PageTransition";
 
 export const metadata: Metadata = {
   alternates: {
@@ -47,7 +48,9 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
       </div>
 
       {/* Main content */}
-      <main className="flex-1">{children}</main>
+      <main className="flex-1">
+        <PageTransition>{children}</PageTransition>
+      </main>
 
       {/* Footer */}
       <footer className="border-t border-black/8 bg-gray-50">
