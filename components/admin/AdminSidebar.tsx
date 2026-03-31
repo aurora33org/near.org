@@ -70,30 +70,36 @@ export function AdminSidebar({ children, role, userName }: AdminSidebarProps) {
   return (
     <div className="admin-wrapper dark flex h-screen bg-background text-foreground">
       <aside
-        className={`relative ${
+        className={`${
           collapsed ? "w-16" : "w-64"
         } bg-card border-r border-border flex flex-col transition-all duration-200 shrink-0`}
       >
-        {/* Header — logo only */}
-        <div className="flex items-center justify-center px-4 border-b border-border h-[73px]">
-          <img
-            src={collapsed ? "/icon.svg" : "/logo.svg"}
-            alt="NEAR"
-            className="h-7 w-auto"
-          />
-        </div>
-
-        {/* Floating collapse toggle on right edge */}
-        <button
-          onClick={() => setCollapsed((v) => !v)}
-          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          className="absolute top-1/2 -right-3 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-foreground shadow-sm transition"
-        >
-          {collapsed
-            ? <ChevronRight className="w-3 h-3" />
-            : <ChevronLeft className="w-3 h-3" />
-          }
-        </button>
+        {/* Header */}
+        {collapsed ? (
+          /* Collapsed: icon centered, toggle below */
+          <div className="flex flex-col items-center border-b border-border py-3 gap-2">
+            <img src="/icon.svg" alt="NEAR" className="h-7 w-auto" />
+            <button
+              onClick={() => setCollapsed((v) => !v)}
+              title="Expand sidebar"
+              className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 transition"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        ) : (
+          /* Expanded: logo + toggle in same row */
+          <div className="flex items-center justify-between px-6 border-b border-border h-[73px]">
+            <img src="/logo.svg" alt="NEAR CMS" className="h-7 w-auto" />
+            <button
+              onClick={() => setCollapsed((v) => !v)}
+              title="Collapse sidebar"
+              className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 transition"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+          </div>
+        )}
 
         {/* Nav */}
         <nav className={`flex-1 py-4 space-y-1 ${collapsed ? "px-2" : "px-4"}`}>
