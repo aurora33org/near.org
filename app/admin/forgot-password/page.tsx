@@ -35,7 +35,7 @@ export default function ForgotPasswordPage() {
             <p className="text-gray-600 text-sm">
               If an account exists for <strong>{email}</strong>, we sent a reset link. Check your inbox.
             </p>
-            <Link href="/admin/login" className="text-sm text-blue-600 hover:underline">
+            <Link href="/admin/login" className="text-sm text-primary hover:underline">
               Back to login
             </Link>
           </div>

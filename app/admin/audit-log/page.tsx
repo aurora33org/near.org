@@ -62,7 +62,7 @@ export default async function AuditLogPage({
   const actionBadgeVariant = (action: string) => {
     if (action === "CREATE") return "bg-green-500/10 text-green-600 border-green-300";
     if (action === "DELETE") return "bg-destructive/10 text-destructive border-destructive/30";
-    return "bg-blue-500/10 text-blue-600 border-blue-300";
+    return "bg-primary/10 text-primary border-primary/30";
   };
 
   return (

@@ -7,7 +7,7 @@ export default function PagesPage() {
         <h1 className="text-4xl font-bold">Pages</h1>
         <Link
           href="/admin/pages/new"
-          className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
+          className="bg-primary text-primary-foreground px-6 py-2 rounded-lg hover:bg-primary/90 transition"
         >
           + New Page
         </Link>
