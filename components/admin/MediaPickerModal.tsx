@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ImageIcon, Loader2, CheckCircle2, UploadCloud } from "lucide-react";
+import { ImageIcon, Loader2, CheckCircle2, UploadCloud, AlertTriangle } from "lucide-react";
 import { useAdminTheme } from "@/components/admin/ThemeProvider";
 
 interface MediaItem {
@@ -42,7 +42,10 @@ export default function MediaPickerModal({
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [oversizedFile, setOversizedFile] = useState<File | null>(null);
   const uploadInputRef = useRef<HTMLInputElement>(null);
+
+  const WEB_OPTIMAL_BYTES = 500 * 1024; // 500 KB
 
   const fetchMedia = useCallback(async (pageNum: number, reset = false) => {
     setIsLoading(true);
@@ -67,6 +70,7 @@ export default function MediaPickerModal({
   }, [open, fetchMedia]);
 
   async function handleUpload(file: File) {
+    setOversizedFile(null);
     setIsUploading(true);
     setUploadSuccess(false);
     try {
@@ -84,11 +88,19 @@ export default function MediaPickerModal({
     }
   }
 
+  function handleFileSelected(file: File) {
+    if (file.size > WEB_OPTIMAL_BYTES) {
+      setOversizedFile(file);
+    } else {
+      handleUpload(file);
+    }
+  }
+
   function handleDrop(e: React.DragEvent) {
     e.preventDefault();
     setIsDragging(false);
     const file = e.dataTransfer.files?.[0];
-    if (file && file.type.startsWith("image/")) handleUpload(file);
+    if (file && file.type.startsWith("image/")) handleFileSelected(file);
   }
 
   function handleSelect() {
@@ -103,7 +115,7 @@ export default function MediaPickerModal({
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="w-[70vw] max-w-[70vw] sm:max-w-[70vw] h-[80vh] flex flex-col p-0 gap-0 overflow-hidden">
-        <div className={`${theme === "dark" ? "dark" : ""} flex flex-col flex-1 overflow-hidden bg-background text-foreground rounded-[inherit]`}>
+        <div className={`${theme === "dark" ? "dark" : ""} relative flex flex-col flex-1 overflow-hidden bg-background text-foreground rounded-[inherit]`}>
           <DialogHeader className="px-6 pt-5 pb-4 border-b border-border flex-shrink-0">
             <DialogTitle>Insert Image</DialogTitle>
           </DialogHeader>
@@ -230,12 +242,61 @@ export default function MediaPickerModal({
                 className="hidden"
                 onChange={(e) => {
                   const file = e.target.files?.[0];
-                  if (file) handleUpload(file);
+                  if (file) handleFileSelected(file);
                   e.target.value = "";
                 }}
               />
             </div>
           </div>
+
+          {/* Oversized file warning */}
+          {oversizedFile && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/80 backdrop-blur-sm rounded-[inherit]">
+              <div className="bg-card border border-border rounded-2xl shadow-xl w-full max-w-sm mx-6 p-6 space-y-4">
+                <div className="flex items-center gap-2 text-amber-500">
+                  <AlertTriangle className="w-5 h-5 shrink-0" />
+                  <h3 className="font-semibold text-foreground">Image is too large</h3>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  <span className="font-medium text-foreground">{oversizedFile.name}</span> is{" "}
+                  <span className="font-medium text-foreground">
+                    {(oversizedFile.size / 1024).toFixed(0)} KB
+                  </span>{" "}
+                  — over the recommended 500 KB for web.
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Large images slow down page load. Consider compressing it first at{" "}
+                  <a
+                    href="https://croma.aurora33.live"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary underline"
+                  >
+                    croma.aurora33.live
+                  </a>
+                  .
+                </p>
+                <div className="flex gap-3 pt-1">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => setOversizedFile(null)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    className="flex-1"
+                    onClick={() => handleUpload(oversizedFile)}
+                  >
+                    Upload anyway
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* FOOTER */}
           <div className="flex justify-end gap-2 px-6 py-4 border-t border-border flex-shrink-0">

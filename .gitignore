@@ -34,4 +34,4 @@ Thumbs.db
 .vercel/
 
 # Prisma
-prisma/migrations/
+# prisma/migrations/ — migrations are version controlled intentionally

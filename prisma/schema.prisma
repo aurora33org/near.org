@@ -11,15 +11,16 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String   // bcrypt hash
-  name      String
-  role      Role     @default(EDITOR)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  posts     Post[]
-  pages     Page[]
+  id              String   @id @default(cuid())
+  email           String   @unique
+  password        String   // bcrypt hash
+  name            String
+  role            Role     @default(EDITOR)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  posts           Post[]   @relation("PostAuthor")
+  lastEditedPosts Post[]   @relation("PostLastEditor")
+  pages           Page[]
 }
 
 enum Role {
@@ -39,15 +40,20 @@ model Post {
   seoTitle    String?
   seoDesc     String?
   ogImage     String?
-  author      User      @relation(fields: [authorId], references: [id])
-  authorId    String
-  categories  Category[]
-  tags        Tag[]
+  author          User      @relation("PostAuthor", fields: [authorId], references: [id])
+  authorId        String
+  lastEditedBy    User?     @relation("PostLastEditor", fields: [lastEditedById], references: [id])
+  lastEditedById  String?
+  categories      Category[]
+  tags            Tag[]
   heroBgColor     String?            // CSS color for hero background, e.g. "#4ade80"
   heroBgImage     String?            // URL of hero background image
   publishedAt     DateTime?
   previewToken    String?   @unique  // null = sharing disabled; UUID generated on demand
   previewPassword String?            // plaintext; low-security gating only
+  lockedBy        String?            // userId of the user currently editing
+  lockedByEmail   String?            // display name/email of the current editor
+  lockedAt        DateTime?          // last heartbeat; lock expires after 90s
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 }

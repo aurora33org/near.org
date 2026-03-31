@@ -38,6 +38,8 @@ export default function EditPostClient() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [lockBlocked, setLockBlocked] = useState(false);
+  const [lockBlockedBy, setLockBlockedBy] = useState("");
   const [isCoverPickerOpen, setIsCoverPickerOpen] = useState(false);
   const [heroBgColor, setHeroBgColor] = useState("#ffffff");
   const [heroBgImage, setHeroBgImage] = useState("");
@@ -107,6 +109,44 @@ export default function EditPostClient() {
     fetchAll();
   }, [postId, router]);
 
+  // Acquire edit lock once post is loaded, keep alive with heartbeat
+  useEffect(() => {
+    if (isLoading) return;
+
+    let heartbeat: ReturnType<typeof setInterval>;
+
+    async function acquireLock() {
+      try {
+        const res = await fetch(`/api/posts/${postId}/lock`, { method: "POST" });
+        if (res.status === 409) {
+          const data = await res.json();
+          setLockBlocked(true);
+          setLockBlockedBy(data.lockedByEmail || "another user");
+          return;
+        }
+        // Acquired — start heartbeat every 30s
+        heartbeat = setInterval(() => {
+          fetch(`/api/posts/${postId}/lock`, { method: "POST" }).catch(() => {});
+        }, 30_000);
+      } catch {
+        // Network error — allow editing optimistically
+      }
+    }
+
+    acquireLock();
+
+    function releaseLock() {
+      clearInterval(heartbeat);
+      fetch(`/api/posts/${postId}/lock`, { method: "DELETE", keepalive: true }).catch(() => {});
+    }
+
+    window.addEventListener("beforeunload", releaseLock);
+    return () => {
+      window.removeEventListener("beforeunload", releaseLock);
+      releaseLock();
+    };
+  }, [postId, isLoading]);
+
   async function handleSubmit(statusOverride?: "DRAFT" | "PUBLISHED") {
     setIsSaving(true);
     const finalStatus = statusOverride || status;
@@ -149,6 +189,25 @@ export default function EditPostClient() {
     } finally {
       setIsSaving(false);
     }
+  }
+
+  if (lockBlocked) {
+    return (
+      <div className="-m-8 flex flex-col h-screen bg-background items-center justify-center gap-6">
+        <div className="max-w-md w-full mx-auto text-center space-y-4 p-8 bg-card border border-border rounded-2xl shadow-lg">
+          <div className="text-4xl">🔒</div>
+          <h2 className="text-xl font-bold">Post is being edited</h2>
+          <p className="text-muted-foreground text-sm">
+            <span className="font-medium text-foreground">{lockBlockedBy}</span> is currently editing this post.
+            You cannot edit it at the same time.
+          </p>
+          <p className="text-xs text-muted-foreground">The lock expires automatically after 90 seconds of inactivity.</p>
+          <Button asChild variant="outline">
+            <Link href="/admin/posts">← Back to Posts</Link>
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   if (isLoading) {

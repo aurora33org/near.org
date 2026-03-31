@@ -17,6 +17,8 @@ interface SerializedPost {
   publishedAt: string | null;
   createdAt: string;
   author: { name: string };
+  lastEditedBy: { name: string } | null;
+  lockedByEmail: string | null;
 }
 
 interface PostsBulkTableProps {
@@ -127,10 +129,22 @@ export function PostsBulkTable({ posts, userRole }: PostsBulkTableProps) {
                   </td>
                 )}
                 <td className="px-6 py-4">
-                  <p className="font-medium">{post.title}</p>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="font-medium">{post.title}</p>
+                    {post.lockedByEmail && (
+                      <span className="inline-flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-400/30 px-1.5 py-0.5 rounded-full">
+                        🔒 {post.lockedByEmail}
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs text-muted-foreground">{post.slug}</p>
                 </td>
-                <td className="px-6 py-4 text-sm">{post.author.name}</td>
+                <td className="px-6 py-4 text-sm">
+                  <p>{post.author.name}</p>
+                  {post.lastEditedBy && post.lastEditedBy.name !== post.author.name && (
+                    <p className="text-xs text-muted-foreground">edited by {post.lastEditedBy.name}</p>
+                  )}
+                </td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-2 flex-wrap">
                     <Badge

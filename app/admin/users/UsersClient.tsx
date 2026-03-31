@@ -4,13 +4,13 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-type Role = "ADMIN" | "EDITOR" | "VIEWER";
+type Role = "ADMIN" | "EDITOR"; // VIEWER exists in DB/backend but is not assignable from the UI
 
 interface User {
   id: string;
   name: string;
   email: string;
-  role: Role;
+  role: string; // string to accommodate any legacy VIEWER rows in DB
   createdAt: string;
 }
 
@@ -19,9 +19,9 @@ interface UsersClientProps {
   currentUserId: string;
 }
 
-const ROLES: Role[] = ["ADMIN", "EDITOR", "VIEWER"];
+const ROLES: Role[] = ["ADMIN", "EDITOR"]; // VIEWER intentionally excluded from UI
 
-const roleBadgeClass = (role: Role) => {
+const roleBadgeClass = (role: string) => {
   if (role === "ADMIN") return "bg-destructive/10 text-destructive border-destructive/30";
   if (role === "EDITOR") return "bg-primary/10 text-primary border-primary/30";
   return "bg-muted text-muted-foreground border-border";
@@ -44,7 +44,7 @@ export function UsersClient({ initialUsers, currentUserId }: UsersClientProps) {
   // Edit form state
   const [editName, setEditName] = useState("");
   const [editEmail, setEditEmail] = useState("");
-  const [editRole, setEditRole] = useState<Role>("EDITOR");
+  const [editRole, setEditRole] = useState<string>("EDITOR");
   const [editPassword, setEditPassword] = useState("");
 
   function openEdit(user: User) {
@@ -234,7 +234,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function RoleSelect({ value, onChange }: { value: Role; onChange: (r: Role) => void }) {
+function RoleSelect({ value, onChange }: { value: string; onChange: (r: Role) => void }) {
   return (
     <select
       value={value}
