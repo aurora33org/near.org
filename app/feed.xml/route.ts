@@ -7,12 +7,17 @@ export const revalidate = 60;
 const BASE_URL = "https://near.org";
 
 export async function GET() {
-  const posts = await prisma.post.findMany({
-    where: { status: "PUBLISHED", publishedAt: { lte: new Date() } },
-    orderBy: { publishedAt: "desc" },
-    take: 20,
-    include: { author: true },
-  });
+  let posts: any[] = [];
+  try {
+    posts = await prisma.post.findMany({
+      where: { status: "PUBLISHED", publishedAt: { lte: new Date() } },
+      orderBy: { publishedAt: "desc" },
+      take: 20,
+      include: { author: true },
+    });
+  } catch {
+    // DB not available — return empty feed
+  }
 
   const feed = new Feed({
     title: "NEAR Protocol Blog",

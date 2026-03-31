@@ -5,10 +5,15 @@ export const revalidate = 60;
 const BASE_URL = "https://near.org";
 
 export default async function sitemap() {
-  const posts = await prisma.post.findMany({
-    where: { status: "PUBLISHED" },
-    select: { slug: true, updatedAt: true },
-  });
+  let posts: { slug: string; updatedAt: Date }[] = [];
+  try {
+    posts = await prisma.post.findMany({
+      where: { status: "PUBLISHED" },
+      select: { slug: true, updatedAt: true },
+    });
+  } catch {
+    // DB not available at build time — return only static routes
+  }
 
   const staticRoutes = [
     "/",
