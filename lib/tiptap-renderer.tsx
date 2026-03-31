@@ -64,7 +64,7 @@ export function renderBlocks(nodes: TipTapNode[] | undefined): React.ReactNode {
 
       case "heading": {
         const level = node.attrs?.level ?? 2;
-        const Tag = `h${level}` as keyof React.JSX.IntrinsicElements;
+        const Tag = `h${level}` as "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
         const headingText = (node.content ?? []).map((c) => c.text ?? "").join("");
         const headingId = [2, 3].includes(level) ? slugifyHeading(headingText) : undefined;
         return (
