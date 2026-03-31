@@ -114,8 +114,8 @@ export default function MediaPickerModal({
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="w-[70vw] max-w-[70vw] sm:max-w-[70vw] h-[80vh] flex flex-col p-0 gap-0 overflow-hidden relative">
-        <div className={`${theme === "dark" ? "dark" : ""} flex flex-col flex-1 overflow-hidden bg-background text-foreground rounded-[inherit]`}>
+      <DialogContent className="w-[70vw] max-w-[70vw] sm:max-w-[70vw] h-[80vh] flex flex-col p-0 gap-0 overflow-hidden">
+        <div className={`${theme === "dark" ? "dark" : ""} relative flex flex-col flex-1 overflow-hidden bg-background text-foreground rounded-[inherit]`}>
           <DialogHeader className="px-6 pt-5 pb-4 border-b border-border flex-shrink-0">
             <DialogTitle>Insert Image</DialogTitle>
           </DialogHeader>
