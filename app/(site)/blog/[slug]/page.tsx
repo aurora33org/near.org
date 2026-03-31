@@ -69,7 +69,7 @@ export default async function BlogPost({
 
   const content = post.content as any;
   const headings = extractHeadings(content);
-  const showToc = headings.length >= 3;
+  const showToc = headings.length >= 2;
 
   // Related posts — same categories, fallback to latest
   const categoryIds = post.categories.map((c) => c.id);
@@ -120,24 +120,19 @@ export default async function BlogPost({
         </div>
       </div>
 
-      {/* CONTENT + TOC */}
-      <div className="max-w-6xl mx-auto px-4 py-12">
-        <div className={showToc ? "flex gap-16 items-start" : ""}>
-          {/* Main content */}
-          <div className={showToc ? "flex-1 min-w-0" : "max-w-3xl mx-auto w-full"}>
-            <div className="prose prose-lg max-w-none">
-              {renderBlocks(content?.content ?? [])}
-            </div>
-          </div>
-
-          {/* TOC — sticky sidebar, desktop only */}
-          {showToc && (
-            <aside className="hidden lg:block w-56 shrink-0 sticky top-24 self-start">
-              <TableOfContents headings={headings} />
-            </aside>
-          )}
+      {/* CONTENT */}
+      <div className="max-w-3xl mx-auto px-4 py-12">
+        <div className="prose prose-lg max-w-none">
+          {renderBlocks(content?.content ?? [])}
         </div>
       </div>
+
+      {/* TOC — floating, fixed position, wide desktop only */}
+      {showToc && (
+        <div className="hidden xl:block fixed right-8 top-24 w-52 z-40">
+          <TableOfContents headings={headings} />
+        </div>
+      )}
 
       {/* RELATED POSTS */}
       {related.length > 0 && (

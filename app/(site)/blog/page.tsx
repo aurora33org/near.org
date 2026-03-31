@@ -2,7 +2,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { extractExcerpt } from "@/lib/excerpt";
-import { readingTime } from "@/lib/readingTime";
 import { Metadata } from "next";
 
 export const revalidate = 60;
@@ -47,7 +46,7 @@ export default async function BlogIndex({
       orderBy: { publishedAt: "desc" },
       take: PAGE_SIZE,
       skip,
-      include: { author: true },
+      select: { id: true, slug: true, title: true, coverImage: true, publishedAt: true, excerpt: true, content: true },
     }),
     prisma.post.count({ where: publishedWhere }),
   ]);
@@ -62,55 +61,64 @@ export default async function BlogIndex({
         <p className="text-gray-600">No posts yet.</p>
       ) : (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {posts.map((post) => (
-              <article
-                key={post.id}
-                className="flex flex-col rounded-xl overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow"
-              >
-                <Link href={`/blog/${post.slug}`} className="block">
-                  {post.coverImage ? (
-                    <div className="relative aspect-video w-full bg-gray-100">
-                      <Image
-                        src={post.coverImage}
-                        alt={post.title}
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                      />
-                    </div>
-                  ) : (
-                    <div className="aspect-video w-full bg-gray-100 flex items-center justify-center">
-                      <span className="text-gray-300 text-4xl">✦</span>
-                    </div>
-                  )}
-                </Link>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {posts.map((post) => {
+              const excerpt = post.excerpt || extractExcerpt(post.content);
+              const date = new Date(post.publishedAt!).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              });
+              return (
+                <article
+                  key={post.id}
+                  className="group flex flex-col rounded-2xl overflow-hidden border border-gray-200 bg-white hover:shadow-xl transition-shadow duration-300"
+                >
+                  <Link href={`/blog/${post.slug}`} className="block overflow-hidden">
+                    {post.coverImage ? (
+                      <div className="relative aspect-[16/9] w-full bg-gray-100">
+                        <Image
+                          src={post.coverImage}
+                          alt={post.title}
+                          fill
+                          className="object-cover transition-transform duration-500 group-hover:scale-105"
+                          sizes="(max-width: 640px) 100vw, 50vw"
+                        />
+                      </div>
+                    ) : (
+                      <div className="aspect-[16/9] w-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                        <span className="text-gray-300 text-5xl">✦</span>
+                      </div>
+                    )}
+                  </Link>
 
-                <div className="flex flex-col flex-1 p-5">
-                  <p className="text-sm text-gray-500 mb-2">
-                    {new Date(post.publishedAt!).toLocaleDateString()} ·{" "}
-                    {post.author.name} · {readingTime(post.content)}
-                  </p>
-                  <Link href={`/blog/${post.slug}`}>
-                    <h2 className="text-lg font-bold leading-snug hover:text-gray-600 mb-2">
-                      {post.title}
-                    </h2>
-                  </Link>
-                  {(() => {
-                    const text = post.excerpt || extractExcerpt(post.content);
-                    return text ? (
-                      <p className="text-gray-600 text-sm line-clamp-3 flex-1">{text}</p>
-                    ) : null;
-                  })()}
-                  <Link
-                    href={`/blog/${post.slug}`}
-                    className="mt-4 text-sm text-blue-600 hover:underline font-medium"
-                  >
-                    Read more →
-                  </Link>
-                </div>
-              </article>
-            ))}
+                  <div className="flex flex-col flex-1 p-6">
+                    <Link href={`/blog/${post.slug}`}>
+                      <h2 className="text-xl font-bold leading-snug text-gray-900 group-hover:text-gray-600 transition-colors mb-3">
+                        {post.title}
+                      </h2>
+                    </Link>
+                    {excerpt && (
+                      <p className="text-gray-500 text-sm leading-relaxed line-clamp-2 flex-1">
+                        {excerpt}
+                      </p>
+                    )}
+                    <div className="flex items-center justify-between mt-5 pt-4 border-t border-gray-100">
+                      <span className="text-xs text-gray-400 font-medium">{date}</span>
+                      <Link
+                        href={`/blog/${post.slug}`}
+                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-gray-900 hover:bg-gray-700 transition-colors px-3 py-1.5 rounded-full"
+                      >
+                        Read more
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                          <path d="M2.5 6h7M6.5 3l3 3-3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </Link>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
           </div>
 
           {totalPages > 1 && (
