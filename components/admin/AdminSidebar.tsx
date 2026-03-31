@@ -15,6 +15,15 @@ interface AdminSidebarProps {
 export function AdminSidebar({ children, role, userName }: AdminSidebarProps) {
   const pathname = usePathname();
 
+  const isAuthPage =
+    pathname === "/admin/login" ||
+    pathname === "/admin/forgot-password" ||
+    pathname.startsWith("/admin/reset-password/");
+
+  if (isAuthPage) {
+    return <>{children}</>;
+  }
+
   const navLink = (href: string, label: string, exact = false) => {
     const active = exact ? pathname === href : pathname.startsWith(href);
     return (
