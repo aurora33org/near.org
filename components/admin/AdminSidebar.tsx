@@ -3,8 +3,8 @@
 import { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { signOut } from "next-auth/react";
 import { ThemeToggle } from "@/components/admin/ThemeToggle";
+import { SidebarProfileMenu } from "@/components/admin/SidebarProfileMenu";
 
 interface AdminSidebarProps {
   children: ReactNode;
@@ -15,7 +15,12 @@ interface AdminSidebarProps {
 export function AdminSidebar({ children, role, userName }: AdminSidebarProps) {
   const pathname = usePathname();
 
-  if (pathname === "/admin/login") {
+  const isAuthPage =
+    pathname === "/admin/login" ||
+    pathname === "/admin/forgot-password" ||
+    pathname.startsWith("/admin/reset-password/");
+
+  if (isAuthPage) {
     return <>{children}</>;
   }
 
@@ -49,19 +54,13 @@ export function AdminSidebar({ children, role, userName }: AdminSidebarProps) {
           {navLink("/admin/media", "Media Library", true)}
           {navLink("/admin/categories", "Categories & Tags", true)}
           {role === "ADMIN" && navLink("/admin/users", "Users", true)}
+          {role === "ADMIN" && navLink("/admin/audit-log", "Audit Log", true)}
+          {navLink("/admin/settings", "Settings", true)}
         </nav>
 
-        <div className="p-6 space-y-3 border-t border-border">
-          {userName && (
-            <p className="text-xs text-muted-foreground truncate">{userName}</p>
-          )}
+        <div className="p-4 space-y-3 border-t border-border">
           <ThemeToggle />
-          <button
-            onClick={() => signOut({ callbackUrl: "/admin/login" })}
-            className="w-full px-4 py-2 bg-destructive hover:bg-destructive/90 rounded-lg transition text-sm text-destructive-foreground"
-          >
-            Sign Out
-          </button>
+          <SidebarProfileMenu userName={userName} role={role} />
         </div>
       </aside>
 

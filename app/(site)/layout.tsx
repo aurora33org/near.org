@@ -1,4 +1,13 @@
 import Link from "next/link";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  alternates: {
+    types: {
+      "application/rss+xml": "https://near.org/feed.xml",
+    },
+  },
+};
 
 export default function SiteLayout({
   children,

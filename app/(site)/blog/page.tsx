@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { prisma } from "@/lib/prisma";
+import { extractExcerpt } from "@/lib/excerpt";
 import { Metadata } from "next";
 
 export const revalidate = 60;
@@ -10,6 +11,15 @@ export const metadata: Metadata = {
   description:
     "Latest news, updates, and insights from the NEAR Protocol ecosystem.",
   openGraph: {
+    type: "website",
+    url: "https://near.org/blog",
+    siteName: "NEAR Protocol",
+    title: "Blog — NEAR Protocol",
+    description:
+      "Latest news, updates, and insights from the NEAR Protocol ecosystem.",
+  },
+  twitter: {
+    card: "summary_large_image",
     title: "Blog — NEAR Protocol",
     description:
       "Latest news, updates, and insights from the NEAR Protocol ecosystem.",
@@ -27,15 +37,18 @@ export default async function BlogIndex({
   const page = Math.max(1, Number(pageParam ?? 1));
   const skip = (page - 1) * PAGE_SIZE;
 
+  const now = new Date();
+  const publishedWhere = { status: "PUBLISHED" as const, publishedAt: { lte: now } };
+
   const [posts, total] = await Promise.all([
     prisma.post.findMany({
-      where: { status: "PUBLISHED" },
+      where: publishedWhere,
       orderBy: { publishedAt: "desc" },
       take: PAGE_SIZE,
       skip,
       include: { author: true },
     }),
-    prisma.post.count({ where: { status: "PUBLISHED" } }),
+    prisma.post.count({ where: publishedWhere }),
   ]);
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
@@ -82,11 +95,12 @@ export default async function BlogIndex({
                       {post.title}
                     </h2>
                   </Link>
-                  {post.excerpt && (
-                    <p className="text-gray-600 text-sm line-clamp-3 flex-1">
-                      {post.excerpt}
-                    </p>
-                  )}
+                  {(() => {
+                    const text = post.excerpt || extractExcerpt(post.content);
+                    return text ? (
+                      <p className="text-gray-600 text-sm line-clamp-3 flex-1">{text}</p>
+                    ) : null;
+                  })()}
                   <Link
                     href={`/blog/${post.slug}`}
                     className="mt-4 text-sm text-blue-600 hover:underline font-medium"

@@ -43,9 +43,13 @@ model Post {
   authorId    String
   categories  Category[]
   tags        Tag[]
-  publishedAt DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  heroBgColor     String?            // CSS color for hero background, e.g. "#4ade80"
+  heroBgImage     String?            // URL of hero background image
+  publishedAt     DateTime?
+  previewToken    String?   @unique  // null = sharing disabled; UUID generated on demand
+  previewPassword String?            // plaintext; low-security gating only
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 }
 
 model Page {
@@ -91,4 +95,23 @@ model Tag {
   name  String @unique
   slug  String @unique
   posts Post[]
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  email     String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String
+  userEmail   String
+  action      String   // "CREATE" | "UPDATE" | "DELETE"
+  entityType  String   // "POST" | "MEDIA"
+  entityId    String
+  entityTitle String
+  createdAt   DateTime @default(now())
 }

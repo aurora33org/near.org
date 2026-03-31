@@ -1,11 +1,14 @@
 import { Feed } from "feed";
 import { prisma } from "@/lib/prisma";
+import { extractExcerpt } from "@/lib/excerpt";
+
+export const revalidate = 60;
 
 const BASE_URL = "https://near.org";
 
 export async function GET() {
   const posts = await prisma.post.findMany({
-    where: { status: "PUBLISHED" },
+    where: { status: "PUBLISHED", publishedAt: { lte: new Date() } },
     orderBy: { publishedAt: "desc" },
     take: 20,
     include: { author: true },
@@ -26,7 +29,7 @@ export async function GET() {
       title: post.title,
       id: `${BASE_URL}/blog/${post.slug}`,
       link: `${BASE_URL}/blog/${post.slug}`,
-      description: post.excerpt ?? "",
+      description: post.excerpt || extractExcerpt(post.content, 300),
       date: post.publishedAt ?? post.createdAt,
       author: [{ name: post.author.name ?? post.author.email }],
       image: post.coverImage ?? undefined,

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Image, AlertTriangle } from "lucide-react";
+import { Image, AlertTriangle, Search } from "lucide-react";
 
 interface MediaItem {
   id: string;
@@ -29,10 +29,15 @@ export default function MediaPage() {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [oversizedFiles, setOversizedFiles] = useState<File[]>([]);
+  const [search, setSearch] = useState("");
+  const [typeFilter, setTypeFilter] = useState("all");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  async function fetchMedia(p: number, append = false) {
-    const res = await fetch(`/api/media?page=${p}`);
+  async function fetchMedia(p: number, append = false, q = "", type = "all") {
+    const params = new URLSearchParams({ page: String(p) });
+    if (q) params.set("q", q);
+    if (type !== "all") params.set("type", type);
+    const res = await fetch(`/api/media?${params}`);
     if (!res.ok) return;
     const data = await res.json();
     setItems((prev) => (append ? [...prev, ...data.items] : data.items));
@@ -41,8 +46,13 @@ export default function MediaPage() {
   }
 
   useEffect(() => {
-    fetchMedia(1).finally(() => setIsLoading(false));
-  }, []);
+    setIsLoading(true);
+    setItems([]);
+    const timer = setTimeout(() => {
+      fetchMedia(1, false, search, typeFilter).finally(() => setIsLoading(false));
+    }, search ? 300 : 0);
+    return () => clearTimeout(timer);
+  }, [search, typeFilter]);
 
   function closeUploadModal() {
     setShowUploadModal(false);
@@ -137,6 +147,35 @@ export default function MediaPage() {
         </Button>
       </div>
 
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by filename…"
+            className="w-full pl-9 pr-3 py-2 text-sm border border-border rounded-lg bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+          />
+        </div>
+        <div className="flex gap-1 p-1 bg-muted rounded-lg">
+          {(["all", "image", "other"] as const).map((t) => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => setTypeFilter(t)}
+              className={`px-3 py-1 text-sm rounded-md transition ${
+                typeFilter === t
+                  ? "bg-background shadow text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {t === "all" ? "All" : t === "image" ? "Images" : "Other"}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {isLoading ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
           {Array.from({ length: 8 }).map((_, i) => (
@@ -144,6 +183,12 @@ export default function MediaPage() {
           ))}
         </div>
       ) : items.length === 0 ? (
+        search || typeFilter !== "all" ? (
+          <div className="w-full border border-border rounded-lg py-24 flex flex-col items-center gap-3 text-muted-foreground">
+            <Search className="w-10 h-10 opacity-30" />
+            <span className="text-sm">No results for your search.</span>
+          </div>
+        ) : (
         <button
           type="button"
           onClick={() => setShowUploadModal(true)}
@@ -152,6 +197,7 @@ export default function MediaPage() {
           <Image className="w-10 h-10 opacity-40" />
           <span className="text-sm">No media yet. Click to upload your first image.</span>
         </button>
+        )
       ) : (
         <>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
@@ -190,7 +236,7 @@ export default function MediaPage() {
             <div className="text-center">
               <Button
                 variant="outline"
-                onClick={() => fetchMedia(page + 1, true)}
+                onClick={() => fetchMedia(page + 1, true, search, typeFilter)}
               >
                 Load More
               </Button>

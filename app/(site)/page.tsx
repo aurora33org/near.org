@@ -1,4 +1,18 @@
 import Image from "next/image";
+import { Metadata } from "next";
+
+export function generateMetadata(): Metadata {
+  return {
+    title: "NEAR Protocol – The Blockchain Operating System",
+    description: "Turn Sensitive Data into Safe Intelligence. Unlock inference for sensitive data with privacy you can verify and models you control.",
+    openGraph: {
+      title: "NEAR Protocol – The Blockchain Operating System",
+      description: "Turn Sensitive Data into Safe Intelligence. Unlock inference for sensitive data with privacy you can verify and models you control.",
+      type: "website",
+    },
+    twitter: { card: "summary_large_image" },
+  };
+}
 
 export default function Home() {
   return (

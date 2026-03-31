@@ -1,0 +1,471 @@
+"use client";
+
+import { useState, useRef, useEffect } from "react";
+
+function expandHexColor(color: string): string {
+  if (/^#[0-9a-fA-F]{3}$/.test(color)) {
+    return "#" + color[1] + color[1] + color[2] + color[2] + color[3] + color[3];
+  }
+  return color;
+}
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import BlockEditor from "@/components/admin/editor/BlockEditor";
+import MediaPickerModal from "@/components/admin/MediaPickerModal";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { ArrowLeft, ImageIcon, X } from "lucide-react";
+import { toast } from "sonner";
+
+export default function NewPostClient() {
+  const router = useRouter();
+  const titleInputRef = useRef<HTMLDivElement>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [title, setTitle] = useState("");
+  const [slug, setSlug] = useState("");
+  const [excerpt, setExcerpt] = useState("");
+  const [content, setContent] = useState<any>({ type: "doc", content: [{ type: "paragraph" }] });
+  const [status, setStatus] = useState<"DRAFT" | "PUBLISHED">("DRAFT");
+  const [coverImage, setCoverImage] = useState("");
+  const [seoTitle, setSeoTitle] = useState("");
+  const [seoDesc, setSeoDesc] = useState("");
+  const [ogImage, setOgImage] = useState("");
+  const [activeTab, setActiveTab] = useState<"post" | "seo" | "settings">("post");
+  const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
+  const [tags, setTags] = useState<{ id: string; name: string }[]>([]);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+  const [publishedAt, setPublishedAt] = useState("");
+  const [isCoverPickerOpen, setIsCoverPickerOpen] = useState(false);
+  const [heroBgColor, setHeroBgColor] = useState("#ffffff");
+  const [heroBgImage, setHeroBgImage] = useState("");
+  const [isHeroBgPickerOpen, setIsHeroBgPickerOpen] = useState(false);
+
+  useEffect(() => {
+    Promise.all([fetch("/api/categories"), fetch("/api/tags")]).then(
+      async ([catRes, tagRes]) => {
+        if (catRes.ok) setCategories(await catRes.json());
+        if (tagRes.ok) setTags(await tagRes.json());
+      }
+    );
+  }, []);
+
+
+  async function handleSubmit(statusOverride?: "DRAFT" | "PUBLISHED") {
+    setIsLoading(true);
+    const finalStatus = statusOverride || status;
+
+    try {
+      const response = await fetch("/api/posts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          slug: slug || title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""),
+          excerpt,
+          content,
+          status: finalStatus,
+          coverImage,
+          seoTitle,
+          seoDesc,
+          ogImage,
+          heroBgColor: heroBgColor,
+          heroBgImage: heroBgImage,
+          categoryIds: selectedCategoryIds,
+          tagIds: selectedTagIds,
+          publishedAt: finalStatus === "PUBLISHED"
+            ? (publishedAt ? new Date(publishedAt).toISOString() : new Date().toISOString())
+            : (publishedAt ? new Date(publishedAt).toISOString() : undefined),
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        toast.error(error.error || error.message || "Failed to create post");
+        return;
+      }
+
+      const post = await response.json();
+      router.push(`/admin/posts/${post.id}/edit`);
+    } catch (err) {
+      console.error(err);
+      toast.error("Error creating post");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  const displaySlug = slug || title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+
+  return (
+    <div className="-m-8 flex flex-col h-screen bg-background">
+      {/* STICKY HEADER */}
+      <div className="sticky top-0 z-20 border-b border-border bg-card shadow-sm">
+        <div className="flex items-center justify-between h-[53px] px-6">
+          <div className="flex items-center gap-3 min-w-0">
+            <Link
+              href="/admin/posts"
+              className="text-muted-foreground hover:text-foreground transition flex-shrink-0"
+              title="Back to Posts"
+            >
+              <ArrowLeft size={20} />
+            </Link>
+            <span className="text-sm text-muted-foreground">Posts</span>
+            <span className="text-sm text-muted-foreground/50">/</span>
+            <span className="text-sm font-medium text-foreground truncate">
+              {title || "New Post"}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3 ml-4">
+            <Button
+              type="button"
+              onClick={() => handleSubmit("DRAFT")}
+              disabled={isLoading || !title}
+              variant="outline"
+              size="sm"
+            >
+              Save Draft
+            </Button>
+            <Button
+              type="button"
+              onClick={() => handleSubmit("PUBLISHED")}
+              disabled={isLoading || !title}
+              size="sm"
+            >
+              Publish
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* MAIN LAYOUT */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* LEFT PANEL - Editor */}
+        <div className="flex-1 flex flex-col overflow-auto bg-background">
+          <div className="p-6 space-y-4 max-w-4xl mx-auto w-full">
+            {/* Title */}
+            <div
+              ref={titleInputRef}
+              contentEditable
+              suppressContentEditableWarning
+              onInput={(e) => setTitle(e.currentTarget.textContent ?? "")}
+              data-placeholder="Post title..."
+              className="w-full text-3xl font-bold bg-transparent text-foreground focus:outline-none outline-none break-words empty:before:content-[attr(data-placeholder)] empty:before:text-muted-foreground empty:before:pointer-events-none"
+            />
+            <hr className="border-border" />
+
+            {/* Slug preview */}
+            <div className="text-sm text-muted-foreground font-mono">
+              /blog/{displaySlug}
+            </div>
+
+            {/* Editor */}
+            <div className="mt-6">
+              <BlockEditor content={content} onChange={setContent} />
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT PANEL - Metadata (Sticky) */}
+        <aside className="w-[380px] min-[1480px]:w-[28rem] shrink-0 border-l border-border bg-card flex flex-col sticky top-[53px] h-[calc(100vh-53px)]">
+          {/* Tab headers */}
+          <div className="flex border-b border-border shrink-0">
+            {(["post", "seo", "settings"] as const).map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => setActiveTab(tab)}
+                className={`flex-1 py-3 text-xs font-semibold uppercase tracking-wide transition border-b-2 -mb-px ${
+                  activeTab === tab
+                    ? "text-foreground border-primary"
+                    : "text-muted-foreground border-transparent hover:text-foreground"
+                }`}
+              >
+                {tab === "post" ? "Post" : tab === "seo" ? "SEO" : "Settings"}
+              </button>
+            ))}
+          </div>
+
+          {/* Tab content */}
+          <div className="overflow-y-auto flex-1 p-6 space-y-6">
+            {activeTab === "post" && (
+              <>
+                {/* Featured Image */}
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold uppercase tracking-wide">Featured Image</Label>
+                  {coverImage ? (
+                    <div className="relative">
+                      <img src={coverImage} alt="Cover" className="w-full rounded-lg object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => setCoverImage("")}
+                        className="absolute top-1 right-1 bg-black/50 hover:bg-black/70 text-white rounded p-0.5 transition"
+                        title="Remove image"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setIsCoverPickerOpen(true)}
+                      className="w-full border-2 border-dashed border-border rounded-lg py-6 flex flex-col items-center gap-2 text-muted-foreground hover:border-primary/50 hover:text-foreground transition"
+                    >
+                      <ImageIcon size={20} />
+                      <span className="text-xs">Pick or upload image</span>
+                    </button>
+                  )}
+                  <MediaPickerModal
+                    open={isCoverPickerOpen}
+                    onClose={() => setIsCoverPickerOpen(false)}
+                    onSelect={(url) => setCoverImage(url)}
+                  />
+                </div>
+
+                {/* Hero Background */}
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold uppercase tracking-wide">Hero Background</Label>
+                  <div className="space-y-3">
+                    <div className="space-y-1">
+                      <span className="text-xs text-muted-foreground">Color</span>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-8 h-8 rounded border border-border cursor-pointer overflow-hidden flex-shrink-0"
+                          style={{ backgroundColor: heroBgColor || "#ffffff" }}
+                        >
+                          <input
+                            type="color"
+                            value={heroBgColor || "#ffffff"}
+                            onChange={(e) => setHeroBgColor(e.target.value)}
+                            className="opacity-0 w-full h-full cursor-pointer"
+                            title="Pick hero background color"
+                          />
+                        </div>
+                        <input
+                          type="text"
+                          value={heroBgColor}
+                          onChange={(e) => setHeroBgColor(e.target.value)}
+                          onBlur={(e) => setHeroBgColor(expandHexColor(e.target.value))}
+                          placeholder="#ffffff"
+                          maxLength={9}
+                          className="text-xs font-mono flex-1 bg-transparent border border-border/70 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary/50 text-foreground"
+                        />
+                        {heroBgColor !== "#ffffff" && (
+                          <button
+                            type="button"
+                            onClick={() => setHeroBgColor("#ffffff")}
+                            className="text-muted-foreground hover:text-foreground transition"
+                            title="Reset to white"
+                          >
+                            <X size={14} />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-xs text-muted-foreground">Background Image</span>
+                      {heroBgImage ? (
+                        <div className="relative">
+                          <img src={heroBgImage} alt="Hero bg" className="w-full h-20 rounded-lg object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => setHeroBgImage("")}
+                            className="absolute top-1 right-1 bg-black/50 hover:bg-black/70 text-white rounded p-0.5 transition"
+                            title="Remove image"
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setIsHeroBgPickerOpen(true)}
+                          className="w-full border-2 border-dashed border-border rounded-lg py-3 flex items-center justify-center gap-2 text-muted-foreground hover:border-primary/50 hover:text-foreground transition text-xs"
+                        >
+                          <ImageIcon size={14} />
+                          Pick background image
+                        </button>
+                      )}
+                      <MediaPickerModal
+                        open={isHeroBgPickerOpen}
+                        onClose={() => setIsHeroBgPickerOpen(false)}
+                        onSelect={(url) => setHeroBgImage(url)}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Categories */}
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold uppercase tracking-wide">Categories</Label>
+                  {categories.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">
+                      No categories yet.{" "}
+                      <Link href="/admin/categories" className="underline hover:text-foreground transition">
+                        Create categories →
+                      </Link>
+                    </p>
+                  ) : (
+                    <div className="max-h-40 overflow-y-auto space-y-1 border border-border/70 rounded-[var(--radius)] p-2 bg-muted/30">
+                      {categories.map((cat) => (
+                        <label key={cat.id} className="flex items-center gap-2 text-sm cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={selectedCategoryIds.includes(cat.id)}
+                            onChange={(e) =>
+                              setSelectedCategoryIds((prev) =>
+                                e.target.checked ? [...prev, cat.id] : prev.filter((id) => id !== cat.id)
+                              )
+                            }
+                          />
+                          {cat.name}
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Tags */}
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold uppercase tracking-wide">Tags</Label>
+                  {tags.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">
+                      No tags yet.{" "}
+                      <Link href="/admin/categories" className="underline hover:text-foreground transition">
+                        Manage tags →
+                      </Link>
+                    </p>
+                  ) : (
+                    <div className="max-h-40 overflow-y-auto space-y-1 border border-border/70 rounded-[var(--radius)] p-2 bg-muted/30">
+                      {tags.map((tag) => (
+                        <label key={tag.id} className="flex items-center gap-2 text-sm cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={selectedTagIds.includes(tag.id)}
+                            onChange={(e) =>
+                              setSelectedTagIds((prev) =>
+                                e.target.checked ? [...prev, tag.id] : prev.filter((id) => id !== tag.id)
+                              )
+                            }
+                          />
+                          {tag.name}
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+
+            {activeTab === "seo" && (
+              <>
+                {/* Excerpt */}
+                <div className="space-y-2">
+                  <Label htmlFor="excerpt" className="text-xs font-semibold uppercase tracking-wide">Excerpt</Label>
+                  <Textarea
+                    id="excerpt"
+                    value={excerpt}
+                    onChange={(e) => setExcerpt(e.target.value)}
+                    placeholder="Brief summary shown in listings"
+                    rows={3}
+                    className="bg-muted/30 border-border/70"
+                  />
+                </div>
+
+                {/* SEO */}
+                <div className="space-y-4 border-t border-border pt-6">
+                  <Label className="text-xs font-semibold uppercase tracking-wide">SEO</Label>
+                  <div className="space-y-2">
+                    <Label htmlFor="seoTitle" className="text-xs font-medium">SEO Title</Label>
+                    <Input
+                      id="seoTitle"
+                      type="text"
+                      value={seoTitle}
+                      onChange={(e) => setSeoTitle(e.target.value)}
+                      placeholder="Optimized title for search engines"
+                      className="bg-muted/30 border-border/70"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="seoDesc" className="text-xs font-medium">Meta Description</Label>
+                    <Textarea
+                      id="seoDesc"
+                      value={seoDesc}
+                      onChange={(e) => setSeoDesc(e.target.value)}
+                      placeholder="Description for search results (160 chars)"
+                      rows={2}
+                      className="bg-muted/30 border-border/70"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="ogImage" className="text-xs font-medium">OG Image URL</Label>
+                    <Input
+                      id="ogImage"
+                      type="text"
+                      value={ogImage}
+                      onChange={(e) => setOgImage(e.target.value)}
+                      placeholder="https://... (Open Graph image)"
+                      className="bg-muted/30 border-border/70"
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
+            {activeTab === "settings" && (
+              <>
+                {/* Status */}
+                <div className="space-y-2">
+                  <Label htmlFor="status" className="text-xs font-semibold uppercase tracking-wide">Status</Label>
+                  <select
+                    id="status"
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value as any)}
+                    className="w-full border border-border/70 rounded-[var(--radius)] px-3 py-2 text-sm bg-muted/30 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  >
+                    <option value="DRAFT">Draft</option>
+                    <option value="PUBLISHED">Published</option>
+                  </select>
+                </div>
+
+                {/* Publish Date */}
+                <div className="space-y-2">
+                  <Label htmlFor="publishedAt" className="text-xs font-semibold uppercase tracking-wide">Publish Date</Label>
+                  <input
+                    id="publishedAt"
+                    type="datetime-local"
+                    value={publishedAt}
+                    onChange={(e) => setPublishedAt(e.target.value)}
+                    className="w-full border border-border/70 rounded-[var(--radius)] px-3 py-2 text-sm bg-muted/30 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 dark:[color-scheme:dark]"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {status === "DRAFT"
+                      ? "Set a future date to schedule. Post won't appear until then."
+                      : "Leave empty to publish immediately."}
+                  </p>
+                </div>
+
+                {/* URL Slug */}
+                <div className="space-y-2">
+                  <Label htmlFor="slug" className="text-xs font-semibold uppercase tracking-wide">URL Slug</Label>
+                  <Input
+                    id="slug"
+                    type="text"
+                    value={slug}
+                    onChange={(e) => setSlug(e.target.value)}
+                    placeholder={displaySlug}
+                    className="bg-muted/30 border-border/70"
+                  />
+                  <div className="text-xs text-muted-foreground font-mono">/blog/{displaySlug}</div>
+                </div>
+              </>
+            )}
+          </div>
+        </aside>
+      </div>
+    </div>
+  );
+}

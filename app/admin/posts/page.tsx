@@ -3,10 +3,9 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { Prisma } from "@prisma/client";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { PostDeleteButton } from "@/components/admin/PostDeleteButton";
+import { PostsBulkTable } from "./PostsBulkTable";
 
 const PAGE_SIZE = 20;
 const VALID_STATUSES = ["DRAFT", "PUBLISHED", "ARCHIVED"] as const;
@@ -29,7 +28,14 @@ export default async function PostsPage({
     userRole === "ADMIN" ? {} : { authorId: userId as string };
 
   const filters: Prisma.PostWhereInput = {};
-  if (q) filters.title = { contains: q, mode: "insensitive" };
+  if (q) {
+    filters.OR = [
+      { title: { contains: q, mode: "insensitive" } },
+      { excerpt: { contains: q, mode: "insensitive" } },
+      { seoTitle: { contains: q, mode: "insensitive" } },
+      { author: { name: { contains: q, mode: "insensitive" } } },
+    ];
+  }
   if (statusParam && (VALID_STATUSES as readonly string[]).includes(statusParam))
     filters.status = statusParam as PostStatus;
   const where = { ...baseWhere, ...filters };
@@ -73,7 +79,7 @@ export default async function PostsPage({
         <Input
           name="q"
           defaultValue={q ?? ""}
-          placeholder="Search by title..."
+          placeholder="Search posts…"
           className="w-64"
         />
         <select
@@ -108,64 +114,18 @@ export default async function PostsPage({
           </CardContent>
         ) : (
           <>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b bg-muted/30">
-                    <th className="px-6 py-3 text-left font-medium text-sm">Title</th>
-                    <th className="px-6 py-3 text-left font-medium text-sm">Author</th>
-                    <th className="px-6 py-3 text-left font-medium text-sm">Status</th>
-                    <th className="px-6 py-3 text-left font-medium text-sm">Created</th>
-                    <th className="px-6 py-3 text-right font-medium text-sm">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {posts.map((post) => (
-                    <tr key={post.id} className="hover:bg-muted/20 transition">
-                      <td className="px-6 py-4">
-                        <p className="font-medium">{post.title}</p>
-                        <p className="text-xs text-muted-foreground">{post.slug}</p>
-                      </td>
-                      <td className="px-6 py-4 text-sm">{post.author.name}</td>
-                      <td className="px-6 py-4">
-                        <Badge
-                          variant={
-                            post.status === "PUBLISHED"
-                              ? "default"
-                              : post.status === "DRAFT"
-                              ? "secondary"
-                              : "outline"
-                          }
-                        >
-                          {post.status}
-                        </Badge>
-                      </td>
-                      <td className="px-6 py-4 text-sm">
-                        {new Date(post.createdAt).toLocaleDateString()}
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          {post.status === "PUBLISHED" && (
-                            <Button asChild variant="ghost" size="sm">
-                              <Link href={`/blog/${post.slug}`} target="_blank">View</Link>
-                            </Button>
-                          )}
-                          <Button asChild variant="ghost" size="sm">
-                            <Link href={`/admin/posts/${post.id}/edit`}>Edit</Link>
-                          </Button>
-                          {userRole !== "VIEWER" && (
-                            <PostDeleteButton
-                              postId={post.id}
-                              postTitle={post.title}
-                            />
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <PostsBulkTable
+              posts={posts.map((p) => ({
+                id: p.id,
+                title: p.title,
+                slug: p.slug,
+                status: p.status,
+                publishedAt: p.publishedAt?.toISOString() ?? null,
+                createdAt: p.createdAt.toISOString(),
+                author: { name: p.author.name },
+              }))}
+              userRole={userRole}
+            />
 
             {totalPages > 1 && (
               <div className="flex items-center justify-between px-6 py-4 border-t border-border">

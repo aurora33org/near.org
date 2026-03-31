@@ -12,6 +12,14 @@ export default async function AdminDashboard() {
     prisma.user.count(),
   ]);
 
+  let recentActivity: any[] = [];
+  try {
+    recentActivity = await (prisma as any).auditLog.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 10,
+    });
+  } catch {}
+
   return (
     <div className="space-y-8">
       <div>
@@ -74,6 +82,43 @@ export default async function AdminDashboard() {
           </Button>
         </CardContent>
       </Card>
+
+      {/* Recent Activity */}
+      {recentActivity.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Activity</CardTitle>
+            <CardDescription>Last 10 actions across the CMS</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="divide-y divide-border">
+              {recentActivity.map((log: any) => (
+                <div key={log.id} className="flex items-center justify-between py-3 text-sm">
+                  <div className="flex items-center gap-3">
+                    <span
+                      className={`inline-block px-2 py-0.5 rounded text-xs font-semibold ${
+                        log.action === "CREATE"
+                          ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                          : log.action === "DELETE"
+                          ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                          : "bg-primary/10 text-primary"
+                      }`}
+                    >
+                      {log.action}
+                    </span>
+                    <span className="text-muted-foreground">{log.entityType}</span>
+                    <span className="font-medium truncate max-w-xs">{log.entityTitle}</span>
+                  </div>
+                  <div className="text-muted-foreground text-xs flex items-center gap-2">
+                    <span>{log.userEmail}</span>
+                    <time suppressHydrationWarning>{new Date(log.createdAt).toLocaleString()}</time>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

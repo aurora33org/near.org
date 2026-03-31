@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import { auth } from "@/lib/auth";
 import { AdminThemeProvider } from "@/components/admin/ThemeProvider";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
+import { Toaster } from "sonner";
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   const session = await auth();
@@ -13,6 +14,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
       <AdminSidebar role={role} userName={userName}>
         {children}
       </AdminSidebar>
+      <Toaster richColors position="top-right" />
     </AdminThemeProvider>
   );
 }

@@ -12,6 +12,7 @@ function toSlug(name: string) {
 export async function GET() {
   const categories = await prisma.category.findMany({
     orderBy: { name: "asc" },
+    include: { _count: { select: { posts: true } } },
   });
   return NextResponse.json(categories);
 }

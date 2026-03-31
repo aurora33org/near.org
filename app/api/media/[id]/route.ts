@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
+import { S3Client, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+
+const s3 = new S3Client({
+  endpoint: process.env.S3_ENDPOINT,
+  region: process.env.S3_REGION || "auto",
+  credentials: {
+    accessKeyId: process.env.S3_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.S3_SECRET_ACCESS_KEY!,
+  },
+});
 
 export async function PATCH(
   req: NextRequest,
@@ -45,6 +55,28 @@ export async function DELETE(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
+  const key = media.url.replace(`${process.env.R2_PUBLIC_URL}/`, "");
+  await s3.send(
+    new DeleteObjectCommand({
+      Bucket: process.env.S3_BUCKET,
+      Key: key,
+    })
+  );
+
   await prisma.media.delete({ where: { id } });
+
+  try {
+    await (prisma as any).auditLog.create({
+      data: {
+        userId: session.user.id,
+        userEmail: session.user.email ?? "",
+        action: "DELETE",
+        entityType: "MEDIA",
+        entityId: media.id,
+        entityTitle: media.filename,
+      },
+    });
+  } catch {}
+
   return NextResponse.json({ success: true });
 }

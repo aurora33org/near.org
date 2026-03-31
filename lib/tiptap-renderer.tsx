@@ -1,4 +1,5 @@
 import React from "react";
+import DOMPurify from "isomorphic-dompurify";
 
 interface TipTapNode {
   type: string;
@@ -25,6 +26,7 @@ function renderInlineContent(nodes: TipTapNode[] | undefined): React.ReactNode {
         else if (mark.type === "italic") el = <em key={i}>{el}</em>;
         else if (mark.type === "code") el = <code key={i}>{el}</code>;
         else if (mark.type === "strike") el = <s key={i}>{el}</s>;
+        else if (mark.type === "underline") el = <u key={i}>{el}</u>;
         else if (mark.type === "link")
           el = (
             <a key={i} href={mark.attrs?.href} target={mark.attrs?.target ?? "_blank"} rel="noopener noreferrer">
@@ -40,18 +42,33 @@ function renderInlineContent(nodes: TipTapNode[] | undefined): React.ReactNode {
   });
 }
 
+function getTextAlign(attrs?: Record<string, any>): React.CSSProperties | undefined {
+  if (attrs?.textAlign && attrs.textAlign !== "left") {
+    return { textAlign: attrs.textAlign };
+  }
+  return undefined;
+}
+
 export function renderBlocks(nodes: TipTapNode[] | undefined): React.ReactNode {
   if (!nodes) return null;
 
   return nodes.map((node, i) => {
     switch (node.type) {
       case "paragraph":
-        return <p key={i}>{renderInlineContent(node.content)}</p>;
+        return (
+          <p key={i} style={getTextAlign(node.attrs)}>
+            {renderInlineContent(node.content)}
+          </p>
+        );
 
       case "heading": {
         const level = node.attrs?.level ?? 2;
         const Tag = `h${level}` as keyof React.JSX.IntrinsicElements;
-        return <Tag key={i}>{renderInlineContent(node.content)}</Tag>;
+        return (
+          <Tag key={i} style={getTextAlign(node.attrs)}>
+            {renderInlineContent(node.content)}
+          </Tag>
+        );
       }
 
       case "bulletList":
@@ -62,6 +79,30 @@ export function renderBlocks(nodes: TipTapNode[] | undefined): React.ReactNode {
 
       case "listItem":
         return <li key={i}>{renderBlocks(node.content)}</li>;
+
+      case "taskList":
+        return (
+          <ul key={i} className="not-prose space-y-1 list-none pl-0">
+            {renderBlocks(node.content)}
+          </ul>
+        );
+
+      case "taskItem": {
+        const checked = node.attrs?.checked ?? false;
+        return (
+          <li key={i} className="flex items-start gap-2">
+            <input
+              type="checkbox"
+              checked={checked}
+              readOnly
+              className="mt-1 rounded border-gray-300"
+            />
+            <div className={checked ? "line-through text-muted-foreground" : ""}>
+              {renderBlocks(node.content)}
+            </div>
+          </li>
+        );
+      }
 
       case "codeBlock": {
         const lang = node.attrs?.language;
@@ -92,6 +133,79 @@ export function renderBlocks(nodes: TipTapNode[] | undefined): React.ReactNode {
             className="rounded-lg max-w-full"
           />
         );
+
+      // Table support
+      case "table":
+        return (
+          <div key={i} className="overflow-x-auto my-4">
+            <table className="w-full border-collapse border border-border">
+              <tbody>{renderBlocks(node.content)}</tbody>
+            </table>
+          </div>
+        );
+
+      case "tableRow":
+        return <tr key={i}>{renderBlocks(node.content)}</tr>;
+
+      case "tableHeader":
+        return (
+          <th
+            key={i}
+            className="border border-border bg-muted px-4 py-2 text-left font-semibold"
+            colSpan={node.attrs?.colspan}
+            rowSpan={node.attrs?.rowspan}
+          >
+            {renderBlocks(node.content)}
+          </th>
+        );
+
+      case "tableCell":
+        return (
+          <td
+            key={i}
+            className="border border-border px-4 py-2"
+            colSpan={node.attrs?.colspan}
+            rowSpan={node.attrs?.rowspan}
+          >
+            {renderBlocks(node.content)}
+          </td>
+        );
+
+      // Raw HTML block
+      case "rawHtmlBlock": {
+        const cleanHtml = DOMPurify.sanitize(node.attrs?.content ?? "", {
+          ADD_TAGS: ["iframe"],
+          ADD_ATTR: ["allow", "allowfullscreen", "frameborder", "scrolling", "loading"],
+        });
+        return (
+          <div
+            key={i}
+            className="raw-html-block my-4"
+            dangerouslySetInnerHTML={{ __html: cleanHtml }}
+          />
+        );
+      }
+
+      // Column layout
+      case "columnLayout": {
+        const cols = node.attrs?.columns ?? 2;
+        return (
+          <div
+            key={i}
+            className="my-4"
+            style={{
+              display: "grid",
+              gridTemplateColumns: `repeat(${cols}, 1fr)`,
+              gap: "1.5rem",
+            }}
+          >
+            {renderBlocks(node.content)}
+          </div>
+        );
+      }
+
+      case "column":
+        return <div key={i}>{renderBlocks(node.content)}</div>;
 
       default:
         return null;

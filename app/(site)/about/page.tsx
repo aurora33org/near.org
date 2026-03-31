@@ -1,3 +1,18 @@
+import { Metadata } from "next";
+
+export function generateMetadata(): Metadata {
+  return {
+    title: "About NEAR | NEAR Protocol",
+    description: "NEAR Protocol is a blockchain that is simple to use, developer friendly, and carbon neutral. Learn about our mission and core values.",
+    openGraph: {
+      title: "About NEAR | NEAR Protocol",
+      description: "NEAR Protocol is a blockchain that is simple to use, developer friendly, and carbon neutral.",
+      type: "website",
+    },
+    twitter: { card: "summary_large_image" },
+  };
+}
+
 export default function About() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-20">
