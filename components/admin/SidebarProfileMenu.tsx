@@ -9,13 +9,13 @@ interface SidebarProfileMenuProps {
   userName: string;
   userEmail?: string;
   role: string;
+  collapsed?: boolean;
 }
 
-export function SidebarProfileMenu({ userName, role }: SidebarProfileMenuProps) {
+export function SidebarProfileMenu({ userName, role, collapsed = false }: SidebarProfileMenuProps) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Close on outside click
   useEffect(() => {
     if (!open) return;
     function handleClick(e: MouseEvent) {
@@ -40,7 +40,7 @@ export function SidebarProfileMenu({ userName, role }: SidebarProfileMenuProps) 
 
   return (
     <div ref={containerRef} className="relative">
-      {/* Dropdown — renders above the card */}
+      {/* Dropdown */}
       {open && (
         <div className="absolute bottom-full left-0 right-0 mb-2 bg-card border border-border rounded-xl shadow-xl overflow-hidden z-50">
           <div className="py-1">
@@ -74,30 +74,39 @@ export function SidebarProfileMenu({ userName, role }: SidebarProfileMenuProps) 
         </div>
       )}
 
-      {/* Profile card trigger */}
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className={`w-full flex items-center gap-3 p-3 rounded-xl border transition ${
-          open
-            ? "bg-muted border-border"
-            : "border-transparent hover:bg-muted/50 hover:border-border"
-        }`}
-      >
-        {/* Avatar */}
-        <div className="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs font-bold shrink-0">
-          {initials}
-        </div>
-
-        {/* Name + role */}
-        <div className="flex-1 text-left min-w-0">
-          <p className="text-sm font-medium truncate leading-tight">{userName || "User"}</p>
-          <p className={`text-xs leading-tight ${roleBadgeColor}`}>{role}</p>
-        </div>
-
-        <ChevronUp
-          className={`w-4 h-4 text-muted-foreground shrink-0 transition-transform ${open ? "" : "rotate-180"}`}
-        />
-      </button>
+      {/* Collapsed: avatar only */}
+      {collapsed ? (
+        <button
+          onClick={() => setOpen((v) => !v)}
+          title={userName || "Profile"}
+          className={`w-full flex justify-center p-1.5 rounded-xl border transition ${
+            open ? "bg-muted border-border" : "border-transparent hover:bg-muted/50 hover:border-border"
+          }`}
+        >
+          <div className="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs font-bold">
+            {initials}
+          </div>
+        </button>
+      ) : (
+        /* Expanded: full card */
+        <button
+          onClick={() => setOpen((v) => !v)}
+          className={`w-full flex items-center gap-3 p-3 rounded-xl border transition ${
+            open ? "bg-muted border-border" : "border-transparent hover:bg-muted/50 hover:border-border"
+          }`}
+        >
+          <div className="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs font-bold shrink-0">
+            {initials}
+          </div>
+          <div className="flex-1 text-left min-w-0">
+            <p className="text-sm font-medium truncate leading-tight">{userName || "User"}</p>
+            <p className={`text-xs leading-tight ${roleBadgeColor}`}>{role}</p>
+          </div>
+          <ChevronUp
+            className={`w-4 h-4 text-muted-foreground shrink-0 transition-transform ${open ? "" : "rotate-180"}`}
+          />
+        </button>
+      )}
     </div>
   );
 }
