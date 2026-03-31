@@ -15,10 +15,6 @@ interface AdminSidebarProps {
 export function AdminSidebar({ children, role, userName }: AdminSidebarProps) {
   const pathname = usePathname();
 
-  if (pathname === "/admin/login") {
-    return <>{children}</>;
-  }
-
   const navLink = (href: string, label: string, exact = false) => {
     const active = exact ? pathname === href : pathname.startsWith(href);
     return (
@@ -49,6 +45,8 @@ export function AdminSidebar({ children, role, userName }: AdminSidebarProps) {
           {navLink("/admin/media", "Media Library", true)}
           {navLink("/admin/categories", "Categories & Tags", true)}
           {role === "ADMIN" && navLink("/admin/users", "Users", true)}
+          {role === "ADMIN" && navLink("/admin/audit-log", "Audit Log", true)}
+          {navLink("/admin/settings", "Settings", true)}
         </nav>
 
         <div className="p-6 space-y-3 border-t border-border">

@@ -1,6 +1,7 @@
 import { Node, mergeAttributes } from "@tiptap/core";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import { ColumnLayoutView } from "../node-views/ColumnLayoutView";
+import { ColumnView } from "../node-views/ColumnView";
 
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
@@ -21,6 +22,10 @@ export const Column = Node.create({
 
   renderHTML({ HTMLAttributes }) {
     return ["div", mergeAttributes(HTMLAttributes, { "data-type": "column" }), 0];
+  },
+
+  addNodeView() {
+    return ReactNodeViewRenderer(ColumnView);
   },
 });
 

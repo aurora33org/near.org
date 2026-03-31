@@ -11,6 +11,15 @@ export const metadata: Metadata = {
   description:
     "Latest news, updates, and insights from the NEAR Protocol ecosystem.",
   openGraph: {
+    type: "website",
+    url: "https://near.org/blog",
+    siteName: "NEAR Protocol",
+    title: "Blog — NEAR Protocol",
+    description:
+      "Latest news, updates, and insights from the NEAR Protocol ecosystem.",
+  },
+  twitter: {
+    card: "summary_large_image",
     title: "Blog — NEAR Protocol",
     description:
       "Latest news, updates, and insights from the NEAR Protocol ecosystem.",

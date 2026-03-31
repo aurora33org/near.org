@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 
@@ -36,7 +37,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 bg-gray-900 flex items-center justify-center">
       <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-8">
         <h1 className="text-2xl font-bold mb-6 text-center">NEAR CMS Login</h1>
 
@@ -80,7 +81,13 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p className="text-sm text-gray-600 text-center mt-6">
+        <div className="mt-4 text-center">
+          <Link href="/admin/forgot-password" className="text-sm text-gray-500 hover:underline">
+            Forgot your password?
+          </Link>
+        </div>
+
+        <p className="text-sm text-gray-600 text-center mt-4">
           Demo credentials: admin@example.com / password
         </p>
       </div>

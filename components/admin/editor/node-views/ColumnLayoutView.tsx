@@ -24,10 +24,15 @@ export function ColumnLayoutView({ node, deleteNode }: any) {
           </button>
         </div>
 
-        <NodeViewContent
-          className="grid gap-4"
-          style={{ gridTemplateColumns: `repeat(${columns}, 1fr)` }}
-        />
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: `repeat(${columns}, 1fr)`,
+            gap: "1rem",
+          }}
+        >
+          <NodeViewContent style={{ display: "contents" }} />
+        </div>
       </div>
     </NodeViewWrapper>
   );

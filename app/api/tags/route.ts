@@ -12,6 +12,7 @@ function toSlug(name: string) {
 export async function GET() {
   const tags = await prisma.tag.findMany({
     orderBy: { name: "asc" },
+    include: { _count: { select: { posts: true } } },
   });
   return NextResponse.json(tags);
 }
