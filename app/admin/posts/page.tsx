@@ -25,7 +25,7 @@ export default async function PostsPage({
   const skip = (page - 1) * PAGE_SIZE;
 
   const baseWhere: Prisma.PostWhereInput =
-    userRole === "ADMIN" ? {} : { authorId: userId as string };
+    userRole === "VIEWER" ? { authorId: userId as string } : {};
 
   const filters: Prisma.PostWhereInput = {};
   if (q) {
@@ -45,7 +45,7 @@ export default async function PostsPage({
   const [posts, total] = await Promise.all([
     prisma.post.findMany({
       where,
-      include: { author: true },
+      include: { author: true, lastEditedBy: { select: { name: true } } },
       orderBy: { createdAt: "desc" },
       take: PAGE_SIZE,
       skip,
@@ -123,6 +123,8 @@ export default async function PostsPage({
                 publishedAt: p.publishedAt?.toISOString() ?? null,
                 createdAt: p.createdAt.toISOString(),
                 author: { name: p.author.name },
+                lastEditedBy: p.lastEditedBy ? { name: p.lastEditedBy.name } : null,
+                lockedByEmail: p.lockedByEmail ?? null,
               }))}
               userRole={userRole}
             />

@@ -14,7 +14,7 @@ type AuditEntityType = (typeof VALID_ENTITY_TYPES)[number];
 export default async function AuditLogPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; action?: string; entityType?: string }>;
+  searchParams: Promise<{ page?: string; action?: string; entityType?: string; userEmail?: string }>;
 }) {
   const session = await auth();
   const userRole = (session?.user as any)?.role;
@@ -27,7 +27,7 @@ export default async function AuditLogPage({
     );
   }
 
-  const { page: pageParam, action: actionParam, entityType: entityTypeParam } = await searchParams;
+  const { page: pageParam, action: actionParam, entityType: entityTypeParam, userEmail: userEmailParam } = await searchParams;
   const page = Math.max(1, Number(pageParam ?? 1));
   const skip = (page - 1) * PAGE_SIZE;
 
@@ -36,10 +36,11 @@ export default async function AuditLogPage({
     where.action = actionParam as AuditAction;
   if (entityTypeParam && (VALID_ENTITY_TYPES as readonly string[]).includes(entityTypeParam))
     where.entityType = entityTypeParam as AuditEntityType;
+  if (userEmailParam) where.userEmail = userEmailParam;
 
-  const hasFilters = !!(actionParam || entityTypeParam);
+  const hasFilters = !!(actionParam || entityTypeParam || userEmailParam);
 
-  const [logs, total] = await Promise.all([
+  const [logs, total, distinctUsers] = await Promise.all([
     (prisma as any).auditLog.findMany({
       where,
       orderBy: { createdAt: "desc" },
@@ -47,6 +48,11 @@ export default async function AuditLogPage({
       skip,
     }),
     (prisma as any).auditLog.count({ where }),
+    (prisma as any).auditLog.findMany({
+      select: { userEmail: true },
+      distinct: ["userEmail"],
+      orderBy: { userEmail: "asc" },
+    }),
   ]);
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
@@ -55,6 +61,7 @@ export default async function AuditLogPage({
     const params = new URLSearchParams();
     if (actionParam) params.set("action", actionParam);
     if (entityTypeParam) params.set("entityType", entityTypeParam);
+    if (userEmailParam) params.set("userEmail", userEmailParam);
     params.set("page", String(p));
     return `/admin/audit-log?${params.toString()}`;
   }
@@ -89,6 +96,16 @@ export default async function AuditLogPage({
           <option value="">All types</option>
           {VALID_ENTITY_TYPES.map((t) => (
             <option key={t} value={t}>{t}</option>
+          ))}
+        </select>
+        <select
+          name="userEmail"
+          defaultValue={userEmailParam ?? ""}
+          className="border border-border rounded-[var(--radius)] px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+        >
+          <option value="">All users</option>
+          {distinctUsers.map((u: { userEmail: string }) => (
+            <option key={u.userEmail} value={u.userEmail}>{u.userEmail}</option>
           ))}
         </select>
         <Button type="submit" variant="outline" size="sm">Filter</Button>

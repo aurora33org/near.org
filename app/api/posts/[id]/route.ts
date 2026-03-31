@@ -64,12 +64,8 @@ export async function PUT(
     }
 
     const userRole = (session.user as any)?.role;
-    // Check permissions: Admin can edit all, Editor can edit own
-    if (userRole !== "ADMIN" && post.authorId !== session.user.id) {
-      return NextResponse.json(
-        { error: "You can only edit your own posts" },
-        { status: 403 }
-      );
+    if (userRole === "VIEWER") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const body = await req.json();
@@ -101,6 +97,7 @@ export async function PUT(
       data: {
         ...postData,
         publishedAt: resolvedPublishedAt,
+        ...(session.user.id !== post.authorId && { lastEditedById: session.user.id }),
         categories: categoryIds !== undefined
           ? { set: categoryIds.map((id) => ({ id })) }
           : undefined,
@@ -161,12 +158,8 @@ export async function DELETE(
     }
 
     const userRole = (session.user as any)?.role;
-    // Check permissions: Admin can delete all, Editor can delete own
-    if (userRole !== "ADMIN" && post.authorId !== session.user.id) {
-      return NextResponse.json(
-        { error: "You can only delete your own posts" },
-        { status: 403 }
-      );
+    if (userRole === "VIEWER") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     await prisma.post.delete({
