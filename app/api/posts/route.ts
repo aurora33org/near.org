@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
@@ -109,6 +110,13 @@ export async function POST(req: NextRequest) {
         },
       });
     } catch {}
+
+    if (post.status === "PUBLISHED") {
+      revalidatePath("/blog");
+      revalidatePath(`/blog/${post.slug}`);
+      revalidatePath("/feed.xml");
+      revalidatePath("/sitemap.xml");
+    }
 
     return NextResponse.json(post, { status: 201 });
   } catch (error) {

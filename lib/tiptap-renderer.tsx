@@ -1,5 +1,6 @@
 import React from "react";
 import DOMPurify from "isomorphic-dompurify";
+import { slugifyHeading } from "@/lib/extractHeadings";
 
 interface TipTapNode {
   type: string;
@@ -64,8 +65,10 @@ export function renderBlocks(nodes: TipTapNode[] | undefined): React.ReactNode {
       case "heading": {
         const level = node.attrs?.level ?? 2;
         const Tag = `h${level}` as keyof React.JSX.IntrinsicElements;
+        const headingText = (node.content ?? []).map((c) => c.text ?? "").join("");
+        const headingId = [2, 3].includes(level) ? slugifyHeading(headingText) : undefined;
         return (
-          <Tag key={i} style={getTextAlign(node.attrs)}>
+          <Tag key={i} id={headingId} style={getTextAlign(node.attrs)}>
             {renderInlineContent(node.content)}
           </Tag>
         );

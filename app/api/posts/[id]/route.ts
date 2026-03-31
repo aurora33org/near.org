@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
@@ -120,6 +121,17 @@ export async function PUT(
         },
       });
     } catch {}
+
+    // On-demand revalidation so the public blog reflects changes immediately
+    revalidatePath("/blog");
+    revalidatePath(`/blog/${updatedPost.slug}`);
+    if (data.slug && data.slug !== post.slug) {
+      revalidatePath(`/blog/${post.slug}`);
+    }
+    if (updatedPost.status === "PUBLISHED") {
+      revalidatePath("/feed.xml");
+      revalidatePath("/sitemap.xml");
+    }
 
     return NextResponse.json(updatedPost);
   } catch (error) {
