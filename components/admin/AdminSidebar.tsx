@@ -3,6 +3,15 @@
 import { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import {
+  LayoutDashboard,
+  FileText,
+  Layers,
+  Image,
+  Tag,
+  Users,
+  ClipboardList,
+} from "lucide-react";
 import { ThemeToggle } from "@/components/admin/ThemeToggle";
 import { SidebarProfileMenu } from "@/components/admin/SidebarProfileMenu";
 
@@ -24,21 +33,24 @@ export function AdminSidebar({ children, role, userName }: AdminSidebarProps) {
     return <>{children}</>;
   }
 
-  const navLink = (href: string, label: string, exact = false) => {
+  const navLink = (href: string, label: string, icon: ReactNode, exact = false) => {
     const active = exact ? pathname === href : pathname.startsWith(href);
     return (
       <Link
         href={href}
-        className={`block px-4 py-2 rounded-lg transition ${
+        className={`flex items-center gap-3 px-4 py-2 rounded-lg transition ${
           active
             ? "bg-secondary text-secondary-foreground"
             : "hover:bg-secondary/50 hover:text-secondary-foreground"
         }`}
       >
+        <span className="shrink-0 opacity-70">{icon}</span>
         {label}
       </Link>
     );
   };
+
+  const iconSize = "w-4 h-4";
 
   return (
     <div className="admin-wrapper dark flex h-screen bg-background text-foreground">
@@ -48,14 +60,13 @@ export function AdminSidebar({ children, role, userName }: AdminSidebarProps) {
         </div>
 
         <nav className="flex-1 p-6 space-y-2">
-          {navLink("/admin/dashboard", "Dashboard", true)}
-          {navLink("/admin/posts", "Blog Posts")}
-          {navLink("/admin/pages", "Pages")}
-          {navLink("/admin/media", "Media Library", true)}
-          {navLink("/admin/categories", "Categories & Tags", true)}
-          {role === "ADMIN" && navLink("/admin/users", "Users", true)}
-          {role === "ADMIN" && navLink("/admin/audit-log", "Audit Log", true)}
-          {navLink("/admin/settings", "Settings", true)}
+          {navLink("/admin/dashboard", "Dashboard",       <LayoutDashboard className={iconSize} />, true)}
+          {navLink("/admin/posts",     "Blog Posts",      <FileText        className={iconSize} />)}
+          {navLink("/admin/pages",     "Pages",           <Layers          className={iconSize} />)}
+          {navLink("/admin/media",     "Media Library",   <Image           className={iconSize} />, true)}
+          {navLink("/admin/categories","Categories & Tags",<Tag            className={iconSize} />, true)}
+          {role === "ADMIN" && navLink("/admin/users",     "Users",       <Users         className={iconSize} />, true)}
+          {role === "ADMIN" && navLink("/admin/audit-log", "Audit Log",   <ClipboardList className={iconSize} />, true)}
         </nav>
 
         <div className="p-4 space-y-3 border-t border-border">
