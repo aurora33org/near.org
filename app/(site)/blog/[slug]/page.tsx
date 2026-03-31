@@ -14,9 +14,12 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const post = await prisma.post.findUnique({
-    where: { slug },
-  });
+  let post;
+  try {
+    post = await prisma.post.findUnique({ where: { slug } });
+  } catch {
+    return {};
+  }
 
   if (!post || post.status !== "PUBLISHED" || (post.publishedAt && post.publishedAt > new Date())) {
     return {};
@@ -34,14 +37,16 @@ export async function generateMetadata({
 }
 
 export async function generateStaticParams() {
-  const posts = await prisma.post.findMany({
-    where: { status: "PUBLISHED", publishedAt: { lte: new Date() } },
-    select: { slug: true },
-  });
-
-  return posts.map((post) => ({
-    slug: post.slug,
-  }));
+  try {
+    const posts = await prisma.post.findMany({
+      where: { status: "PUBLISHED", publishedAt: { lte: new Date() } },
+      select: { slug: true },
+    });
+    return posts.map((post) => ({ slug: post.slug }));
+  } catch {
+    // DB not available at build time — pages will be generated on first request via ISR
+    return [];
+  }
 }
 
 export default async function BlogPost({
