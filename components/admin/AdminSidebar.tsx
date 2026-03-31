@@ -3,8 +3,8 @@
 import { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { signOut } from "next-auth/react";
 import { ThemeToggle } from "@/components/admin/ThemeToggle";
+import { SidebarProfileMenu } from "@/components/admin/SidebarProfileMenu";
 
 interface AdminSidebarProps {
   children: ReactNode;
@@ -58,17 +58,9 @@ export function AdminSidebar({ children, role, userName }: AdminSidebarProps) {
           {navLink("/admin/settings", "Settings", true)}
         </nav>
 
-        <div className="p-6 space-y-3 border-t border-border">
-          {userName && (
-            <p className="text-xs text-muted-foreground truncate">{userName}</p>
-          )}
+        <div className="p-4 space-y-3 border-t border-border">
           <ThemeToggle />
-          <button
-            onClick={() => signOut({ callbackUrl: "/admin/login" })}
-            className="w-full px-4 py-2 bg-destructive hover:bg-destructive/90 rounded-lg transition text-sm text-destructive-foreground"
-          >
-            Sign Out
-          </button>
+          <SidebarProfileMenu userName={userName} role={role} />
         </div>
       </aside>
 
