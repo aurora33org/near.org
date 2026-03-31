@@ -11,8 +11,8 @@ import {
   Tag,
   Users,
   ClipboardList,
-  ChevronLeft,
-  ChevronRight,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/admin/ThemeToggle";
 import { SidebarProfileMenu } from "@/components/admin/SidebarProfileMenu";
@@ -84,7 +84,7 @@ export function AdminSidebar({ children, role, userName }: AdminSidebarProps) {
               title="Expand sidebar"
               className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 transition"
             >
-              <ChevronRight className="w-4 h-4" />
+              <PanelLeftOpen className="w-4 h-4" />
             </button>
           </div>
         ) : (
@@ -96,7 +96,7 @@ export function AdminSidebar({ children, role, userName }: AdminSidebarProps) {
               title="Collapse sidebar"
               className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 transition"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <PanelLeftClose className="w-4 h-4" />
             </button>
           </div>
         )}
