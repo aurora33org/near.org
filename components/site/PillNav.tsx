@@ -125,7 +125,7 @@ const PillNav: React.FC<PillNavProps> = ({
           width: 'auto',
           duration: 0.6,
           ease,
-          onComplete: () => gsap.set(navItemsRef.current, { overflow: 'visible' }),
+          onComplete: () => { gsap.set(navItemsRef.current, { overflow: 'visible' }); },
         });
       }
     }
@@ -195,7 +195,7 @@ const PillNav: React.FC<PillNavProps> = ({
       } else {
         gsap.to(menu, {
           opacity: 0, y: 10, duration: 0.2, ease,
-          onComplete: () => gsap.set(menu, { visibility: 'hidden' }),
+          onComplete: () => { gsap.set(menu, { visibility: 'hidden' }); },
         });
       }
     }
