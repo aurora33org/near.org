@@ -113,7 +113,7 @@ export default function PrivateChatPage() {
               { provider: "DeepSeek", model: "DeepSeek V3.1", note: "Deep reasoning · 128K context" },
               { provider: "Zhipu AI", model: "GLM-4.6 FP8", note: "Long-doc analysis · 200K context" },
               { provider: "Alibaba Qwen", model: "Qwen3 30B", note: "Cost-efficient · 262K context" },
-            ].map((m, i) => (
+            ].map((m) => (
               <div
                 key={m.model}
                 className="flex items-center justify-between px-5 py-4 border border-black/8 hover:border-[#5895d8]/30 hover:bg-[#5895d8]/[0.02] transition-all group"
