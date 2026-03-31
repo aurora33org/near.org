@@ -121,7 +121,7 @@ export default async function AuditLogPage({
                 <tbody className="divide-y">
                   {logs.map((log: any) => (
                     <tr key={log.id} className="hover:bg-muted/20 transition">
-                      <td className="px-6 py-3 text-sm text-muted-foreground whitespace-nowrap">
+                      <td className="px-6 py-3 text-sm text-muted-foreground whitespace-nowrap" suppressHydrationWarning>
                         {new Date(log.createdAt).toLocaleString()}
                       </td>
                       <td className="px-6 py-3 text-sm">{log.userEmail}</td>
