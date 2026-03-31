@@ -75,7 +75,7 @@ export function AdminSidebar({ children, role, userName }: AdminSidebarProps) {
       <aside
         className={`${
           collapsed ? "w-16" : "w-64"
-        } bg-card border-r border-border flex flex-col transition-all duration-200 shrink-0`}
+        } bg-card border-r border-border flex flex-col transition-all duration-500 ease-linear shrink-0`}
       >
         {/* Header */}
         <div className={`flex items-center border-b border-border h-[73px] ${collapsed ? "justify-center px-3" : "justify-between px-6"}`}>
