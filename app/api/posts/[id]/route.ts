@@ -126,7 +126,11 @@ export async function PUT(
     revalidatePath("/blog");
     revalidatePath(`/blog/${updatedPost.slug}`);
     if (data.slug && data.slug !== post.slug) {
-      revalidatePath(`/blog/${post.slug}`); // also revalidate old slug if changed
+      revalidatePath(`/blog/${post.slug}`);
+    }
+    if (updatedPost.status === "PUBLISHED") {
+      revalidatePath("/feed.xml");
+      revalidatePath("/sitemap.xml");
     }
 
     return NextResponse.json(updatedPost);

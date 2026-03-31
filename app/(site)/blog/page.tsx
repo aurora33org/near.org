@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { extractExcerpt } from "@/lib/excerpt";
+import { readingTime } from "@/lib/readingTime";
 import { Metadata } from "next";
 
 export const revalidate = 60;
@@ -88,7 +89,7 @@ export default async function BlogIndex({
                 <div className="flex flex-col flex-1 p-5">
                   <p className="text-sm text-gray-500 mb-2">
                     {new Date(post.publishedAt!).toLocaleDateString()} ·{" "}
-                    {post.author.name}
+                    {post.author.name} · {readingTime(post.content)}
                   </p>
                   <Link href={`/blog/${post.slug}`}>
                     <h2 className="text-lg font-bold leading-snug hover:text-gray-600 mb-2">

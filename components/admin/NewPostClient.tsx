@@ -51,6 +51,7 @@ export default function NewPostClient() {
   const [heroBgColor, setHeroBgColor] = useState("#ffffff");
   const [heroBgImage, setHeroBgImage] = useState("");
   const [isHeroBgPickerOpen, setIsHeroBgPickerOpen] = useState(false);
+  const [isOgPickerOpen, setIsOgPickerOpen] = useState(false);
 
   useEffect(() => {
     Promise.all([fetch("/api/categories"), fetch("/api/tags")]).then(
@@ -410,14 +411,42 @@ export default function NewPostClient() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="ogImage" className="text-xs font-medium">OG Image URL</Label>
-                    <Input
-                      id="ogImage"
-                      type="text"
-                      value={ogImage}
-                      onChange={(e) => setOgImage(e.target.value)}
-                      placeholder="https://... (Open Graph image)"
-                      className="bg-muted/30 border-border/70"
+                    <Label className="text-xs font-medium">OG Image</Label>
+                    {coverImage && !ogImage && (
+                      <button
+                        type="button"
+                        onClick={() => setOgImage(coverImage)}
+                        className="text-xs text-primary underline"
+                      >
+                        Use featured image
+                      </button>
+                    )}
+                    {ogImage ? (
+                      <div className="relative">
+                        <img src={ogImage} alt="OG" className="w-full rounded-lg object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => setOgImage("")}
+                          className="absolute top-1 right-1 bg-black/50 hover:bg-black/70 text-white rounded p-0.5 transition"
+                          title="Remove OG image"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setIsOgPickerOpen(true)}
+                        className="w-full border-2 border-dashed border-border rounded-lg py-4 flex flex-col items-center gap-2 text-muted-foreground hover:border-primary/50 hover:text-foreground transition"
+                      >
+                        <ImageIcon size={16} />
+                        <span className="text-xs">Pick or upload OG image</span>
+                      </button>
+                    )}
+                    <MediaPickerModal
+                      open={isOgPickerOpen}
+                      onClose={() => setIsOgPickerOpen(false)}
+                      onSelect={(url) => setOgImage(url)}
                     />
                   </div>
                 </div>

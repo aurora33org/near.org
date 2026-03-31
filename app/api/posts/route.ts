@@ -114,6 +114,8 @@ export async function POST(req: NextRequest) {
     if (post.status === "PUBLISHED") {
       revalidatePath("/blog");
       revalidatePath(`/blog/${post.slug}`);
+      revalidatePath("/feed.xml");
+      revalidatePath("/sitemap.xml");
     }
 
     return NextResponse.json(post, { status: 201 });
