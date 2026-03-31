@@ -3,6 +3,7 @@ import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { extractExcerpt } from "@/lib/excerpt";
 import { Metadata } from "next";
+import ThreadsClient from "@/components/site/ThreadsClient";
 
 export const revalidate = 60;
 
@@ -53,9 +54,28 @@ export default async function BlogIndex({
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
+  const T = { fontFamily: "var(--font-tech)" };
+  const D = { fontFamily: "var(--font-display)" };
+
   return (
-    <div className="max-w-6xl mx-auto px-4 py-20">
-      <h1 className="text-5xl font-bold mb-12">Blog</h1>
+    <div className="bg-white text-black">
+
+      {/* ── HERO ─────────────────────────────────────────────────── */}
+      <section className="relative bg-black flex items-center overflow-hidden" style={{ minHeight: "38vh" }}>
+        <div aria-hidden="true" style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}>
+          <ThreadsClient color={[0.345, 0.584, 0.847]} amplitude={0.8} distance={0.6} enableMouseInteraction />
+        </div>
+        <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.55)" }} aria-hidden="true" />
+        <div className="relative z-10 w-full max-w-6xl mx-auto px-8 py-14">
+          <p style={T} className="text-[#5895d8] text-xs tracking-widest uppercase mb-4">Blog</p>
+          <h1 style={D} className="text-4xl lg:text-5xl font-bold text-white leading-tight tracking-tight">
+            Insights on Private AI,<br className="hidden sm:block" /> Confidential Compute &amp; What&apos;s Next
+          </h1>
+        </div>
+      </section>
+
+      {/* ── POSTS ────────────────────────────────────────────────── */}
+      <div className="max-w-6xl mx-auto px-8 py-16">
 
       {posts.length === 0 ? (
         <p className="text-gray-600">No posts yet.</p>
@@ -146,6 +166,7 @@ export default async function BlogIndex({
           )}
         </>
       )}
+      </div>
     </div>
   );
 }
