@@ -1,60 +1,22 @@
 # NEAR.org CMS
 
-A comprehensive marketing website & CMS for NEAR Protocol built with Next.js 15, Tailwind CSS v4 (TweakCN theme), PostgreSQL, and TipTap editor.
+A marketing website + CMS for NEAR Protocol built with Next.js 16, Tailwind CSS v4, PostgreSQL, and TipTap editor.
 
-## 🚀 Quick Start
-
-### Prerequisites
-- Node.js 18+ and npm
-- PostgreSQL 12+ (or Docker)
-
-### Setup (5 minutes)
+## Quick Start
 
 ```bash
-# 1. Install dependencies
 npm install
-
-# 2. Set up environment variables
-cp .env.example .env
-# Update DATABASE_URL and generate NEXTAUTH_SECRET with: openssl rand -hex 32
-
-# 3. Initialize database
+cp .env.example .env.local   # fill in DATABASE_URL, AUTH_SECRET, NEXTAUTH_URL
 npm run prisma:migrate
 npm run prisma:seed
-
-# 4. Start dev server
 npm run dev
 ```
 
 Visit `http://localhost:3000` (site) or `http://localhost:3000/admin` (CMS)
 
-### Default Credentials
-- Email: `admin@example.com`
-- Password: `password`
+**Default credentials:** `admin@example.com` / `password`
 
-## 📁 Project Structure
-
-```
-app/
-├── (site)/          # Public website (home, about, blog, etc.)
-├── (admin)/         # CMS admin (dashboard, posts, users)
-└── api/             # API endpoints (auth, CRUD)
-
-lib/
-├── auth.ts         # NextAuth v5 configuration
-├── prisma.ts       # Database client
-└── utils.ts        # Utilities
-
-prisma/
-├── schema.prisma   # Database schema
-└── seed.ts         # Demo data
-
-components/
-├── admin/          # Admin UI (BlockEditor, ThemeProvider)
-└── ui/             # shadcn/ui components
-```
-
-## 🛠 Tech Stack
+## Tech Stack
 
 | Layer | Technology |
 |-------|------------|
@@ -63,77 +25,80 @@ components/
 | Database | PostgreSQL + Prisma ORM |
 | Auth | NextAuth.js v5 (JWT + Credentials) |
 | Editor | TipTap v3 (block-based rich text) |
-| UI Components | shadcn/ui |
-| Media | Uploadthing (configured) |
+| UI Components | shadcn/ui (new-york style) |
+| Media | Cloudflare R2 (S3-compatible) |
+| Email | Resend |
 
-## ✨ Features
+## Features
 
 ### Public Site
-- 📄 Multiple landing pages (Home, About, Founders, Developers, Tech, Community)
-- 📝 Blog with ISR (60s revalidate)
-- 🎨 Responsive design with TweakCN theme
-- 🌙 Dark mode support
-- 📊 SEO optimized
+- Landing pages (Home, About, Founders, Developers, Tech, Community, Cloud, Private Chat)
+- Blog with ISR revalidation (60s), table of contents, reading time, related posts
+- Ecosystem partners page (live from Airtable)
+- RSS feed (`/feed.xml`), XML sitemap (`/sitemap.xml`), robots.txt
+- 3D animations (Beams, Threads, Plasma) on homepage and blog
 
 ### CMS Admin
-- 🔐 Email + password authentication with role-based access
-- ✍️ TipTap block editor for rich content
-- 📸 Media library with Uploadthing
-- 📋 Blog & page management (create, edit, publish, delete)
-- 👥 User management (admin-only)
-- 🎨 Dark/light mode toggle
+- Email + password auth with forgot/reset password flow
+- TipTap block editor — headings, lists, tables, code blocks, images, columns, raw HTML, slash commands, drag & drop
+- Media library with Cloudflare R2 upload (drag & drop, 10MB, image types)
+- Full blog post management: create, edit, publish, archive, duplicate, bulk actions
+- Password-protected preview links for sharing drafts
+- Edit locks — warns when two people edit the same post simultaneously
+- Categories and tags CRUD (admin-only)
+- User management with roles (admin-only)
+- Audit log — full history of create/update/delete actions
+- Dark/light mode toggle
 
-## 🔑 Commands
+### Security
+- bcrypt password hashing (cost 13) for users and preview passwords
+- Rate limiting on sensitive endpoints (forgot-password, preview verify, upload)
+- Security headers (X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy)
+- DOMPurify sanitization in editor and public renderer
+- Demo credentials shown only in development mode
+
+## Commands
 
 ```bash
 npm run dev              # Start dev server
-npm run build           # Production build
-npm run start           # Run production
-npm run prisma:migrate  # Database migrations
-npm run prisma:seed     # Seed demo data
-npm run prisma:studio   # Database admin UI
+npm run build            # Production build
+npm run lint             # ESLint
+npm run prisma:migrate   # Database migrations
+npm run prisma:seed      # Seed demo data
+npm run prisma:studio    # Database admin UI (http://localhost:5555)
 ```
 
-## 📚 Documentation
+## Database Schema
 
-- **DOCS.md** - Complete architecture, implementation guide, Phase 2 checklist
-- **[Prisma](https://prisma.io)** - Database ORM
-- **[NextAuth.js](https://next-auth.js.org)** - Authentication
-- **[TipTap](https://tiptap.dev)** - Rich text editor
+| Model | Purpose |
+|-------|---------|
+| User | Auth — email, bcrypt password, role |
+| Post | Blog posts — content (JSON), status, SEO fields, preview token, edit lock |
+| Page | CMS pages (model ready, UI stub) |
+| Media | File metadata — url, filename, mimeType |
+| Category / Tag | Post taxonomy |
+| PasswordResetToken | 1-hour reset tokens |
+| AuditLog | Action history (CREATE/UPDATE/DELETE) |
 
-## 🚀 Deployment
-
-Push to GitHub and deploy to Railway.app:
-1. Set `DATABASE_URL`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL` in Railway
-2. Auto-deploys on git push
-
-## 📊 Database Schema
-
-**User** - Authentication (email, password hash, role)
-**Post** - Blog posts (title, slug, content, status, SEO fields)
-**Page** - CMS pages (similar to Post)
-**Media** - File metadata (url, filename, mimeType)
-**Category & Tag** - Post taxonomy
-
-## 🔐 Roles
+## Roles
 
 | Role | Permissions |
 |------|------------|
-| ADMIN | Full access, user management |
-| EDITOR | Create/edit content |
-| VIEWER | Read-only |
+| ADMIN | Full access, user management, categories/tags |
+| EDITOR | Create and edit own posts, read all |
+| VIEWER | Read own posts only |
 
-## 🎨 Current Phase
+## Current Status
 
-✅ **Phase 1**: Foundation (Auth, DB, Blog, Admin scaffold)
-✅ **Phase 2**: CMS Core (TipTap editor, Media, Dark mode, shadcn/ui)
-⏳ **Phase 3**: Page management system
-⏳ **Phase 4**: SEO & blog rendering enhancements
+✅ **Phase 1** — Auth, DB, Blog, Admin scaffold  
+✅ **Phase 2** — TipTap editor, Media upload, Dark mode, shadcn/ui  
+✅ **Phase 3** — Preview links, edit locks, bulk actions, audit log, RSS, SEO, security hardening  
+⏳ **Phase 4** — Page management UI, public site content, notification emails
 
-## 📖 Next Steps
+## Documentation
 
-See **DOCS.md** for detailed Phase 2 checklist and architecture overview.
+See **DOCS.md** for architecture deep-dive, implementation guide, and deployment instructions.
 
 ---
 
-Built with ❤️ for NEAR Protocol | [GitHub](https://github.com/aurora33org/near.org)
+Built for NEAR Protocol

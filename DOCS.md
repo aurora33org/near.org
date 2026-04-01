@@ -2,12 +2,13 @@
 
 Complete guide for developers working on the NEAR.org CMS project.
 
-## 📖 Table of Contents
+## Table of Contents
 1. Getting Started
 2. Architecture
 3. Implementation Guide
-4. Phase 2 Checklist
+4. Feature Checklist
 5. Development Workflow
+6. Troubleshooting
 
 ---
 
@@ -15,46 +16,42 @@ Complete guide for developers working on the NEAR.org CMS project.
 
 ### Database Setup (Choose One)
 
-**Docker (Easiest)**
+**Docker**
 ```bash
 docker run --name postgres-near -e POSTGRES_PASSWORD=password -e POSTGRES_DB=near_org -p 5432:5432 -d postgres:15
 ```
 
-**Local PostgreSQL**
+**Local PostgreSQL (macOS)**
 ```bash
-# macOS
 brew install postgresql@15 && brew services start postgresql@15
-
-# Ubuntu/Debian
-sudo apt-get install postgresql && sudo service postgresql start
 ```
 
-**Railway.app** - Sign up and create PostgreSQL database, copy connection string
+**Railway.app** — Sign up, create a PostgreSQL database, copy the connection string.
 
 ### Environment Setup
 
 ```bash
-cp .env.example .env
+cp .env.example .env.local
 ```
 
-Update `.env`:
+Minimum required variables:
 ```
 DATABASE_URL="postgresql://user:password@localhost:5432/near_org"
-NEXTAUTH_SECRET=$(openssl rand -hex 32)
+AUTH_SECRET="<openssl rand -hex 32>"
 NEXTAUTH_URL="http://localhost:3000"
 ```
+
+Full variable list in `CLAUDE.md`.
 
 ### Database Initialization
 
 ```bash
 npm run prisma:migrate   # Create tables
-npm run prisma:seed      # Add demo data
+npm run prisma:seed      # Add demo admin user
 npm run dev              # Start server
 ```
 
-Login at `/admin/login` with:
-- Email: `admin@example.com`
-- Password: `password`
+Login at `/admin/login` → `admin@example.com` / `password`
 
 ---
 
@@ -63,84 +60,105 @@ Login at `/admin/login` with:
 ### System Overview
 
 ```
-Next.js 15 (App Router + TypeScript)
-├── PUBLIC SITE (/app/(site)/)
-│   ├── Home, About, Founders, Developers, Tech, Community
-│   ├── Blog (ISR 60s revalidate)
-│   └── Navigation + Footer
+Next.js 16 (App Router + TypeScript)
+├── PUBLIC SITE (app/(site)/)
+│   ├── Home, About, Founders, Developers, Tech, Community, Cloud, Private Chat
+│   ├── Ecosystem (Airtable ISR 60s)
+│   ├── Blog index + [slug] (ISR 60s, static params)
+│   ├── feed.xml, sitemap.xml, robots.txt
+│   └── Navigation + Footer (app/(site)/layout.tsx)
 │
-├── CMS ADMIN (/app/(admin)/)
-│   ├── Login, Dashboard
-│   ├── Posts/Pages management
-│   ├── Media library
-│   └── User management (admin-only)
+├── CMS ADMIN (app/admin/)
+│   ├── Login, Forgot/Reset Password
+│   ├── Dashboard (stats + recent audit activity)
+│   ├── Posts (CRUD, bulk actions, preview links, edit locks, duplicate)
+│   ├── Media (R2 upload, library, search)
+│   ├── Categories + Tags
+│   ├── Users (admin-only)
+│   ├── Audit Log (admin-only)
+│   └── Settings (change password)
 │
-└── API ROUTES (/app/api/)
-    ├── Auth endpoints (NextAuth)
-    └── CRUD for posts/pages/media
+└── API ROUTES (app/api/)
+    ├── auth/ — NextAuth, forgot-password, reset-password
+    ├── posts/ — CRUD + bulk + lock + duplicate + preview-link
+    ├── preview/[token]/verify — password-protected draft access
+    ├── upload/ — Cloudflare R2 file upload
+    ├── media/ — media library CRUD
+    ├── categories/ + tags/ — taxonomy CRUD
+    ├── users/ + profile/ — user management
+    └── audit-log/ — action history
 
-Middleware → JWT Session → PostgreSQL (Prisma ORM)
+lib/
+├── auth.ts          NextAuth v5 config (JWT + CredentialsProvider)
+├── prisma.ts        Prisma singleton client
+├── airtable.ts      getEcosystemPartners() — Airtable API
+├── email.ts         sendPasswordResetEmail() — Resend API
+└── tiptap-renderer.tsx  Renders TipTap JSON to React (DOMPurify sanitized)
+
+Middleware → JWT session check → PostgreSQL (Prisma ORM)
 ```
-
-### Data Flow
-
-**Public Site**
-- User visits URL → Static/ISR cached page → Renders content
-
-**CMS Admin**
-- User logs in → NextAuth JWT → Middleware protects routes → Dashboard/Editor loaded
-
-**Blog Post Creation**
-1. Editor fills form in `/admin/posts/new`
-2. TipTap editor saves JSON content
-3. POST `/api/posts` → Prisma saves to DB
-4. ISR revalidates blog pages automatically
 
 ### Database Schema
 
 ```
 User
-├─ id, email (UNIQUE), password (bcrypt), name
+├─ id, email (UNIQUE), password (bcrypt cost 13), name
 ├─ role (ADMIN|EDITOR|VIEWER)
 └─ createdAt, updatedAt
 
 Post
-├─ id, title, slug (UNIQUE), content (JSON - TipTap)
-├─ excerpt, coverImage, ogImage
+├─ id, title, slug (UNIQUE), content (JSON - TipTap blocks)
+├─ excerpt, coverImage, heroBgColor, heroBgImage
 ├─ status (DRAFT|PUBLISHED|ARCHIVED)
-├─ seoTitle, seoDesc
-├─ authorId (FK→User)
+├─ seoTitle, seoDesc, ogImage
+├─ authorId (FK→User), lastEditedById (FK→User)
+├─ previewToken (UNIQUE), previewPassword (bcrypt-hashed)
+├─ lockedBy (userId), lockedByEmail, lockedAt (90s TTL)
 └─ publishedAt, createdAt, updatedAt
 
-Page (similar to Post for CMS-driven pages)
+Page (same structure as Post — UI stub, not yet implemented)
 
 Media
 ├─ id, url, filename, mimeType, size, alt
 └─ createdAt
 
-Category & Tag (post taxonomy)
+Category / Tag
+└─ id, name (UNIQUE), slug (UNIQUE)
+
+PasswordResetToken
+└─ token (UNIQUE), email, expiresAt (1h), createdAt
+
+AuditLog
+└─ userId, userEmail, action (CREATE|UPDATE|DELETE),
+   entityType (POST|MEDIA|USER), entityId, entityTitle, createdAt
 ```
 
 ### Authentication
 
-NextAuth.js v5 with JWT strategy:
+NextAuth.js v5, JWT strategy:
 1. User submits email/password at `/admin/login`
-2. Credentials provider finds user by email
-3. bcryptjs compares password hash
-4. JWT token created with user data (id, email, role)
-5. Token stored in secure HTTP-only cookie
-6. Middleware checks session on protected routes (`/admin/*`)
-7. Role-based access control enforced
+2. CredentialsProvider finds user, bcryptjs compares hash
+3. JWT created with `{ id, email, role }` — stored in HTTP-only cookie
+4. `middleware.ts` checks `req.auth` on all `/admin/*` routes
+5. API routes call `await auth()` and return 401 if no session
+6. Session expires after 30 days
 
-### Security Features
+### Security
 
-✅ bcryptjs password hashing (12 rounds)
-✅ JWT tokens signed with NEXTAUTH_SECRET
-✅ HTTP-only secure cookies (XSS protection)
-✅ Middleware protects admin routes
-✅ Zod schema validation on all API routes
-✅ TypeScript strict mode
-✅ Role-based permissions (ADMIN/EDITOR/VIEWER)
+| Feature | Implementation |
+|---------|---------------|
+| Password hashing | bcryptjs, cost 13 (users + preview passwords) |
+| JWT signing | `AUTH_SECRET` env var |
+| HTTP-only cookies | NextAuth default |
+| Admin route protection | `middleware.ts` |
+| API auth | `await auth()` check in every protected route |
+| Input validation | Zod schemas on all API routes |
+| HTML sanitization | DOMPurify in editor (`RawHtmlBlockView.tsx`) and renderer (`tiptap-renderer.tsx`) |
+| Rate limiting | In-memory: forgot-password (1/min), preview verify (5/min), upload (20/min) |
+| Security headers | `next.config.ts`: X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy, X-XSS-Protection |
+| Image domains | `remotePatterns` dynamically built from `R2_PUBLIC_URL`/`S3_ENDPOINT` — no wildcard |
+| Demo credentials | Shown only when `NODE_ENV === "development"` |
+| Zod error details | Returned only when `NODE_ENV === "development"` |
 
 ---
 
@@ -149,11 +167,9 @@ NextAuth.js v5 with JWT strategy:
 ### Adding a New Public Page
 
 ```bash
-# 1. Create page directory
 mkdir -p app/\(site\)/[section]
-
-# 2. Add page.tsx with React component
-# 3. Update navigation in app/(site)/layout.tsx
+# Create page.tsx with React component
+# Update navigation in app/(site)/layout.tsx
 ```
 
 ### Creating an API Endpoint
@@ -162,80 +178,87 @@ mkdir -p app/\(site\)/[section]
 // app/api/[route]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-
   const data = await req.json();
-  // Process data...
-  return NextResponse.json(data, { status: 201 });
+  // Zod validation, prisma operation...
+  return NextResponse.json(result, { status: 201 });
 }
 ```
 
 ### Database Migrations
 
 ```bash
-# Create new migration
-npx prisma migrate dev --name descriptive_name
-
-# Reset database (deletes data!)
-npx prisma migrate reset
-
-# Sync schema to DB
-npx prisma db push
-
-# View database
-npm run prisma:studio
+npx prisma migrate dev --name descriptive_name   # New migration
+npx prisma db push                                # Sync schema (dev only)
+npx prisma migrate reset                          # Reset (deletes data!)
+npm run prisma:studio                             # GUI at localhost:5555
 ```
 
 ### Deploying to Railway
 
-1. Push code to GitHub
+1. Push to GitHub
 2. Connect repo to Railway.app
-3. Add environment variables:
-   - `DATABASE_URL` → Railway PostgreSQL
-   - `NEXTAUTH_SECRET` → Secure random string
-   - `NEXTAUTH_URL` → Your domain
+3. Add env vars: `DATABASE_URL`, `AUTH_SECRET`, `NEXTAUTH_URL`, R2 credentials, `RESEND_API_KEY`
+4. Auto-deploys on git push
 
 ---
 
-## 4. Phase 2 Checklist
+## 4. Feature Checklist
 
-### TipTap Block Editor ✅ DONE
-- [x] Install TipTap dependencies
-- [x] Create `components/admin/BlockEditor.tsx`
-- [x] Configure toolbar (H1-H3, Bold, Italic, Lists, Code, Link, HR)
-- [x] Support syntax highlighting with lowlight
-- [x] Integrate into post editor
+### Foundation ✅
+- [x] NextAuth.js v5 (JWT + Credentials)
+- [x] PostgreSQL + Prisma ORM
+- [x] Admin scaffold with sidebar and middleware protection
+- [x] Role-based access (ADMIN / EDITOR / VIEWER)
 
-### Tailwind v4 + TweakCN Theme ✅ DONE
-- [x] Migrate from Tailwind v3 → v4
-- [x] Apply TweakCN design system (OKLch colors, 1.4rem radius)
-- [x] Set NEAR green as primary color
-- [x] Add Google Fonts (Plus Jakarta Sans, Lora, IBM Plex Mono)
-- [x] Implement dark mode in admin
+### CMS Core ✅
+- [x] TipTap block editor (slash commands, drag handles, tables, code, images, columns, raw HTML)
+- [x] Blog CRUD (create, edit, publish, archive, delete)
+- [x] Tailwind v4 + TweakCN dark mode admin
+- [x] shadcn/ui component library
+- [x] Media library with Cloudflare R2 upload
+- [x] Categories and tags CRUD
 
-### shadcn/ui Components ✅ DONE
-- [x] Initialize shadcn with `new-york` style
-- [x] Install: button, card, badge, input, label, textarea, separator, skeleton
-- [x] Refactor admin pages with semantic components
-- [x] Update BlockEditor styling for dark mode
+### Blog & Public Site ✅
+- [x] ISR blog index and dynamic post pages (60s revalidation)
+- [x] Table of contents (floating sidebar)
+- [x] Reading time calculation
+- [x] Related posts by category
+- [x] OG image + SEO fields per post
+- [x] RSS feed (`/feed.xml`)
+- [x] XML sitemap (`/sitemap.xml`)
+- [x] robots.txt
 
-### Media Upload ✅ DONE (Phase 2b)
-- [x] Cloudflare R2 bucket configured (`cms-test` for staging)
-- [x] `app/api/upload/route.ts` — POST endpoint, auth-protected, 10MB limit
-- [x] Supports: JPEG, PNG, WebP, GIF, SVG
-- [x] Returns public URL via `R2_PUBLIC_URL` env var
-- [ ] Build `components/admin/MediaPicker.tsx`
-- [ ] Integrate MediaPicker into post editor for image uploads
+### Advanced CMS ✅
+- [x] Password-protected preview links for draft sharing
+- [x] Edit locks (90s TTL, warns on conflict)
+- [x] Duplicate posts
+- [x] Bulk actions (publish / archive / delete)
+- [x] Forgot password + email reset (Resend)
+- [x] Audit log with admin UI
+- [x] Dashboard with stats and recent activity
+- [x] Airtable integration for Ecosystem page
 
-### Draft Preview (TODO - Phase 2b)
-- [ ] Create preview mode route
-- [ ] Render TipTap JSON to HTML
-- [ ] Show preview in modal before publish
+### Security Hardening ✅
+- [x] bcrypt preview passwords (was plaintext)
+- [x] Rate limiting on forgot-password, preview verify, upload
+- [x] Security HTTP headers in next.config.ts
+- [x] DOMPurify sanitization in editor and renderer
+- [x] Restricted image remotePatterns (no wildcard)
+- [x] Dev-only demo credentials and Zod error details
+
+### Pending ⏳
+- [ ] Page management UI (`app/admin/pages/` is a stub)
+- [ ] Public site content pages (most are static stubs)
+- [ ] Dark mode on public site
+- [ ] Notification emails (post publish, new user welcome)
+- [ ] Post scheduling (field exists, no scheduler)
 
 ---
 
@@ -244,80 +267,64 @@ npm run prisma:studio
 ### Creating a Blog Post
 
 1. Login at `/admin/login`
-2. Navigate to "Blog Posts"
-3. Click "+ New Post"
-4. Fill title, content (TipTap editor), excerpt, cover image
-5. Add SEO fields (title, description, OG image)
-6. Choose status (DRAFT or PUBLISHED)
-7. Save and view at `/blog/[slug]`
+2. Go to "Blog Posts" → "+ New Post"
+3. Fill title (auto-generates slug), content, excerpt, cover image
+4. Add SEO fields under the SEO tab
+5. Set status (DRAFT or PUBLISHED) and save
+6. Published posts appear at `/blog/[slug]`
 
-### Creating a CMS Page
+### Sharing a Draft Preview
 
-1. Go to `/admin/pages`
-2. Same workflow as blog post
-3. Page appears on public site when published
+1. Open the post in edit mode
+2. Click "Share Preview" → set a password → generate link
+3. Share the link — recipient enters the password to view the draft
 
-### Editing Users
+### Managing Users
 
 1. Admin goes to `/admin/users`
-2. Create/edit user roles (ADMIN, EDITOR, VIEWER)
-3. Permissions enforced by middleware
+2. Create users with ADMIN / EDITOR / VIEWER roles
+3. Delete or edit as needed (cannot delete yourself)
 
 ### Debugging
 
 ```bash
-# View database GUI
-npm run prisma:studio
-
-# Check build for errors
-npm run build
-
-# Clear cache if stuck
-rm -rf .next && npm run dev
+npm run prisma:studio   # View/edit database records
+npm run build           # Check for TypeScript/build errors
+rm -rf .next && npm run dev  # Clear Next.js cache
 ```
 
 ---
 
-## 🔗 Key Files Reference
+## 6. Troubleshooting
 
-- `lib/auth.ts` - NextAuth.js v5 config
-- `lib/prisma.ts` - Database client singleton
-- `middleware.ts` - Route protection
-- `components/admin/BlockEditor.tsx` - TipTap editor
-- `app/(admin)/layout.tsx` - Admin sidebar + ThemeProvider
-- `prisma/schema.prisma` - Database schema
+**"Error: connect ECONNREFUSED"** → PostgreSQL not running. Start it or use Docker.
 
----
+**"NextAuth login not working"** → Check `AUTH_SECRET` in `.env.local`, clear browser cookies.
 
-## 📚 External Resources
+**"Port 3000 already in use"** → `npm run dev -- -p 3001`
 
-- [Next.js 16 Docs](https://nextjs.org/docs)
-- [Prisma Docs](https://www.prisma.io/docs)
-- [NextAuth.js Docs](https://next-auth.js.org)
-- [TipTap Docs](https://www.tiptap.dev)
-- [Tailwind CSS v4](https://tailwindcss.com/docs)
-- [shadcn/ui](https://ui.shadcn.com)
+**"Module not found"** → `npm install && npx prisma generate`
+
+**"Database error during migration"** → `npx prisma db push` or `npx prisma migrate reset`
+
+**"Images not loading"** → Check `R2_PUBLIC_URL` is set — `remotePatterns` is built from this env var.
 
 ---
 
-## 🆘 Troubleshooting
+## Key Files Reference
 
-**"Error: connect ECONNREFUSED"**
-→ PostgreSQL not running. Start it or use Docker.
-
-**"NextAuth login not working"**
-→ Check NEXTAUTH_SECRET in `.env`, clear browser cookies.
-
-**"Port 3000 already in use"**
-→ `npm run dev -- -p 3001`
-
-**"Module not found"**
-→ `npm install && npx prisma generate`
-
-**"Database error during migration"**
-→ `npx prisma db push` or `npx prisma migrate reset`
+| File | Purpose |
+|------|---------|
+| `lib/auth.ts` | NextAuth v5 config |
+| `lib/prisma.ts` | Prisma singleton |
+| `lib/email.ts` | Resend email helper |
+| `lib/tiptap-renderer.tsx` | TipTap JSON → React (public) |
+| `middleware.ts` | Admin route protection |
+| `components/admin/BlockEditor.tsx` | TipTap editor |
+| `app/admin/layout.tsx` | Admin sidebar + ThemeProvider |
+| `prisma/schema.prisma` | Full database schema |
+| `next.config.ts` | Image domains + security headers |
 
 ---
 
-**Last Updated**: Phase 2b (Cloudflare R2 media upload)
-**Next Phase**: MediaPicker component, draft preview, SEO enhancements
+*Last updated: Phase 3 — Security hardening, preview links, edit locks, bulk actions, audit log, RSS/SEO*

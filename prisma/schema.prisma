@@ -50,7 +50,7 @@ model Post {
   heroBgImage     String?            // URL of hero background image
   publishedAt     DateTime?
   previewToken    String?   @unique  // null = sharing disabled; UUID generated on demand
-  previewPassword String?            // plaintext; low-security gating only
+  previewPassword String?            // bcrypt-hashed
   lockedBy        String?            // userId of the user currently editing
   lockedByEmail   String?            // display name/email of the current editor
   lockedAt        DateTime?          // last heartbeat; lock expires after 90s
