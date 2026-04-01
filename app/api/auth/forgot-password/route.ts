@@ -2,11 +2,28 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendPasswordResetEmail } from "@/lib/email";
 
+const forgotRateLimit = new Map<string, { count: number; resetAt: number }>();
+function checkForgotRateLimit(email: string): boolean {
+  const now = Date.now();
+  const entry = forgotRateLimit.get(email);
+  if (!entry || now > entry.resetAt) {
+    forgotRateLimit.set(email, { count: 1, resetAt: now + 60_000 });
+    return true;
+  }
+  if (entry.count >= 1) return false;
+  entry.count++;
+  return true;
+}
+
 export async function POST(req: NextRequest) {
   const { email } = await req.json();
 
   if (!email || typeof email !== "string") {
     return NextResponse.json({ error: "Email is required" }, { status: 400 });
+  }
+
+  if (!checkForgotRateLimit(email.toLowerCase().trim())) {
+    return NextResponse.json({ success: true }); // Don't reveal rate limit to prevent enumeration
   }
 
   // Always return success to prevent user enumeration

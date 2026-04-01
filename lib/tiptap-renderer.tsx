@@ -176,10 +176,7 @@ export function renderBlocks(nodes: TipTapNode[] | undefined): React.ReactNode {
 
       // Raw HTML block
       case "rawHtmlBlock": {
-        const cleanHtml = DOMPurify.sanitize(node.attrs?.content ?? "", {
-          ADD_TAGS: ["iframe"],
-          ADD_ATTR: ["allow", "allowfullscreen", "frameborder", "scrolling", "loading"],
-        });
+        const cleanHtml = DOMPurify.sanitize(node.attrs?.content ?? "");
         return (
           <div
             key={i}

@@ -109,7 +109,9 @@ export async function POST(req: NextRequest) {
           entityTitle: post.title,
         },
       });
-    } catch {}
+    } catch (auditError) {
+      console.error("Audit log failed:", auditError);
+    }
 
     if (post.status === "PUBLISHED") {
       revalidatePath("/blog");
@@ -122,7 +124,10 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "Invalid request body", details: error.issues },
+        {
+          error: "Invalid request body",
+          ...(process.env.NODE_ENV === "development" && { details: error.issues }),
+        },
         { status: 400 }
       );
     }

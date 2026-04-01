@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { hash } from "bcryptjs";
 
 export async function POST(
   req: NextRequest,
@@ -39,12 +40,13 @@ export async function POST(
         ? crypto.randomUUID()
         : post.previewToken;
 
+    const hashedPassword = await hash(password, 12);
     await prisma.post.update({
       where: { id },
-      data: { previewToken: token, previewPassword: password },
+      data: { previewToken: token, previewPassword: hashedPassword },
     });
 
-    return NextResponse.json({ token, password });
+    return NextResponse.json({ token });
   } catch (error) {
     console.error("Error creating preview link:", error);
     return NextResponse.json(

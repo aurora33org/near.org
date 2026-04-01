@@ -36,7 +36,7 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "Current password is incorrect" }, { status: 400 });
   }
 
-  const hashed = await hash(newPassword, 12);
+  const hashed = await hash(newPassword, 13);
   await prisma.user.update({
     where: { id: session.user.id },
     data: { password: hashed },

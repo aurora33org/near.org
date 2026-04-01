@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "User not found." }, { status: 404 });
   }
 
-  const hashed = await hash(password, 12);
+  const hashed = await hash(password, 13);
   await prisma.user.update({ where: { id: user.id }, data: { password: hashed } });
   await prisma.passwordResetToken.delete({ where: { token } });
 
