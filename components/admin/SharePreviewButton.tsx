@@ -34,7 +34,7 @@ export default function SharePreviewButton({
         if (post.previewToken) {
           setPreviewToken(post.previewToken);
           setPreviewUrl(`${window.location.origin}/preview/${post.previewToken}`);
-          setPassword(post.previewPassword ?? "");
+          // Don't load the hash — password field stays blank for user to set a new one
         }
       })
       .catch(() => {})
@@ -60,7 +60,6 @@ export default function SharePreviewButton({
       }
       setPreviewToken(data.token);
       setPreviewUrl(`${window.location.origin}/preview/${data.token}`);
-      setPassword(data.password);
       toast.success(regenerate ? "Preview link regenerated" : "Preview link created");
     } catch {
       toast.error("Something went wrong");
