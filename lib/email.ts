@@ -24,3 +24,27 @@ export async function sendPasswordResetEmail(to: string, resetUrl: string) {
     `,
   });
 }
+
+export async function sendInvitationEmail(to: string, name: string, inviteUrl: string) {
+  await resend.emails.send({
+    from: "onboarding@resend.dev",
+    to,
+    subject: "You're invited to join NEAR CMS",
+    html: `
+      <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+        <h2 style="margin-bottom: 16px;">Welcome, ${name}!</h2>
+        <p style="color: #555; margin-bottom: 24px;">
+          You've been invited to join the NEAR CMS team. Click the button below to set up your account and get started.
+          This link expires in <strong>48 hours</strong>.
+        </p>
+        <a href="${inviteUrl}"
+           style="display: inline-block; background: #000; color: #fff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;">
+          Accept Invitation
+        </a>
+        <p style="color: #999; font-size: 12px; margin-top: 32px;">
+          If you didn't expect this invitation, you can safely ignore this email.
+        </p>
+      </div>
+    `,
+  });
+}

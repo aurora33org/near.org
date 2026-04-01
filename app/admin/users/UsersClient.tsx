@@ -30,6 +30,7 @@ const roleBadgeClass = (role: string) => {
 export function UsersClient({ initialUsers, currentUserId }: UsersClientProps) {
   const [users, setUsers] = useState<User[]>(initialUsers);
   const [showCreate, setShowCreate] = useState(false);
+  const [showInvite, setShowInvite] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -40,6 +41,11 @@ export function UsersClient({ initialUsers, currentUserId }: UsersClientProps) {
   const [createEmail, setCreateEmail] = useState("");
   const [createPassword, setCreatePassword] = useState("");
   const [createRole, setCreateRole] = useState<Role>("EDITOR");
+
+  // Invite form state
+  const [inviteName, setInviteName] = useState("");
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState<Role>("EDITOR");
 
   // Edit form state
   const [editName, setEditName] = useState("");
@@ -59,6 +65,12 @@ export function UsersClient({ initialUsers, currentUserId }: UsersClientProps) {
   function closeCreate() {
     setShowCreate(false);
     setCreateName(""); setCreateEmail(""); setCreatePassword(""); setCreateRole("EDITOR");
+    setError("");
+  }
+
+  function closeInvite() {
+    setShowInvite(false);
+    setInviteName(""); setInviteEmail(""); setInviteRole("EDITOR");
     setError("");
   }
 
@@ -117,11 +129,34 @@ export function UsersClient({ initialUsers, currentUserId }: UsersClientProps) {
     }
   }
 
+  async function handleInvite(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/users/invite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: inviteName, email: inviteEmail, role: inviteRole }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setError(data.error ?? "Failed to send invitation"); return; }
+      closeInvite();
+      // Show success message (optional: add toast)
+      alert("Invitation sent successfully!");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center gap-3">
         <h1 className="text-4xl font-bold">Users</h1>
-        <Button onClick={() => { setShowCreate(true); setError(""); }}>+ New User</Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => { setShowInvite(true); setError(""); }}>Invite User</Button>
+          <Button onClick={() => { setShowCreate(true); setError(""); }}>+ New User</Button>
+        </div>
       </div>
 
       <div className="bg-background border border-border rounded-lg overflow-hidden">
@@ -178,6 +213,27 @@ export function UsersClient({ initialUsers, currentUserId }: UsersClientProps) {
             <div className="flex gap-3 pt-2">
               <Button type="button" variant="outline" className="flex-1" onClick={closeCreate}>Cancel</Button>
               <Button type="submit" className="flex-1" disabled={isLoading}>{isLoading ? "Creating…" : "Create"}</Button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {/* Invite Dialog */}
+      {showInvite && (
+        <Modal title="Invite User" onClose={closeInvite}>
+          <form onSubmit={handleInvite} className="space-y-4">
+            {error && <p className="text-sm text-destructive bg-destructive/10 rounded-lg px-3 py-2">{error}</p>}
+            <Field label="Name"><Input value={inviteName} onChange={(e) => setInviteName(e.target.value)} required /></Field>
+            <Field label="Email"><Input type="email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} required /></Field>
+            <Field label="Role">
+              <RoleSelect value={inviteRole} onChange={setInviteRole} />
+            </Field>
+            <p className="text-xs text-muted-foreground bg-muted/30 rounded-lg px-3 py-2">
+              An invitation link will be sent to this email. The user will set their own password when they accept.
+            </p>
+            <div className="flex gap-3 pt-2">
+              <Button type="button" variant="outline" className="flex-1" onClick={closeInvite}>Cancel</Button>
+              <Button type="submit" className="flex-1" disabled={isLoading}>{isLoading ? "Sending…" : "Send Invitation"}</Button>
             </div>
           </form>
         </Modal>

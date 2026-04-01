@@ -4,9 +4,10 @@ import { NextResponse } from "next/server";
 export default auth((req) => {
   const isAdminRoute = req.nextUrl.pathname.startsWith("/admin");
   const isLoginPage = req.nextUrl.pathname === "/admin/login";
+  const isAcceptInvitePage = req.nextUrl.pathname.startsWith("/admin/accept-invite");
 
-  // Redirect unauthenticated users to login page
-  if (isAdminRoute && !isLoginPage && !req.auth) {
+  // Redirect unauthenticated users to login page (except for invitation acceptance)
+  if (isAdminRoute && !isLoginPage && !isAcceptInvitePage && !req.auth) {
     return NextResponse.redirect(new URL("/admin/login", req.url));
   }
 

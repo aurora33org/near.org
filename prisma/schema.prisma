@@ -111,6 +111,16 @@ model PasswordResetToken {
   createdAt DateTime @default(now())
 }
 
+model InvitationToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  email     String
+  name      String
+  role      Role     @default(EDITOR)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
 model AuditLog {
   id          String   @id @default(cuid())
   userId      String

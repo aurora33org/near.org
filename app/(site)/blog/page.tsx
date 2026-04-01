@@ -32,16 +32,26 @@ const PAGE_SIZE = 12;
 export default async function BlogIndex({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; q?: string; category?: string }>;
 }) {
-  const { page: pageParam } = await searchParams;
+  const { page: pageParam, q, category } = await searchParams;
   const page = Math.max(1, Number(pageParam ?? 1));
   const skip = (page - 1) * PAGE_SIZE;
 
   const now = new Date();
-  const publishedWhere = { status: "PUBLISHED" as const, publishedAt: { lte: now } };
+  const publishedWhere = {
+    status: "PUBLISHED" as const,
+    publishedAt: { lte: now },
+    ...(q && {
+      OR: [
+        { title: { contains: q, mode: "insensitive" as const } },
+        { excerpt: { contains: q, mode: "insensitive" as const } },
+      ],
+    }),
+    ...(category && { categories: { some: { slug: category } } }),
+  };
 
-  const [posts, total] = await Promise.all([
+  const [posts, total, categories] = await Promise.all([
     prisma.post.findMany({
       where: publishedWhere,
       orderBy: { publishedAt: "desc" },
@@ -50,6 +60,7 @@ export default async function BlogIndex({
       select: { id: true, slug: true, title: true, coverImage: true, publishedAt: true, excerpt: true, content: true },
     }),
     prisma.post.count({ where: publishedWhere }),
+    prisma.category.findMany({ select: { id: true, name: true, slug: true }, orderBy: { name: "asc" } }),
   ]);
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
@@ -76,6 +87,53 @@ export default async function BlogIndex({
 
       {/* ── POSTS ────────────────────────────────────────────────── */}
       <div className="max-w-6xl mx-auto px-8 py-16">
+
+        {/* SEARCH BAR */}
+        <form method="GET" className="mb-8">
+          <input
+            type="text"
+            name="q"
+            placeholder="Search posts..."
+            defaultValue={q ?? ""}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </form>
+
+        {/* CATEGORY FILTER */}
+        {categories.length > 0 && (
+          <div className="mb-8 flex flex-wrap gap-2">
+            <Link
+              href="/blog"
+              className={`px-4 py-2 rounded-full text-sm font-medium transition ${
+                !category
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              All
+            </Link>
+            {categories.map((cat) => (
+              <Link
+                key={cat.id}
+                href={`/blog?category=${cat.slug}`}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition ${
+                  category === cat.slug
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+              >
+                {cat.name}
+              </Link>
+            ))}
+          </div>
+        )}
+
+        {/* RESULTS COUNT */}
+        {(q || category) && (
+          <p className="text-sm text-gray-600 mb-6">
+            {total} result{total !== 1 ? "s" : ""} {q && `for "${q}"`} {q && category && "in"} {category && `"${categories.find(c => c.slug === category)?.name || category}"`}
+          </p>
+        )}
 
       {posts.length === 0 ? (
         <p className="text-gray-600">No posts yet.</p>
@@ -145,7 +203,7 @@ export default async function BlogIndex({
             <div className="flex items-center justify-center gap-4 mt-16">
               {page > 1 && (
                 <Link
-                  href={`/blog?page=${page - 1}`}
+                  href={`/blog?page=${page - 1}${q ? `&q=${encodeURIComponent(q)}` : ""}${category ? `&category=${category}` : ""}`}
                   className="px-5 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 transition"
                 >
                   ← Previous
@@ -156,7 +214,7 @@ export default async function BlogIndex({
               </span>
               {page < totalPages && (
                 <Link
-                  href={`/blog?page=${page + 1}`}
+                  href={`/blog?page=${page + 1}${q ? `&q=${encodeURIComponent(q)}` : ""}${category ? `&category=${category}` : ""}`}
                   className="px-5 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 transition"
                 >
                   Next →

@@ -7,8 +7,9 @@ const BASE_URL = "https://near.org";
 export default async function sitemap() {
   let posts: { slug: string; updatedAt: Date }[] = [];
   try {
+    const now = new Date();
     posts = await prisma.post.findMany({
-      where: { status: "PUBLISHED" },
+      where: { status: "PUBLISHED", publishedAt: { lte: now } },
       select: { slug: true, updatedAt: true },
     });
   } catch {
@@ -21,9 +22,11 @@ export default async function sitemap() {
     "/about",
     "/founders",
     "/developers",
-    "/tech",
+    "/technology",
     "/community",
     "/ecosystem",
+    "/cloud",
+    "/private-chat",
   ].map((url) => ({
     url: `${BASE_URL}${url}`,
     lastModified: new Date(),
