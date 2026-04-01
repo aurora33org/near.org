@@ -3,6 +3,7 @@
 import { NodeViewWrapper } from "@tiptap/react";
 import { useState } from "react";
 import { Code, Eye, EyeOff, Trash2 } from "lucide-react";
+import DOMPurify from "isomorphic-dompurify";
 
 export function RawHtmlBlockView({ node, updateAttributes, deleteNode }: any) {
   const [showPreview, setShowPreview] = useState(false);
@@ -39,7 +40,7 @@ export function RawHtmlBlockView({ node, updateAttributes, deleteNode }: any) {
         {showPreview ? (
           <div
             className="p-4 prose dark:prose-invert max-w-none"
-            dangerouslySetInnerHTML={{ __html: node.attrs.content }}
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(node.attrs.content ?? "") }}
           />
         ) : (
           <textarea

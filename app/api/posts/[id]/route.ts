@@ -26,6 +26,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const session = await auth();
     const { id } = await params;
     const post = await prisma.post.findUnique({
       where: { id },
@@ -33,6 +34,11 @@ export async function GET(
     });
 
     if (!post) {
+      return NextResponse.json({ error: "Post not found" }, { status: 404 });
+    }
+
+    // Unauthenticated users can only see published posts
+    if (!session?.user?.id && post.status !== "PUBLISHED") {
       return NextResponse.json({ error: "Post not found" }, { status: 404 });
     }
 
@@ -120,7 +126,9 @@ export async function PUT(
           entityTitle: updatedPost.title,
         },
       });
-    } catch {}
+    } catch (auditError) {
+      console.error("Audit log failed:", auditError);
+    }
 
     // On-demand revalidation so the public blog reflects changes immediately
     revalidatePath("/blog");
@@ -137,7 +145,10 @@ export async function PUT(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "Invalid request body", details: error.issues },
+        {
+          error: "Invalid request body",
+          ...(process.env.NODE_ENV === "development" && { details: error.issues }),
+        },
         { status: 400 }
       );
     }
@@ -189,7 +200,9 @@ export async function DELETE(
           entityTitle: post.title,
         },
       });
-    } catch {}
+    } catch (auditError) {
+      console.error("Audit log failed:", auditError);
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

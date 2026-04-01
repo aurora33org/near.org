@@ -1,5 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { compare } from "bcryptjs";
+
+const verifyRateLimit = new Map<string, { count: number; resetAt: number }>();
+function checkVerifyRateLimit(token: string): boolean {
+  const now = Date.now();
+  const entry = verifyRateLimit.get(token);
+  if (!entry || now > entry.resetAt) {
+    verifyRateLimit.set(token, { count: 1, resetAt: now + 60_000 });
+    return true;
+  }
+  if (entry.count >= 5) return false;
+  entry.count++;
+  return true;
+}
 
 export async function POST(
   req: NextRequest,
@@ -10,6 +24,10 @@ export async function POST(
     const body = await req.json();
     const { password } = body as { password: string };
 
+    if (!checkVerifyRateLimit(token)) {
+      return NextResponse.json({ error: "Too many attempts" }, { status: 429 });
+    }
+
     const post = await prisma.post.findUnique({
       where: { previewToken: token },
     });
@@ -18,7 +36,8 @@ export async function POST(
       return NextResponse.json({ error: "Invalid preview link" }, { status: 404 });
     }
 
-    if (password !== post.previewPassword) {
+    const isValid = await compare(password, post.previewPassword);
+    if (!isValid) {
       return NextResponse.json({ error: "Wrong password" }, { status: 401 });
     }
 

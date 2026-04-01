@@ -87,9 +87,11 @@ export default function LoginPage() {
           </Link>
         </div>
 
-        <p className="text-sm text-gray-600 text-center mt-4">
-          Demo credentials: admin@example.com / password
-        </p>
+        {process.env.NODE_ENV === "development" && (
+          <p className="text-sm text-gray-600 text-center mt-4">
+            Demo credentials: admin@example.com / password
+          </p>
+        )}
       </div>
     </div>
   );
