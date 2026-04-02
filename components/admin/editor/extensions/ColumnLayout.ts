@@ -1,6 +1,5 @@
 import { Node, mergeAttributes } from "@tiptap/core";
 import { ReactNodeViewRenderer } from "@tiptap/react";
-import { ColumnLayoutView } from "../node-views/ColumnLayoutView";
 import { ColumnView } from "../node-views/ColumnView";
 
 declare module "@tiptap/core" {
@@ -98,19 +97,16 @@ export const ColumnLayout = Node.create({
   },
 
   renderHTML({ node, HTMLAttributes }) {
+    const cols = node.attrs.columns || 2;
     return [
       "div",
       mergeAttributes(HTMLAttributes, {
         "data-type": "column-layout",
-        "data-columns": node.attrs.columns,
-        style: `display:grid;grid-template-columns:repeat(${node.attrs.columns},1fr);gap:1rem`,
+        "data-columns": cols,
+        style: `display: grid; grid-template-columns: repeat(${cols}, 1fr); gap: 1rem; margin: 1rem 0;`,
       }),
       0,
     ];
-  },
-
-  addNodeView() {
-    return ReactNodeViewRenderer(ColumnLayoutView);
   },
 
   addCommands() {
