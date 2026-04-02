@@ -15,6 +15,7 @@ export const Column = Node.create({
   name: "column",
   group: "block",
   content: "block+",
+  isolating: true,
 
   parseHTML() {
     return [{ tag: 'div[data-type="column"]' }];
@@ -26,6 +27,57 @@ export const Column = Node.create({
 
   addNodeView() {
     return ReactNodeViewRenderer(ColumnView);
+  },
+
+  addKeyboardShortcuts() {
+    return {
+      Enter: () => {
+        const { selection } = this.editor.state;
+        const { $from, empty } = selection;
+
+        // Only handle simple cursor positions
+        if (!empty) return false;
+
+        // Find the depths of column and columnLayout nodes
+        let columnDepth = -1;
+        let columnLayoutDepth = -1;
+
+        for (let d = $from.depth; d >= 0; d--) {
+          const node = $from.node(d);
+          if (node.type.name === "column" && columnDepth === -1) {
+            columnDepth = d;
+          }
+          if (node.type.name === "columnLayout" && columnLayoutDepth === -1) {
+            columnLayoutDepth = d;
+          }
+        }
+
+        // If not inside column + columnLayout, let default behavior handle it
+        if (columnDepth === -1 || columnLayoutDepth === -1) return false;
+
+        // Check if we're in an empty paragraph that's the last block of the column
+        const currentNode = $from.parent;
+        const isEmpty = currentNode.type.name === "paragraph" && currentNode.textContent === "";
+        const columnNode = $from.node(columnDepth);
+        const isLastBlock = $from.index(columnDepth) === columnNode.childCount - 1;
+
+        if (!isEmpty || !isLastBlock) {
+          // Not an empty last paragraph — use default behavior
+          return false;
+        }
+
+        // Exit the column layout: delete the empty paragraph and insert a new paragraph after columnLayout
+        const afterColumnLayout = $from.after(columnLayoutDepth);
+
+        // Note: deleteCurrentNode removes 2 positions (node + close tag), so we subtract 2 from afterColumnLayout
+        return this.editor
+          .chain()
+          .deleteCurrentNode()
+          .insertContentAt(afterColumnLayout - 2, { type: "paragraph" })
+          .focus()
+          .run();
+      },
+    };
   },
 });
 
