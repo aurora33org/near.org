@@ -93,11 +93,11 @@ export async function PUT(
 
     const { categoryIds, tagIds, publishedAt, ...postData } = data;
 
-    const resolvedPublishedAt = data.publishedAt
-      ? new Date(data.publishedAt)
-      : data.status === "PUBLISHED" && post.status !== "PUBLISHED"
-      ? new Date()
-      : post.publishedAt;
+    const now = new Date();
+    const incomingDate = data.publishedAt ? new Date(data.publishedAt) : null;
+    const resolvedPublishedAt = data.status === "PUBLISHED"
+      ? (incomingDate && incomingDate <= now ? incomingDate : now)
+      : (incomingDate ?? post.publishedAt);
 
     const updatedPost = await prisma.post.update({
       where: { id },
