@@ -707,7 +707,7 @@ export default function EditPostClient() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Update published post?</DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-foreground/70">
               This post is live. Changes will be visible immediately to all readers.
             </DialogDescription>
           </DialogHeader>
