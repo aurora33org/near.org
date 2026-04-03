@@ -40,11 +40,10 @@ export function AdminSidebar({ children, role, userName }: AdminSidebarProps) {
     localStorage.setItem("sidebar-collapsed", String(collapsed));
   }, [collapsed]);
 
-  // Auto-expand Advanced if user is on an advanced page
+  // Auto-expand Advanced if user is on an advanced page, collapse otherwise
   useEffect(() => {
-    if (pathname.startsWith("/admin/audit-log") || pathname.startsWith("/admin/sitemap") || pathname.startsWith("/admin/robots")) {
-      setAdvancedExpanded(true);
-    }
+    const isAdvancedPage = pathname.startsWith("/admin/audit-log") || pathname.startsWith("/admin/sitemap") || pathname.startsWith("/admin/robots");
+    setAdvancedExpanded(isAdvancedPage);
   }, [pathname]);
 
   const isAuthPage =
@@ -142,7 +141,7 @@ export function AdminSidebar({ children, role, userName }: AdminSidebarProps) {
                 className={`flex items-center rounded-lg transition-all w-full ${
                   collapsed ? "justify-center p-2" : "gap-3 px-4 py-2"
                 } ${
-                  advancedExpanded || pathname.startsWith("/admin/audit-log") || pathname.startsWith("/admin/sitemap") || pathname.startsWith("/admin/robots")
+                  advancedExpanded
                     ? "bg-secondary text-secondary-foreground"
                     : "hover:bg-secondary/50 hover:text-secondary-foreground"
                 }`}
