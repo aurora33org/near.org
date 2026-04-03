@@ -44,9 +44,9 @@ export default async function SharedPreviewPage({
         return (
           <div style={heroStyle}>
             <div className="max-w-4xl mx-auto px-4 pt-16 pb-12">
-              <span className="text-sm opacity-70 mb-6 block">Blog</span>
-              <h1 className="text-5xl font-bold mb-4">{post.title}</h1>
-              <p className="text-sm opacity-70 mb-8">
+              <span className="text-sm text-black opacity-70 mb-6 block">Blog</span>
+              <h1 className="text-5xl font-bold mb-4 text-black">{post.title}</h1>
+              <p className="text-sm text-black opacity-70 mb-8">
                 {new Date(post.updatedAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })} (last updated)
               </p>
               {post.coverImage && (

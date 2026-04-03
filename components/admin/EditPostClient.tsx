@@ -154,6 +154,25 @@ export default function EditPostClient() {
     };
   }, [postId, isLoading]);
 
+  // Auto-retry lock acquisition when blocked, in case the lock expires
+  useEffect(() => {
+    if (!lockBlocked) return;
+
+    const retryInterval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/posts/${postId}/lock`, { method: "POST" });
+        if (res.ok) {
+          setLockBlocked(false);
+          setLockBlockedBy("");
+        }
+      } catch {
+        // Network error — retry again next interval
+      }
+    }, 5_000);
+
+    return () => clearInterval(retryInterval);
+  }, [lockBlocked, postId]);
+
   async function handleSubmit(statusOverride?: "DRAFT" | "PUBLISHED") {
     setIsSaving(true);
     const finalStatus = statusOverride || status;
