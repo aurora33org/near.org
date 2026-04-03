@@ -704,9 +704,9 @@ export default function EditPostClient() {
 
       {/* Update Confirmation Dialog */}
       <Dialog open={showUpdateConfirm} onOpenChange={setShowUpdateConfirm}>
-        <DialogContent>
+        <DialogContent className="bg-card border-border">
           <DialogHeader>
-            <DialogTitle>Update published post?</DialogTitle>
+            <DialogTitle className="text-foreground">Update published post?</DialogTitle>
             <DialogDescription className="text-foreground/70">
               This post is live. Changes will be visible immediately to all readers.
             </DialogDescription>
