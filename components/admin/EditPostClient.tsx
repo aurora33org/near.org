@@ -61,6 +61,7 @@ export default function EditPostClient() {
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [publishedAt, setPublishedAt] = useState("");
+  const [excludeFromSitemap, setExcludeFromSitemap] = useState(false);
   const [showUpdateConfirm, setShowUpdateConfirm] = useState(false);
 
   // Initialize contentEditable title div once when post loads
@@ -101,6 +102,7 @@ export default function EditPostClient() {
           : "");
         setHeroBgColor(expandHexColor(post.heroBgColor || "#ffffff"));
         setHeroBgImage(post.heroBgImage || "");
+        setExcludeFromSitemap(post.excludeFromSitemap ?? false);
 
         if (catRes.ok) setCategories(await catRes.json());
         if (tagRes.ok) setTags(await tagRes.json());
@@ -204,6 +206,7 @@ export default function EditPostClient() {
             }
             return parsedDate ? parsedDate.toISOString() : undefined;
           })(),
+          excludeFromSitemap,
         }),
       });
 
@@ -714,6 +717,23 @@ export default function EditPostClient() {
                     className="bg-muted/30 border-border/70"
                   />
                   <div className="text-xs text-muted-foreground font-mono">/blog/{displaySlug}</div>
+                </div>
+
+                {/* Sitemap */}
+                <div className="space-y-2 pt-1">
+                  <Label className="text-xs font-semibold uppercase tracking-wide">SEO / Sitemap</Label>
+                  <label className="flex items-center gap-3 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={excludeFromSitemap}
+                      onChange={(e) => setExcludeFromSitemap(e.target.checked)}
+                      className="rounded"
+                    />
+                    <span className="text-sm">Exclude from sitemap.xml</span>
+                  </label>
+                  <p className="text-xs text-muted-foreground">
+                    When checked, this post won't appear in sitemap.xml and may be deprioritized by search engines.
+                  </p>
                 </div>
               </>
             )}
