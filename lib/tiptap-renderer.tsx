@@ -176,7 +176,10 @@ export function renderBlocks(nodes: TipTapNode[] | undefined): React.ReactNode {
 
       // Raw HTML block
       case "rawHtmlBlock": {
-        const cleanHtml = DOMPurify.sanitize(node.attrs?.content ?? "");
+        const cleanHtml = DOMPurify.sanitize(node.attrs?.content ?? "", {
+          FORBID_TAGS: ["form", "input", "button", "select", "textarea", "base", "meta"],
+          FORBID_ATTR: ["style"],
+        });
         return (
           <div
             key={i}

@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ArrowLeft, ImageIcon, X, Eye } from "lucide-react";
 import { PostDeleteButton } from "@/components/admin/PostDeleteButton";
 import SharePreviewButton from "@/components/admin/SharePreviewButton";
@@ -60,6 +61,7 @@ export default function EditPostClient() {
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [publishedAt, setPublishedAt] = useState("");
+  const [showUpdateConfirm, setShowUpdateConfirm] = useState(false);
 
   // Initialize contentEditable title div once when post loads
   useEffect(() => {
@@ -92,7 +94,11 @@ export default function EditPostClient() {
         setOgImage(post.ogImage || "");
         setSelectedCategoryIds((post.categories ?? []).map((c: any) => c.id));
         setSelectedTagIds((post.tags ?? []).map((t: any) => t.id));
-        setPublishedAt(toDatetimeLocalString(post.publishedAt));
+        // Only pre-fill publishedAt if it's a future date (explicitly scheduled)
+        const storedDate = post.publishedAt ? new Date(post.publishedAt) : null;
+        setPublishedAt(storedDate && storedDate > new Date()
+          ? toDatetimeLocalString(post.publishedAt)
+          : "");
         setHeroBgColor(expandHexColor(post.heroBgColor || "#ffffff"));
         setHeroBgImage(post.heroBgImage || "");
 
@@ -170,9 +176,15 @@ export default function EditPostClient() {
           heroBgImage: heroBgImage,
           categoryIds: selectedCategoryIds,
           tagIds: selectedTagIds,
-          publishedAt: finalStatus === "PUBLISHED"
-            ? (publishedAt ? new Date(publishedAt).toISOString() : new Date().toISOString())
-            : (publishedAt ? new Date(publishedAt).toISOString() : undefined),
+          publishedAt: (() => {
+            const now = new Date();
+            const parsedDate = publishedAt ? new Date(publishedAt) : null;
+            if (finalStatus === "PUBLISHED") {
+              // If published date is in future, publish now instead
+              return parsedDate && parsedDate > now ? now.toISOString() : (parsedDate ?? now).toISOString();
+            }
+            return parsedDate ? parsedDate.toISOString() : undefined;
+          })(),
         }),
       });
 
@@ -275,43 +287,53 @@ export default function EditPostClient() {
           </div>
 
           <div className="flex items-center gap-3 ml-4">
-            <Button
-              type="button"
-              asChild
-              variant="ghost"
-              size="sm"
-              title="Preview post"
-            >
-              <a href={`/admin/posts/${postId}/preview`} target="_blank" rel="noopener noreferrer">
-                <Eye size={16} className="mr-1" />
-                Preview
-              </a>
-            </Button>
-            <SharePreviewButton postId={postId} postTitle={title} />
-            {!isPublished && (
+            {/* Preview & Share Section */}
+            <div className="flex items-center gap-2">
               <Button
                 type="button"
-                onClick={() => handleSubmit("DRAFT")}
+                asChild
+                variant="ghost"
+                size="sm"
+                title="Preview post"
+              >
+                <a href={`/admin/posts/${postId}/preview`} target="_blank" rel="noopener noreferrer">
+                  <Eye size={16} className="mr-1" />
+                  Preview
+                </a>
+              </Button>
+              <SharePreviewButton postId={postId} postTitle={title} />
+            </div>
+
+            {/* Separator */}
+            <div className="w-px h-5 bg-border" />
+
+            {/* Publish & Delete Section */}
+            <div className="flex items-center gap-2">
+              {!isPublished && (
+                <Button
+                  type="button"
+                  onClick={() => handleSubmit("DRAFT")}
+                  disabled={isSaving}
+                  variant="outline"
+                  size="sm"
+                >
+                  {isSaving ? "Saving..." : "Save Draft"}
+                </Button>
+              )}
+              <Button
+                type="button"
+                onClick={() => isPublished ? setShowUpdateConfirm(true) : handleSubmit("PUBLISHED")}
                 disabled={isSaving}
-                variant="outline"
                 size="sm"
               >
-                {isSaving ? "Saving..." : "Save Draft"}
+                {isSaving ? "Saving..." : isPublished ? "Update" : "Publish"}
               </Button>
-            )}
-            <Button
-              type="button"
-              onClick={() => handleSubmit(isPublished ? "PUBLISHED" : "PUBLISHED")}
-              disabled={isSaving}
-              size="sm"
-            >
-              {isSaving ? "Saving..." : isPublished ? "Update" : "Publish"}
-            </Button>
-            <PostDeleteButton
-              postId={postId}
-              postTitle={title}
-              redirectAfter="/admin/posts"
-            />
+              <PostDeleteButton
+                postId={postId}
+                postTitle={title}
+                redirectAfter="/admin/posts"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -679,6 +701,31 @@ export default function EditPostClient() {
           </div>
         </aside>
       </div>
+
+      {/* Update Confirmation Dialog */}
+      <Dialog open={showUpdateConfirm} onOpenChange={setShowUpdateConfirm}>
+        <DialogContent className="bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="text-foreground">Update published post?</DialogTitle>
+            <DialogDescription className="text-foreground/70">
+              This post is live. Changes will be visible immediately to all readers.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowUpdateConfirm(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                setShowUpdateConfirm(false);
+                handleSubmit("PUBLISHED");
+              }}
+            >
+              Update
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
