@@ -4,14 +4,17 @@ import { redirect } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ExternalLink } from "lucide-react";
-import { SitemapPostToggle } from "./SitemapPostToggle";
+import { BlogPostsTable } from "./BlogPostsTable";
 
-export default async function SitemapPage() {
-  const session = await auth();
-  if (!session?.user?.id || (session.user as any).role !== "ADMIN") {
-    redirect("/admin/login");
-  }
+interface BlogPost {
+  id: string;
+  title: string;
+  slug: string;
+  updatedAt: Date;
+  excludeFromSitemap: boolean;
+}
 
+async function fetchSitemapData() {
   // Static routes — always included, can't be toggled
   const staticRoutes = [
     { path: "/", label: "Home" },
@@ -27,7 +30,7 @@ export default async function SitemapPage() {
   ];
 
   // All published posts with their sitemap status
-  let blogPosts: Array<{ id: string; title: string; slug: string; updatedAt: Date; excludeFromSitemap: boolean }> = [];
+  let blogPosts: BlogPost[] = [];
   try {
     blogPosts = await prisma.post.findMany({
       where: { status: "PUBLISHED", publishedAt: { lte: new Date() } },
@@ -38,6 +41,16 @@ export default async function SitemapPage() {
     console.error("Failed to fetch blog posts for sitemap:", error);
   }
 
+  return { staticRoutes, blogPosts };
+}
+
+export default async function SitemapPage() {
+  const session = await auth();
+  if (!session?.user?.id || (session.user as any).role !== "ADMIN") {
+    redirect("/admin/login");
+  }
+
+  const { staticRoutes, blogPosts } = await fetchSitemapData();
   const includedCount = staticRoutes.length + blogPosts.filter((p) => !p.excludeFromSitemap).length;
   const excludedCount = blogPosts.filter((p) => p.excludeFromSitemap).length;
 
@@ -96,48 +109,7 @@ export default async function SitemapPage() {
       </Card>
 
       {/* Blog Posts */}
-      <Card>
-        <CardHeader className="pb-4">
-          <CardTitle>Blog Posts</CardTitle>
-          <CardDescription>Click the status badge to include or exclude a post from the sitemap.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {blogPosts.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-4 text-center">No published posts yet.</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border">
-                    <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Title</th>
-                    <th className="text-left py-3 px-4 font-semibold text-muted-foreground">URL</th>
-                    <th className="text-left py-3 px-4 font-semibold text-muted-foreground w-36">Last Modified</th>
-                    <th className="text-left py-3 px-4 font-semibold text-muted-foreground w-28">Sitemap</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {blogPosts.map((post) => (
-                    <tr key={post.id} className="border-b border-border/50 hover:bg-muted/30 transition">
-                      <td className="py-3 px-4 font-medium max-w-xs truncate">{post.title}</td>
-                      <td className="py-3 px-4">
-                        <a href={`https://near.org/blog/${post.slug}`} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline font-mono text-xs">
-                          /blog/{post.slug}
-                        </a>
-                      </td>
-                      <td className="py-3 px-4 text-muted-foreground text-xs">
-                        {post.updatedAt.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
-                      </td>
-                      <td className="py-3 px-4">
-                        <SitemapPostToggle postId={post.id} excluded={post.excludeFromSitemap} />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <BlogPostsTable blogPosts={blogPosts} />
     </div>
   );
 }
