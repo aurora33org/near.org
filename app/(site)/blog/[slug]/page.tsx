@@ -101,10 +101,10 @@ export default async function BlogPost({
       {/* HERO */}
       <div style={heroStyle}>
         <div className="max-w-4xl mx-auto px-4 pt-16 pb-12">
-          <Link href="/blog" className="text-sm opacity-70 hover:opacity-100 mb-6 block transition">
+          <Link href="/blog" className="text-sm text-gray-600 opacity-70 hover:opacity-100 mb-6 block transition">
             Blog
           </Link>
-          <h1 className="text-5xl font-bold mb-4">{post.title}</h1>
+          <h1 className="text-5xl font-bold mb-4 text-gray-900">{post.title}</h1>
           <div className="flex flex-wrap gap-2 mb-4">
             {post.categories.map((cat) => (
               <Link
@@ -116,7 +116,7 @@ export default async function BlogPost({
               </Link>
             ))}
           </div>
-          <p className="text-sm opacity-70 mb-8">
+          <p className="text-sm text-gray-600 opacity-70 mb-8">
             {new Date(post.publishedAt!).toLocaleDateString("en-US", {
               year: "numeric",
               month: "long",
