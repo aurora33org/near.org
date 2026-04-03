@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 interface SitemapPostToggleProps {
   postId: string;
@@ -13,15 +15,15 @@ export function SitemapPostToggle({ postId, excluded }: SitemapPostToggleProps) 
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  async function toggle() {
+  async function toggle(checked: boolean) {
     setLoading(true);
     try {
       await fetch(`/api/posts/${postId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ excludeFromSitemap: !isExcluded }),
+        body: JSON.stringify({ excludeFromSitemap: !checked }),
       });
-      setIsExcluded((v) => !v);
+      setIsExcluded(!checked);
       router.refresh();
     } finally {
       setLoading(false);
@@ -29,16 +31,15 @@ export function SitemapPostToggle({ postId, excluded }: SitemapPostToggleProps) 
   }
 
   return (
-    <button
-      onClick={toggle}
-      disabled={loading}
-      className={`text-xs font-medium px-2 py-1 rounded transition-colors ${
-        isExcluded
-          ? "bg-red-500/10 text-red-600 hover:bg-red-500/20"
-          : "bg-green-500/10 text-green-600 hover:bg-green-500/20"
-      }`}
-    >
-      {loading ? "..." : isExcluded ? "Excluded" : "Included"}
-    </button>
+    <div className="flex items-center gap-2">
+      <Switch
+        checked={!isExcluded}
+        onCheckedChange={toggle}
+        disabled={loading}
+      />
+      <Label className="text-xs text-muted-foreground cursor-pointer">
+        {loading ? "..." : isExcluded ? "Excluded" : "Included"}
+      </Label>
+    </div>
   );
 }
