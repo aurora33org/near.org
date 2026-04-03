@@ -13,6 +13,8 @@ import {
   ClipboardList,
   PanelLeftClose,
   PanelLeftOpen,
+  Map,
+  Bot,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/admin/ThemeToggle";
 import { SidebarProfileMenu } from "@/components/admin/SidebarProfileMenu";
@@ -67,6 +69,17 @@ export function AdminSidebar({ children, role, userName }: AdminSidebarProps) {
     );
   };
 
+  const sectionLabel = (label: string) => {
+    if (collapsed) {
+      return <div className="border-t border-border mx-2 my-2" />;
+    }
+    return (
+      <div className="px-4 pt-4 pb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 select-none">
+        {label}
+      </div>
+    );
+  };
+
   return (
     <div className="admin-wrapper dark flex h-screen bg-background text-foreground">
       <aside
@@ -102,14 +115,22 @@ export function AdminSidebar({ children, role, userName }: AdminSidebarProps) {
         )}
 
         {/* Nav */}
-        <nav className={`flex-1 py-4 space-y-1 ${collapsed ? "px-2" : "px-4"}`}>
+        <nav className={`flex-1 py-4 space-y-1 ${collapsed ? "px-2" : "px-0"}`}>
           {navLink("/admin/dashboard",  "Dashboard",         <LayoutDashboard className={iconSize} />, true)}
           {navLink("/admin/posts",      "Blog Posts",        <FileText        className={iconSize} />)}
           {navLink("/admin/pages",      "Pages",             <Layers          className={iconSize} />)}
           {navLink("/admin/media",      "Media Library",     <Image           className={iconSize} />, true)}
           {navLink("/admin/categories", "Categories & Tags", <Tag             className={iconSize} />, true)}
-          {role === "ADMIN" && navLink("/admin/users",     "Users",     <Users         className={iconSize} />, true)}
-          {role === "ADMIN" && navLink("/admin/audit-log", "Audit Log", <ClipboardList className={iconSize} />, true)}
+          {role === "ADMIN" && (
+            <>
+              {sectionLabel("Management")}
+              {navLink("/admin/users", "Users", <Users className={iconSize} />, true)}
+              {sectionLabel("Advanced")}
+              {navLink("/admin/audit-log", "Audit Log", <ClipboardList className={iconSize} />, true)}
+              {navLink("/admin/sitemap", "Sitemap", <Map className={iconSize} />, true)}
+              {navLink("/admin/robots", "Robots.txt", <Bot className={iconSize} />, true)}
+            </>
+          )}
         </nav>
 
         {/* Footer */}
