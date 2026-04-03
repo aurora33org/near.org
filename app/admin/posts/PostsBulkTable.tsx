@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AlertTriangle } from "lucide-react";
@@ -34,6 +34,13 @@ export function PostsBulkTable({ posts, userRole }: PostsBulkTableProps) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteStep, setDeleteStep] = useState<1 | 2>(1);
   const [deleteConfirmInput, setDeleteConfirmInput] = useState("");
+
+  // Refresh lock state on mount and every 30s while on this page
+  useEffect(() => {
+    router.refresh();
+    const refreshInterval = setInterval(() => router.refresh(), 30_000);
+    return () => clearInterval(refreshInterval);
+  }, [router]);
 
   const allSelected = posts.length > 0 && posts.every((p) => selectedIds.has(p.id));
   const someSelected = selectedIds.size > 0;

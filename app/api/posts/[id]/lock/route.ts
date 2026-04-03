@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -82,6 +83,8 @@ export async function DELETE(
     where: { id },
     data: { lockedBy: null, lockedByEmail: null, lockedAt: null },
   });
+
+  revalidatePath("/admin/posts");
 
   return NextResponse.json({ released: true });
 }
