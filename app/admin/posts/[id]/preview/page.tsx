@@ -46,13 +46,13 @@ export default async function PreviewPage({
           <div style={heroStyle}>
             <div className="max-w-4xl mx-auto px-4 pt-16 pb-12">
               <div className="flex items-center gap-3 mb-6">
-                <span className="text-sm opacity-70">Blog</span>
+                <span className="text-sm text-black opacity-70">Blog</span>
                 <span className="bg-yellow-200 text-yellow-800 text-xs font-semibold px-2 py-0.5 rounded">
                   {post.status}
                 </span>
               </div>
-              <h1 className="text-5xl font-bold mb-4">{post.title}</h1>
-              <p className="text-sm opacity-70 mb-8">
+              <h1 className="text-5xl font-bold mb-4 text-black">{post.title}</h1>
+              <p className="text-sm text-black opacity-70 mb-8">
                 {new Date(post.updatedAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })} (last updated)
               </p>
               {post.coverImage && (
