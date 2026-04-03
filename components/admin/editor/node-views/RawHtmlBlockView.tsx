@@ -40,7 +40,12 @@ export function RawHtmlBlockView({ node, updateAttributes, deleteNode }: any) {
         {showPreview ? (
           <div
             className="p-4 prose dark:prose-invert max-w-none"
-            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(node.attrs.content ?? "") }}
+            dangerouslySetInnerHTML={{
+              __html: DOMPurify.sanitize(node.attrs.content ?? "", {
+                FORBID_TAGS: ["form", "input", "button", "select", "textarea", "base", "meta"],
+                FORBID_ATTR: ["style"],
+              }),
+            }}
           />
         ) : (
           <textarea
