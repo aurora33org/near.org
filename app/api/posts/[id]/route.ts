@@ -19,6 +19,7 @@ const updatePostSchema = z.object({
   categoryIds: z.array(z.string()).optional(),
   tagIds: z.array(z.string()).optional(),
   publishedAt: z.string().optional().nullable(),
+  excludeFromSitemap: z.boolean().optional(),
 });
 
 export async function GET(

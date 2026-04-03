@@ -54,6 +54,7 @@ model Post {
   lockedBy        String?            // userId of the user currently editing
   lockedByEmail   String?            // display name/email of the current editor
   lockedAt        DateTime?          // last heartbeat; lock expires after 90s
+  excludeFromSitemap Boolean  @default(false)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 }
