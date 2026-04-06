@@ -27,6 +27,8 @@ export function getExtensions() {
     StarterKit.configure({
       heading: { levels: [1, 2, 3, 4, 5] },
       codeBlock: false,
+      link: false,
+      underline: false,
     }),
     Link.configure({ openOnClick: false }),
     CodeBlockLowlight.configure({ lowlight }),
