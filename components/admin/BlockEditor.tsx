@@ -35,6 +35,7 @@ export default function BlockEditor({ content, onChange }: BlockEditorProps) {
     extensions: [
       StarterKit.configure({
         codeBlock: false,
+        link: false,
       }),
       Link.configure({
         openOnClick: false,
