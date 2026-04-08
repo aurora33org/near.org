@@ -102,7 +102,7 @@ export default function EditPostClient() {
           : "");
         setHeroBgColor(expandHexColor(post.heroBgColor || "#ffffff"));
         setHeroBgImage(post.heroBgImage || "");
-        setExcludeFromSitemap(post.excludeFromSitemap ?? false);
+        setExcludeFromSitemap(post.excludeFromSitemap === true);
 
         if (catRes.ok) setCategories(await catRes.json());
         if (tagRes.ok) setTags(await tagRes.json());

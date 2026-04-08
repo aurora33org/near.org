@@ -32,11 +32,15 @@ async function fetchSitemapData() {
   // All published posts with their sitemap status
   let blogPosts: BlogPost[] = [];
   try {
-    blogPosts = await prisma.post.findMany({
+    const posts = await prisma.post.findMany({
       where: { status: "PUBLISHED", publishedAt: { lte: new Date() } },
-      select: { id: true, title: true, slug: true, updatedAt: true, excludeFromSitemap: true },
+      select: { id: true, title: true, slug: true, updatedAt: true },
       orderBy: { publishedAt: "desc" },
     });
+    blogPosts = posts.map(p => ({
+      ...p,
+      excludeFromSitemap: false
+    }));
   } catch (error) {
     console.error("Failed to fetch blog posts for sitemap:", error);
   }

@@ -9,7 +9,7 @@ export default async function sitemap() {
   try {
     const now = new Date();
     posts = await prisma.post.findMany({
-      where: { status: "PUBLISHED", publishedAt: { lte: now }, excludeFromSitemap: false },
+      where: { status: "PUBLISHED", publishedAt: { lte: now } },
       select: { slug: true, updatedAt: true },
     });
   } catch {
