@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { formatAdminDate } from "@/lib/utils";
 
 type Role = "ADMIN" | "EDITOR"; // VIEWER exists in DB/backend but is not assignable from the UI
 
@@ -181,7 +182,7 @@ export function UsersClient({ initialUsers, currentUserId }: UsersClientProps) {
                   </span>
                 </td>
                 <td className="px-6 py-4 text-sm text-muted-foreground">
-                  {new Date(user.createdAt).toLocaleDateString()}
+                  {formatAdminDate(user.createdAt)}
                 </td>
                 <td className="px-6 py-4 text-right">
                   <div className="flex items-center justify-end gap-2">
