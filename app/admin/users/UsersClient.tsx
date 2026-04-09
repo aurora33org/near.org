@@ -143,9 +143,9 @@ export function UsersClient({ initialUsers, currentUserId }: UsersClientProps) {
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error ?? "Failed to send invitation"); return; }
+      const sentEmail = inviteEmail;
       closeInvite();
-      // Show success message (optional: add toast)
-      toast.success(`Invitation sent to ${inviteEmail}`);
+      toast.success(`Invitation sent to ${sentEmail}`);
     } finally {
       setIsLoading(false);
     }
