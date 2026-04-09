@@ -11,9 +11,10 @@ import MediaPickerModal from "@/components/admin/MediaPickerModal";
 interface BlockEditorProps {
   content: object;
   onChange: (json: object) => void;
+  autosaveLabel?: string;
 }
 
-export default function BlockEditor({ content, onChange }: BlockEditorProps) {
+export default function BlockEditor({ content, onChange, autosaveLabel }: BlockEditorProps) {
   const [isMediaPickerOpen, setIsMediaPickerOpen] = useState(false);
   const mediaPickerCallback = useRef<((url: string) => void) | null>(null);
 
@@ -61,6 +62,13 @@ export default function BlockEditor({ content, onChange }: BlockEditorProps) {
           style={{ minHeight: "60vh" }}
         />
       </div>
+
+      {/* Autosave footer */}
+      {autosaveLabel && (
+        <div className="border-t border-border px-4 py-1.5 text-xs text-muted-foreground font-mono">
+          {autosaveLabel}
+        </div>
+      )}
 
       {/* Media Picker */}
       <MediaPickerModal

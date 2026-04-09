@@ -56,6 +56,14 @@ export default function NewPostClient() {
   const [isOgPickerOpen, setIsOgPickerOpen] = useState(false);
   const { isDirty, setIsDirty, requestNavigation } = useNavigationGuard();
   const markDirty = () => setIsDirty(true);
+  const [autosavedAt, setAutosavedAt] = useState<Date | null>(null);
+  const [draftRecovery, setDraftRecovery] = useState<{ savedAt: Date; draft: any } | null>(null);
+  const autosaveStateRef = useRef({
+    isDirty: false, title: "", content: {} as any, slug: "", excerpt: "",
+    coverImage: "", heroBgColor: "#ffffff", heroBgImage: "", seoTitle: "",
+    seoDesc: "", ogImage: "", publishedAt: "", selectedCategoryIds: [] as string[],
+    selectedTagIds: [] as string[],
+  });
 
   useEffect(() => {
     Promise.all([fetch("/api/categories"), fetch("/api/tags")]).then(
@@ -64,6 +72,49 @@ export default function NewPostClient() {
         if (tagRes.ok) setTags(await tagRes.json());
       }
     );
+  }, []);
+
+  // Check for a recovered draft on mount
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("cms_draft_new");
+      if (!stored) return;
+      const draft = JSON.parse(stored);
+      if (draft.savedAt) {
+        setDraftRecovery({ savedAt: new Date(draft.savedAt), draft });
+      }
+    } catch {
+      localStorage.removeItem("cms_draft_new");
+    }
+  }, []);
+
+  // Keep autosave ref current with latest state
+  useEffect(() => {
+    autosaveStateRef.current = {
+      isDirty, title, content, slug, excerpt, coverImage, heroBgColor,
+      heroBgImage, seoTitle, seoDesc, ogImage, publishedAt,
+      selectedCategoryIds, selectedTagIds,
+    };
+  }, [isDirty, title, content, slug, excerpt, coverImage, heroBgColor,
+      heroBgImage, seoTitle, seoDesc, ogImage, publishedAt, selectedCategoryIds, selectedTagIds]);
+
+  // Autosave every 30s when dirty
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const s = autosaveStateRef.current;
+      if (!s.isDirty) return;
+      try {
+        localStorage.setItem("cms_draft_new", JSON.stringify({
+          title: s.title, content: s.content, slug: s.slug, excerpt: s.excerpt,
+          coverImage: s.coverImage, heroBgColor: s.heroBgColor, heroBgImage: s.heroBgImage,
+          seoTitle: s.seoTitle, seoDesc: s.seoDesc, ogImage: s.ogImage,
+          publishedAt: s.publishedAt, selectedCategoryIds: s.selectedCategoryIds,
+          selectedTagIds: s.selectedTagIds, savedAt: new Date().toISOString(),
+        }));
+        setAutosavedAt(new Date());
+      } catch { /* storage quota exceeded */ }
+    }, 30_000);
+    return () => clearInterval(interval);
   }, []);
 
   // Warn browser-level navigation (tab close, hard refresh, address bar) when dirty
@@ -77,6 +128,32 @@ export default function NewPostClient() {
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [isDirty]);
+
+  function handleRestoreDraft() {
+    if (!draftRecovery) return;
+    const d = draftRecovery.draft;
+    setTitle(d.title || "");
+    setContent(d.content || { type: "doc", content: [{ type: "paragraph" }] });
+    setSlug(d.slug || "");
+    setExcerpt(d.excerpt || "");
+    setCoverImage(d.coverImage || "");
+    setHeroBgColor(d.heroBgColor || "#ffffff");
+    setHeroBgImage(d.heroBgImage || "");
+    setSeoTitle(d.seoTitle || "");
+    setSeoDesc(d.seoDesc || "");
+    setOgImage(d.ogImage || "");
+    setPublishedAt(d.publishedAt || "");
+    setSelectedCategoryIds(d.selectedCategoryIds || []);
+    setSelectedTagIds(d.selectedTagIds || []);
+    if (titleInputRef.current) titleInputRef.current.textContent = d.title || "";
+    setDraftRecovery(null);
+    markDirty();
+  }
+
+  function handleDiscardDraft() {
+    localStorage.removeItem("cms_draft_new");
+    setDraftRecovery(null);
+  }
 
   async function handleSubmit(statusOverride?: "DRAFT" | "PUBLISHED") {
     setIsLoading(true);
@@ -114,6 +191,8 @@ export default function NewPostClient() {
 
       const post = await response.json();
       setIsDirty(false);
+      localStorage.removeItem("cms_draft_new");
+      setAutosavedAt(null);
       router.push(`/admin/posts/${post.id}/edit`);
     } catch (err) {
       console.error(err);
@@ -124,6 +203,9 @@ export default function NewPostClient() {
   }
 
   const displaySlug = slug || titleToSlug(title);
+  const autosaveLabel = autosavedAt
+    ? `Autosaved at ${autosavedAt.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "UTC" })} UTC`
+    : undefined;
 
   return (
     <div className="-m-8 flex flex-col h-screen bg-background">
@@ -147,6 +229,9 @@ export default function NewPostClient() {
           </div>
 
           <div className="flex items-center gap-3 ml-4">
+            {autosaveLabel && (
+              <span className="text-xs text-muted-foreground hidden sm:block">{autosaveLabel}</span>
+            )}
             <Button
               type="button"
               onClick={() => handleSubmit("DRAFT")}
@@ -181,6 +266,19 @@ export default function NewPostClient() {
         {/* LEFT PANEL - Editor */}
         <div className="flex-1 flex flex-col overflow-auto bg-background">
           <div className="p-6 space-y-4 max-w-4xl mx-auto w-full">
+            {/* Draft recovery banner */}
+            {draftRecovery && (
+              <div className="flex items-center justify-between gap-4 rounded-lg border border-amber-400/50 bg-amber-500/10 px-4 py-3">
+                <span className="text-sm text-amber-700 dark:text-amber-400">
+                  Draft recovered from {formatAdminDate(draftRecovery.savedAt.toISOString())}
+                </span>
+                <div className="flex gap-2 shrink-0">
+                  <Button size="sm" variant="outline" onClick={handleRestoreDraft}>Restore</Button>
+                  <Button size="sm" variant="ghost" onClick={handleDiscardDraft}>Discard</Button>
+                </div>
+              </div>
+            )}
+
             {/* Title */}
             <div
               ref={titleInputRef}
@@ -199,7 +297,11 @@ export default function NewPostClient() {
 
             {/* Editor */}
             <div className="mt-6">
-              <BlockEditor content={content} onChange={(v) => { markDirty(); setContent(v); }} />
+              <BlockEditor
+                content={content}
+                onChange={(v) => { markDirty(); setContent(v); }}
+                autosaveLabel={autosaveLabel}
+              />
             </div>
           </div>
         </div>
