@@ -56,6 +56,28 @@ export default async function AuditLogPage({
     }),
   ]);
 
+  // Verify which entities still exist to avoid broken links
+  const postIds = new Set(logs.filter((log: any) => log.entityType === "POST").map((log: any) => log.entityId));
+  const mediaIds = new Set(logs.filter((log: any) => log.entityType === "MEDIA").map((log: any) => log.entityId));
+
+  const [existingPosts, existingMedia] = await Promise.all([
+    postIds.size > 0
+      ? (prisma as any).post.findMany({
+          where: { id: { in: Array.from(postIds) } },
+          select: { id: true },
+        })
+      : [],
+    mediaIds.size > 0
+      ? (prisma as any).media.findMany({
+          where: { id: { in: Array.from(mediaIds) } },
+          select: { id: true },
+        })
+      : [],
+  ]);
+
+  const validPostIds = new Set(existingPosts.map((p: any) => p.id));
+  const validMediaIds = new Set(existingMedia.map((m: any) => m.id));
+
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
   function buildPageUrl(p: number) {
@@ -152,7 +174,33 @@ export default async function AuditLogPage({
                         <Badge variant="outline" className="text-xs">{log.entityType}</Badge>
                       </td>
                       <td className="px-6 py-3 text-sm max-w-xs truncate" title={log.entityTitle}>
-                        {log.entityTitle}
+                        {log.entityType === "POST" ? (
+                          validPostIds.has(log.entityId) ? (
+                            <Link
+                              href={`/admin/posts/${log.entityId}/edit`}
+                              className="hover:text-primary transition inline-flex items-center gap-1"
+                            >
+                              {log.entityTitle}
+                              <span aria-hidden="true">↗</span>
+                            </Link>
+                          ) : (
+                            <span className="text-muted-foreground line-through">{log.entityTitle}</span>
+                          )
+                        ) : log.entityType === "MEDIA" ? (
+                          validMediaIds.has(log.entityId) ? (
+                            <Link
+                              href="/admin/media"
+                              className="hover:text-primary transition inline-flex items-center gap-1"
+                            >
+                              {log.entityTitle}
+                              <span aria-hidden="true">↗</span>
+                            </Link>
+                          ) : (
+                            <span className="text-muted-foreground line-through">{log.entityTitle}</span>
+                          )
+                        ) : (
+                          log.entityTitle
+                        )}
                       </td>
                     </tr>
                   ))}
