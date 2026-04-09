@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { formatAdminDate } from "@/lib/utils";
 
 const PAGE_SIZE = 50;
 const VALID_ACTIONS = ["CREATE", "UPDATE", "DELETE"] as const;
@@ -138,8 +139,8 @@ export default async function AuditLogPage({
                 <tbody className="divide-y">
                   {logs.map((log: any) => (
                     <tr key={log.id} className="hover:bg-muted/20 transition">
-                      <td className="px-6 py-3 text-sm text-muted-foreground whitespace-nowrap" suppressHydrationWarning>
-                        {new Date(log.createdAt).toLocaleString()}
+                      <td className="px-6 py-3 text-sm text-muted-foreground whitespace-nowrap">
+                        {formatAdminDate(log.createdAt)}
                       </td>
                       <td className="px-6 py-3 text-sm">{log.userEmail}</td>
                       <td className="px-6 py-3">
