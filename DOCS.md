@@ -4,26 +4,51 @@ Complete guide for developers working on the NEAR.org CMS project.
 
 ## Table of Contents
 1. Getting Started
-2. Architecture
-3. Implementation Guide
-4. Feature Checklist
-5. Development Workflow
-6. Troubleshooting
+2. Local Development (pnpm + Portless)
+3. Architecture
+4. Implementation Guide
+5. Feature Checklist
+6. Development Workflow
+7. Troubleshooting
 
 ---
 
 ## 1. Getting Started
 
+### Package Manager: pnpm
+
+This project uses **pnpm** for faster, more efficient dependency management:
+
+```bash
+npm install -g pnpm    # Install globally (one-time)
+pnpm install           # Install dependencies
+pnpm dev               # Run development server
+pnpm prisma:migrate    # Run migrations
+```
+
+Why pnpm?
+- Faster installs (content-addressable storage + hard links)
+- Smaller disk footprint (~10% smaller than npm)
+- Stricter dependency resolution (prevents "phantom dependencies")
+- Auto-detected by Railpack on Dokploy from `pnpm-lock.yaml`
+
 ### Database Setup (Choose One)
 
-**Docker**
+**Docker Compose (Recommended)**
 ```bash
-docker run --name postgres-near -e POSTGRES_PASSWORD=password -e POSTGRES_DB=near_org -p 5432:5432 -d postgres:15
+docker compose up -d    # Start PostgreSQL 16 on localhost:5432
+docker compose down     # Stop
+```
+
+**Docker Run** (alternative)
+```bash
+docker run --name postgres-near -e POSTGRES_PASSWORD=password -e POSTGRES_DB=near_org -p 5432:5432 -d postgres:16
 ```
 
 **Local PostgreSQL (macOS)**
 ```bash
-brew install postgresql@15 && brew services start postgresql@15
+brew install postgresql@16 && brew services start postgresql@16
+createdb near_org
 ```
 
 **Railway.app** — Sign up, create a PostgreSQL database, copy the connection string.
@@ -46,16 +71,62 @@ Full variable list in `CLAUDE.md`.
 ### Database Initialization
 
 ```bash
-npm run prisma:migrate   # Create tables
-npm run prisma:seed      # Add demo admin user
-npm run dev              # Start server
+pnpm prisma:migrate   # Create tables
+pnpm prisma:seed      # Add demo admin user
+pnpm dev              # Start server
 ```
 
 Login at `/admin/login` → `admin@example.com` / `password`
 
 ---
 
-## 2. Architecture
+## 2. Local Development (pnpm + Portless)
+
+### Using Portless for HTTPS + HTTP/2 Locally
+
+**Portless** replaces port numbers with human-readable HTTPS URLs. Instead of `http://localhost:3000`, access your app via `https://near-org.localhost`.
+
+#### Install
+
+```bash
+npm install -g portless    # Global install (one-time)
+portless trust             # Install local CA into system trust store
+```
+
+#### Run
+
+```bash
+portless run next dev
+```
+
+Then access:
+- **Public Site**: https://near-org.localhost
+- **CMS**: https://near-org.localhost/admin
+
+#### Benefits
+
+- **HTTPS locally** — test secure cookies, auth headers, HTTPS-only features
+- **HTTP/2** — multiplexing support (browsers limit HTTP/1.1 to 6 connections per host)
+- **No port juggling** — stable URL every time
+- **LAN testing** — if needed, run `portless proxy start --lan` and access from other devices as `https://near-org.local`
+
+#### Portless Commands
+
+```bash
+portless run next dev               # Run app with auto-detected name
+portless proxy start                # Start HTTPS proxy on port 443
+portless proxy start --lan          # Enable LAN/mDNS mode
+portless list                       # Show all active routes
+portless clean                      # Remove all portless data
+```
+
+---
+
+## 3. Architecture
+
+---
+
+## 3. Architecture
 
 ### System Overview
 
@@ -162,7 +233,7 @@ NextAuth.js v5, JWT strategy:
 
 ---
 
-## 3. Implementation Guide
+## 4. Implementation Guide
 
 ### Adding a New Public Page
 
@@ -194,22 +265,33 @@ export async function POST(req: NextRequest) {
 ### Database Migrations
 
 ```bash
-npx prisma migrate dev --name descriptive_name   # New migration
-npx prisma db push                                # Sync schema (dev only)
-npx prisma migrate reset                          # Reset (deletes data!)
-npm run prisma:studio                             # GUI at localhost:5555
+pnpm prisma migrate dev --name descriptive_name   # New migration
+pnpm prisma db push                                # Sync schema (dev only)
+pnpm prisma migrate reset                          # Reset (deletes data!)
+pnpm prisma:studio                                 # GUI at localhost:5555
 ```
 
-### Deploying to Railway
+### Deploying to Dokploy (Railpack)
 
 1. Push to GitHub
-2. Connect repo to Railway.app
-3. Add env vars: `DATABASE_URL`, `AUTH_SECRET`, `NEXTAUTH_URL`, R2 credentials, `RESEND_API_KEY`
-4. Auto-deploys on git push
+2. Connect repo to Dokploy project
+3. Add environment variables:
+   - `DATABASE_URL` — PostgreSQL connection string
+   - `AUTH_SECRET` — `openssl rand -hex 32`
+   - `NEXTAUTH_URL` — Your production domain
+   - R2 credentials (S3_ENDPOINT, S3_BUCKET, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY)
+   - `RESEND_API_KEY` — For password reset emails
+   - Optional: `AIRTABLE_API_KEY`, `AIRTABLE_BASE_ID`, `AIRTABLE_ECOSYSTEM_TABLE`
+
+4. **Auto-Migration**: The `npm start` script includes `prisma migrate deploy`, which automatically applies pending migrations before Next.js starts. No manual setup needed.
+
+5. **Builder**: Railpack auto-detects Next.js. pnpm is auto-detected from `pnpm-lock.yaml`.
+
+**Important**: Always test migrations locally before deploying. Use `pnpm prisma:migrate` to create migrations, never push schema changes without a migration.
 
 ---
 
-## 4. Feature Checklist
+## 5. Feature Checklist
 
 ### Foundation ✅
 - [x] NextAuth.js v5 (JWT + Credentials)
@@ -253,16 +335,23 @@ npm run prisma:studio                             # GUI at localhost:5555
 - [x] Restricted image remotePatterns (no wildcard)
 - [x] Dev-only demo credentials and Zod error details
 
+### Production & Deployment ✅
+- [x] Auto-apply Prisma migrations on deploy (via `pnpm start` script)
+- [x] pnpm adoption (faster, smaller lockfile, auto-detected by Railpack)
+- [x] Sitemap exclusion toggle per-post (`excludeFromSitemap` field)
+- [x] Robots.txt admin viewer
+- [x] Advanced settings submenu (collapsible sidebar)
+
 ### Pending ⏳
 - [ ] Page management UI (`app/admin/pages/` is a stub)
 - [ ] Public site content pages (most are static stubs)
 - [ ] Dark mode on public site
 - [ ] Notification emails (post publish, new user welcome)
-- [ ] Post scheduling (field exists, no scheduler)
+- [ ] Post scheduling UI (scheduled posts cron job exists, no UI)
 
 ---
 
-## 5. Development Workflow
+## 6. Development Workflow
 
 ### Creating a Blog Post
 
@@ -288,26 +377,27 @@ npm run prisma:studio                             # GUI at localhost:5555
 ### Debugging
 
 ```bash
-npm run prisma:studio   # View/edit database records
-npm run build           # Check for TypeScript/build errors
-rm -rf .next && npm run dev  # Clear Next.js cache
+pnpm prisma:studio            # View/edit database records
+pnpm build                    # Check for TypeScript/build errors
+rm -rf .next && pnpm dev      # Clear Next.js cache
+pnpm prisma:generate          # Regenerate Prisma client
 ```
 
 ---
 
-## 6. Troubleshooting
+## 7. Troubleshooting
 
-**"Error: connect ECONNREFUSED"** → PostgreSQL not running. Start it or use Docker.
+**"Error: connect ECONNREFUSED"** → PostgreSQL not running. Start it: `docker compose up -d` or `brew services start postgresql@16`.
 
-**"NextAuth login not working"** → Check `AUTH_SECRET` in `.env.local`, clear browser cookies.
+**"NextAuth login not working"** → Clear browser cookies and check `AUTH_SECRET` in `.env.local`. Regenerate: `openssl rand -hex 32`.
 
-**"Port 3000 already in use"** → `npm run dev -- -p 3001`
+**"Port 3000 already in use"** → Run on a different port: `pnpm dev -- -p 3001`
 
-**"Module not found"** → `npm install && npx prisma generate`
+**"Module not found / Prisma errors"** → Reinstall and generate: `pnpm install && pnpm prisma:generate`
 
-**"Database error during migration"** → `npx prisma db push` or `npx prisma migrate reset`
+**"Database error during migration"** → Try `pnpm prisma migrate deploy` or `pnpm prisma migrate reset` (resets all data).
 
-**"Images not loading"** → Check `R2_PUBLIC_URL` is set — `remotePatterns` is built from this env var.
+**"Images not loading"** → Check `R2_PUBLIC_URL` and `S3_ENDPOINT` are set in `.env.local` — image domains are restricted to these for security.
 
 ---
 
@@ -327,4 +417,4 @@ rm -rf .next && npm run dev  # Clear Next.js cache
 
 ---
 
-*Last updated: Phase 3 — Security hardening, preview links, edit locks, bulk actions, audit log, RSS/SEO*
+*Last updated: Phase 4 — pnpm adoption, auto-migration on deploy, portless HTTPS local dev, enhanced documentation*
