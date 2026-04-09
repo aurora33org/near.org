@@ -71,8 +71,8 @@ export function AdminSidebar({ children, role, userName }: AdminSidebarProps) {
             requestNavigation(href);
           }
         }}
-        className={`flex items-center rounded-lg transition-all ${
-          collapsed ? "justify-center p-2" : "gap-3 px-4 py-2"
+        className={`flex items-center rounded-xl transition-all ${
+          collapsed ? "justify-center p-2" : "gap-3 px-3 py-2.5"
         } ${
           active
             ? "bg-secondary text-secondary-foreground"
@@ -131,7 +131,7 @@ export function AdminSidebar({ children, role, userName }: AdminSidebarProps) {
         )}
 
         {/* Nav */}
-        <nav className={`flex-1 py-4 space-y-1 ${collapsed ? "px-2" : "px-0"}`}>
+        <nav className={`flex-1 py-4 space-y-1 px-3`}>
           {navLink("/admin/dashboard",  "Dashboard",         <LayoutDashboard className={iconSize} />, true)}
           {navLink("/admin/posts",      "Blog Posts",        <FileText        className={iconSize} />)}
           {navLink("/admin/pages",      "Pages",             <Layers          className={iconSize} />)}
@@ -146,8 +146,8 @@ export function AdminSidebar({ children, role, userName }: AdminSidebarProps) {
               <button
                 onClick={() => setAdvancedExpanded((v) => !v)}
                 title={collapsed ? "Advanced" : undefined}
-                className={`flex items-center rounded-lg transition-all w-full ${
-                  collapsed ? "justify-center p-2" : "gap-3 px-4 py-2"
+                className={`flex items-center rounded-xl transition-all w-full ${
+                  collapsed ? "justify-center p-2" : "gap-3 px-3 py-2.5"
                 } ${
                   advancedExpanded
                     ? "bg-secondary text-secondary-foreground"
