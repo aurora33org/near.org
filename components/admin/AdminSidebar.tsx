@@ -57,7 +57,7 @@ export function AdminSidebar({ children, role, userName }: AdminSidebarProps) {
     return <>{children}</>;
   }
 
-  const iconSize = "w-4 h-4 shrink-0";
+  const iconSize = "w-4 h-4";
 
   const navLink = (href: string, label: string, icon: ReactNode, exact = false) => {
     const active = exact ? pathname === href : pathname.startsWith(href);
@@ -79,7 +79,7 @@ export function AdminSidebar({ children, role, userName }: AdminSidebarProps) {
             : "hover:bg-secondary/50 hover:text-secondary-foreground"
         }`}
       >
-        <span className="shrink-0 opacity-70">{icon}</span>
+        <span className="opacity-70">{icon}</span>
         {!collapsed && <span>{label}</span>}
       </Link>
     );
@@ -154,7 +154,7 @@ export function AdminSidebar({ children, role, userName }: AdminSidebarProps) {
                     : "hover:bg-secondary/50 hover:text-secondary-foreground"
                 }`}
               >
-                <ChevronDown className={`${iconSize} transition-transform ${advancedExpanded ? "rotate-0" : "-rotate-90"}`} />
+                <ChevronDown className={`transition-transform opacity-70 ${advancedExpanded ? "rotate-0" : "-rotate-90"}`} />
                 {!collapsed && <span className="text-sm font-medium">Advanced</span>}
               </button>
 
