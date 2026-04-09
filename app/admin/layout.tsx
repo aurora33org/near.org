@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import { auth } from "@/lib/auth";
 import { AdminThemeProvider } from "@/components/admin/ThemeProvider";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
+import { NavigationGuardProvider } from "@/components/admin/NavigationGuardProvider";
 import { Toaster } from "sonner";
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
@@ -11,9 +12,11 @@ export default async function AdminLayout({ children }: { children: ReactNode })
 
   return (
     <AdminThemeProvider>
-      <AdminSidebar role={role} userName={userName}>
-        {children}
-      </AdminSidebar>
+      <NavigationGuardProvider>
+        <AdminSidebar role={role} userName={userName}>
+          {children}
+        </AdminSidebar>
+      </NavigationGuardProvider>
       <Toaster richColors position="top-right" />
     </AdminThemeProvider>
   );
