@@ -15,6 +15,7 @@ import { ArrowLeft, ImageIcon, X, Eye } from "lucide-react";
 import { PostDeleteButton } from "@/components/admin/PostDeleteButton";
 import SharePreviewButton from "@/components/admin/SharePreviewButton";
 import { toast } from "sonner";
+import { useNavigationGuard } from "@/components/admin/NavigationGuardProvider";
 
 function toDatetimeLocalString(date: string | null | undefined): string {
   if (!date) return "";
@@ -63,6 +64,8 @@ export default function EditPostClient() {
   const [publishedAt, setPublishedAt] = useState("");
   const [excludeFromSitemap, setExcludeFromSitemap] = useState(false);
   const [showUpdateConfirm, setShowUpdateConfirm] = useState(false);
+  const { isDirty, setIsDirty, requestNavigation } = useNavigationGuard();
+  const markDirty = () => setIsDirty(true);
 
   // Initialize contentEditable title div once when post loads
   useEffect(() => {
@@ -175,6 +178,18 @@ export default function EditPostClient() {
     return () => clearInterval(retryInterval);
   }, [lockBlocked, postId]);
 
+  // Warn browser-level navigation (tab close, hard refresh, address bar) when dirty
+  useEffect(() => {
+    function handleBeforeUnload(e: BeforeUnloadEvent) {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    }
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isDirty]);
+
   async function handleSubmit(statusOverride?: "DRAFT" | "PUBLISHED") {
     setIsSaving(true);
     const finalStatus = statusOverride || status;
@@ -217,6 +232,7 @@ export default function EditPostClient() {
       }
 
       setStatus(finalStatus);
+      setIsDirty(false);
       toast.success("Post saved");
     } catch (err) {
       console.error(err);
@@ -294,13 +310,14 @@ export default function EditPostClient() {
       <div className="sticky top-0 z-20 border-b border-border bg-card shadow-sm">
         <div className="flex items-center justify-between h-[53px] px-6">
           <div className="flex items-center gap-3 min-w-0">
-            <Link
-              href="/admin/posts"
+            <button
+              type="button"
+              onClick={() => requestNavigation("/admin/posts")}
               className="text-muted-foreground hover:text-foreground transition flex-shrink-0"
               title="Back to Posts"
             >
               <ArrowLeft size={20} />
-            </Link>
+            </button>
             <span className="text-sm text-muted-foreground">Posts</span>
             <span className="text-sm text-muted-foreground/50">/</span>
             <span className="text-sm font-medium text-foreground truncate">
@@ -338,8 +355,12 @@ export default function EditPostClient() {
                   disabled={isSaving}
                   variant="outline"
                   size="sm"
+                  className="relative"
                 >
                   {isSaving ? "Saving..." : "Save Draft"}
+                  {isDirty && (
+                    <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-amber-500" />
+                  )}
                 </Button>
               )}
               <Button
@@ -347,8 +368,12 @@ export default function EditPostClient() {
                 onClick={() => isPublished ? setShowUpdateConfirm(true) : handleSubmit("PUBLISHED")}
                 disabled={isSaving}
                 size="sm"
+                className="relative"
               >
                 {isSaving ? "Saving..." : isPublished ? "Update" : "Publish"}
+                {isDirty && (
+                  <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-amber-500" />
+                )}
               </Button>
               <PostDeleteButton
                 postId={postId}
@@ -370,7 +395,7 @@ export default function EditPostClient() {
               ref={titleInputRef}
               contentEditable
               suppressContentEditableWarning
-              onInput={(e) => setTitle(e.currentTarget.textContent ?? "")}
+              onInput={(e) => { markDirty(); setTitle(e.currentTarget.textContent ?? ""); }}
               data-placeholder="Post title..."
               className="w-full text-3xl font-bold bg-transparent text-foreground focus:outline-none outline-none break-words empty:before:content-[attr(data-placeholder)] empty:before:text-muted-foreground empty:before:pointer-events-none"
             />
@@ -394,7 +419,7 @@ export default function EditPostClient() {
 
             {/* Editor */}
             <div className="mt-6">
-              <BlockEditor content={content} onChange={setContent} />
+              <BlockEditor content={content} onChange={(v) => { markDirty(); setContent(v); }} />
             </div>
           </div>
         </div>
@@ -431,7 +456,7 @@ export default function EditPostClient() {
                       <img src={coverImage} alt="Cover" className="w-full rounded-lg object-cover" />
                       <button
                         type="button"
-                        onClick={() => setCoverImage("")}
+                        onClick={() => { setCoverImage(""); markDirty(); }}
                         className="absolute top-1 right-1 bg-black/50 hover:bg-black/70 text-white rounded p-0.5 transition"
                         title="Remove image"
                       >
@@ -451,7 +476,7 @@ export default function EditPostClient() {
                   <MediaPickerModal
                     open={isCoverPickerOpen}
                     onClose={() => setIsCoverPickerOpen(false)}
-                    onSelect={(url) => setCoverImage(url)}
+                    onSelect={(url) => { setCoverImage(url); markDirty(); }}
                   />
                 </div>
 
@@ -469,7 +494,7 @@ export default function EditPostClient() {
                           <input
                             type="color"
                             value={heroBgColor || "#ffffff"}
-                            onChange={(e) => setHeroBgColor(e.target.value)}
+                            onChange={(e) => { setHeroBgColor(e.target.value); markDirty(); }}
                             className="opacity-0 w-full h-full cursor-pointer"
                             title="Pick hero background color"
                           />
@@ -477,7 +502,7 @@ export default function EditPostClient() {
                         <input
                           type="text"
                           value={heroBgColor}
-                          onChange={(e) => setHeroBgColor(e.target.value)}
+                          onChange={(e) => { setHeroBgColor(e.target.value); markDirty(); }}
                           onBlur={(e) => setHeroBgColor(expandHexColor(e.target.value))}
                           placeholder="#ffffff"
                           maxLength={9}
@@ -486,7 +511,7 @@ export default function EditPostClient() {
                         {heroBgColor !== "#ffffff" && (
                           <button
                             type="button"
-                            onClick={() => setHeroBgColor("#ffffff")}
+                            onClick={() => { setHeroBgColor("#ffffff"); markDirty(); }}
                             className="text-muted-foreground hover:text-foreground transition"
                             title="Reset to white"
                           >
@@ -502,7 +527,7 @@ export default function EditPostClient() {
                           <img src={heroBgImage} alt="Hero bg" className="w-full h-20 rounded-lg object-cover" />
                           <button
                             type="button"
-                            onClick={() => setHeroBgImage("")}
+                            onClick={() => { setHeroBgImage(""); markDirty(); }}
                             className="absolute top-1 right-1 bg-black/50 hover:bg-black/70 text-white rounded p-0.5 transition"
                             title="Remove image"
                           >
@@ -522,7 +547,7 @@ export default function EditPostClient() {
                       <MediaPickerModal
                         open={isHeroBgPickerOpen}
                         onClose={() => setIsHeroBgPickerOpen(false)}
-                        onSelect={(url) => setHeroBgImage(url)}
+                        onSelect={(url) => { setHeroBgImage(url); markDirty(); }}
                       />
                     </div>
                   </div>
@@ -545,11 +570,12 @@ export default function EditPostClient() {
                           <input
                             type="checkbox"
                             checked={selectedCategoryIds.includes(cat.id)}
-                            onChange={(e) =>
+                            onChange={(e) => {
+                              markDirty();
                               setSelectedCategoryIds((prev) =>
                                 e.target.checked ? [...prev, cat.id] : prev.filter((id) => id !== cat.id)
-                              )
-                            }
+                              );
+                            }}
                           />
                           {cat.name}
                         </label>
@@ -575,11 +601,12 @@ export default function EditPostClient() {
                           <input
                             type="checkbox"
                             checked={selectedTagIds.includes(tag.id)}
-                            onChange={(e) =>
+                            onChange={(e) => {
+                              markDirty();
                               setSelectedTagIds((prev) =>
                                 e.target.checked ? [...prev, tag.id] : prev.filter((id) => id !== tag.id)
-                              )
-                            }
+                              );
+                            }}
                           />
                           {tag.name}
                         </label>
@@ -598,7 +625,7 @@ export default function EditPostClient() {
                   <Textarea
                     id="excerpt"
                     value={excerpt}
-                    onChange={(e) => setExcerpt(e.target.value)}
+                    onChange={(e) => { markDirty(); setExcerpt(e.target.value); }}
                     placeholder="Brief summary shown in listings"
                     rows={3}
                     className="bg-muted/30 border-border/70"
@@ -614,7 +641,7 @@ export default function EditPostClient() {
                       id="seoTitle"
                       type="text"
                       value={seoTitle}
-                      onChange={(e) => setSeoTitle(e.target.value)}
+                      onChange={(e) => { markDirty(); setSeoTitle(e.target.value); }}
                       placeholder="Optimized title for search engines"
                       className="bg-muted/30 border-border/70"
                     />
@@ -624,7 +651,7 @@ export default function EditPostClient() {
                     <Textarea
                       id="seoDesc"
                       value={seoDesc}
-                      onChange={(e) => setSeoDesc(e.target.value)}
+                      onChange={(e) => { markDirty(); setSeoDesc(e.target.value); }}
                       placeholder="Description for search results (160 chars)"
                       rows={2}
                       className="bg-muted/30 border-border/70"
@@ -635,7 +662,7 @@ export default function EditPostClient() {
                     {coverImage && !ogImage && (
                       <button
                         type="button"
-                        onClick={() => setOgImage(coverImage)}
+                        onClick={() => { setOgImage(coverImage); markDirty(); }}
                         className="text-xs text-primary underline"
                       >
                         Use featured image
@@ -646,7 +673,7 @@ export default function EditPostClient() {
                         <img src={ogImage} alt="OG" className="w-full rounded-lg object-cover" />
                         <button
                           type="button"
-                          onClick={() => setOgImage("")}
+                          onClick={() => { setOgImage(""); markDirty(); }}
                           className="absolute top-1 right-1 bg-black/50 hover:bg-black/70 text-white rounded p-0.5 transition"
                           title="Remove OG image"
                         >
@@ -666,7 +693,7 @@ export default function EditPostClient() {
                     <MediaPickerModal
                       open={isOgPickerOpen}
                       onClose={() => setIsOgPickerOpen(false)}
-                      onSelect={(url) => setOgImage(url)}
+                      onSelect={(url) => { setOgImage(url); markDirty(); }}
                     />
                   </div>
                 </div>
@@ -681,7 +708,7 @@ export default function EditPostClient() {
                   <select
                     id="status"
                     value={status}
-                    onChange={(e) => setStatus(e.target.value as any)}
+                    onChange={(e) => { markDirty(); setStatus(e.target.value as any); }}
                     className="w-full border border-border/70 rounded-[var(--radius)] px-3 py-2 text-sm bg-muted/30 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                   >
                     <option value="DRAFT">Draft</option>
@@ -696,7 +723,7 @@ export default function EditPostClient() {
                     id="publishedAt"
                     type="datetime-local"
                     value={publishedAt}
-                    onChange={(e) => setPublishedAt(e.target.value)}
+                    onChange={(e) => { markDirty(); setPublishedAt(e.target.value); }}
                     className="w-full border border-border/70 rounded-[var(--radius)] px-3 py-2 text-sm bg-muted/30 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 dark:[color-scheme:dark]"
                   />
                   <p className="text-xs text-muted-foreground">
@@ -713,7 +740,7 @@ export default function EditPostClient() {
                     id="slug"
                     type="text"
                     value={slug}
-                    onChange={(e) => setSlug(e.target.value)}
+                    onChange={(e) => { markDirty(); setSlug(e.target.value); }}
                     className="bg-muted/30 border-border/70"
                   />
                   <div className="text-xs text-muted-foreground font-mono">/blog/{displaySlug}</div>
@@ -726,7 +753,7 @@ export default function EditPostClient() {
                     <input
                       type="checkbox"
                       checked={excludeFromSitemap}
-                      onChange={(e) => setExcludeFromSitemap(e.target.checked)}
+                      onChange={(e) => { markDirty(); setExcludeFromSitemap(e.target.checked); }}
                       className="rounded"
                     />
                     <span className="text-sm">Exclude from sitemap.xml</span>
