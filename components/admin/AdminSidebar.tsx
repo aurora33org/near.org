@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { ThemeToggle } from "@/components/admin/ThemeToggle";
 import { SidebarProfileMenu } from "@/components/admin/SidebarProfileMenu";
+import { useNavigationGuard } from "@/components/admin/NavigationGuardProvider";
 
 interface AdminSidebarProps {
   children: ReactNode;
@@ -30,6 +31,7 @@ export function AdminSidebar({ children, role, userName }: AdminSidebarProps) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [advancedExpanded, setAdvancedExpanded] = useState(false);
+  const { isDirty, requestNavigation } = useNavigationGuard();
 
   useEffect(() => {
     const saved = localStorage.getItem("sidebar-collapsed");
@@ -63,6 +65,12 @@ export function AdminSidebar({ children, role, userName }: AdminSidebarProps) {
       <Link
         href={href}
         title={collapsed ? label : undefined}
+        onClick={(e) => {
+          if (isDirty) {
+            e.preventDefault();
+            requestNavigation(href);
+          }
+        }}
         className={`flex items-center rounded-lg transition-all ${
           collapsed ? "justify-center p-2" : "gap-3 px-4 py-2"
         } ${
