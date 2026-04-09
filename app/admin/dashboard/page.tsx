@@ -3,6 +3,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatAdminDate } from "@/lib/utils";
 
 export default async function AdminDashboard() {
   const session = await auth();
@@ -111,7 +112,7 @@ export default async function AdminDashboard() {
                   </div>
                   <div className="text-muted-foreground text-xs flex items-center gap-2">
                     <span>{log.userEmail}</span>
-                    <time suppressHydrationWarning>{new Date(log.createdAt).toLocaleString()}</time>
+                    <time>{formatAdminDate(log.createdAt)}</time>
                   </div>
                 </div>
               ))}

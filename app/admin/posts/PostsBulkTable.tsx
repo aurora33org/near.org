@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PostDeleteButton } from "@/components/admin/PostDeleteButton";
 import { DuplicatePostButton } from "@/components/admin/DuplicatePostButton";
+import { formatAdminDate } from "@/lib/utils";
 
 interface SerializedPost {
   id: string;
@@ -168,14 +169,18 @@ export function PostsBulkTable({ posts, userRole }: PostsBulkTableProps) {
                     {post.status === "PUBLISHED" &&
                       post.publishedAt &&
                       new Date(post.publishedAt) > new Date() && (
-                        <Badge variant="outline" className="text-yellow-600 border-yellow-400">
+                        <Badge
+                          variant="outline"
+                          className="text-yellow-600 border-yellow-400"
+                          title={`Scheduled: ${formatAdminDate(post.publishedAt)}`}
+                        >
                           SCHEDULED
                         </Badge>
                       )}
                   </div>
                 </td>
                 <td className="px-6 py-4 text-sm">
-                  {new Date(post.createdAt).toLocaleDateString()}
+                  {formatAdminDate(post.createdAt)}
                 </td>
                 <td className="px-6 py-4 text-right">
                   <div className="flex items-center justify-end gap-2">

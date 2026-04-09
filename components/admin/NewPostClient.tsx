@@ -27,6 +27,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, ImageIcon, X } from "lucide-react";
 import { toast } from "sonner";
+import { formatAdminDate } from "@/lib/utils";
 
 export default function NewPostClient() {
   const router = useRouter();
@@ -86,8 +87,8 @@ export default function NewPostClient() {
           categoryIds: selectedCategoryIds,
           tagIds: selectedTagIds,
           publishedAt: finalStatus === "PUBLISHED"
-            ? (publishedAt ? new Date(publishedAt).toISOString() : new Date().toISOString())
-            : (publishedAt ? new Date(publishedAt).toISOString() : undefined),
+            ? (publishedAt ? new Date(publishedAt + "Z").toISOString() : new Date().toISOString())
+            : (publishedAt ? new Date(publishedAt + "Z").toISOString() : undefined),
         }),
       });
 
@@ -471,7 +472,12 @@ export default function NewPostClient() {
 
                 {/* Publish Date */}
                 <div className="space-y-2">
-                  <Label htmlFor="publishedAt" className="text-xs font-semibold uppercase tracking-wide">Publish Date</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="publishedAt" className="text-xs font-semibold uppercase tracking-wide">
+                      Publish Date
+                    </Label>
+                    <span className="text-xs text-muted-foreground font-medium">Times are in UTC</span>
+                  </div>
                   <input
                     id="publishedAt"
                     type="datetime-local"
@@ -479,6 +485,11 @@ export default function NewPostClient() {
                     onChange={(e) => setPublishedAt(e.target.value)}
                     className="w-full border border-border/70 rounded-[var(--radius)] px-3 py-2 text-sm bg-muted/30 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 dark:[color-scheme:dark]"
                   />
+                  {publishedAt && (
+                    <p className="text-xs text-blue-600 dark:text-blue-400 font-mono">
+                      {formatAdminDate(publishedAt + "Z")}
+                    </p>
+                  )}
                   <p className="text-xs text-muted-foreground">
                     {status === "DRAFT"
                       ? "Set a future date to schedule. Post won't appear until then."
