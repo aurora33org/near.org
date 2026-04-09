@@ -56,6 +56,7 @@ export default function NewPostClient() {
   const [isOgPickerOpen, setIsOgPickerOpen] = useState(false);
   const { isDirty, setIsDirty, requestNavigation } = useNavigationGuard();
   const markDirty = () => setIsDirty(true);
+  const [editorKey, setEditorKey] = useState(0);
   const [autosavedAt, setAutosavedAt] = useState<Date | null>(null);
   const [draftRecovery, setDraftRecovery] = useState<{ savedAt: Date; draft: any } | null>(null);
   const autosaveStateRef = useRef({
@@ -145,6 +146,7 @@ export default function NewPostClient() {
     setPublishedAt(d.publishedAt || "");
     setSelectedCategoryIds(d.selectedCategoryIds || []);
     setSelectedTagIds(d.selectedTagIds || []);
+    setEditorKey((k) => k + 1);
     if (titleInputRef.current) titleInputRef.current.textContent = d.title || "";
     setDraftRecovery(null);
     markDirty();
@@ -298,6 +300,7 @@ export default function NewPostClient() {
             {/* Editor */}
             <div className="mt-6">
               <BlockEditor
+                key={editorKey}
                 content={content}
                 onChange={(v) => { markDirty(); setContent(v); }}
                 autosaveLabel={autosaveLabel}
