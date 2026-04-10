@@ -14,6 +14,7 @@ interface User {
   email: string;
   role: string; // string to accommodate any legacy VIEWER rows in DB
   createdAt: string;
+  lastLoginAt?: string | null;
 }
 
 interface UsersClientProps {
@@ -169,6 +170,7 @@ export function UsersClient({ initialUsers, currentUserId }: UsersClientProps) {
               <th className="px-6 py-3 text-left font-medium text-muted-foreground text-sm">Email</th>
               <th className="px-6 py-3 text-left font-medium text-muted-foreground text-sm">Role</th>
               <th className="px-6 py-3 text-left font-medium text-muted-foreground text-sm">Created</th>
+              <th className="px-6 py-3 text-left font-medium text-muted-foreground text-sm">Last Login</th>
               <th className="px-6 py-3 text-right font-medium text-muted-foreground text-sm">Actions</th>
             </tr>
           </thead>
@@ -184,6 +186,9 @@ export function UsersClient({ initialUsers, currentUserId }: UsersClientProps) {
                 </td>
                 <td className="px-6 py-4 text-sm text-muted-foreground">
                   {formatAdminDate(user.createdAt)}
+                </td>
+                <td className="px-6 py-4 text-sm text-muted-foreground">
+                  {user.lastLoginAt ? formatAdminDate(user.lastLoginAt) : "Never"}
                 </td>
                 <td className="px-6 py-4 text-right">
                   <div className="flex items-center justify-end gap-2">
