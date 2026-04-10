@@ -197,6 +197,10 @@ export default function EditPostClient() {
       try {
         const res = await fetch(`/api/posts/${postId}/lock`, { method: "POST" });
         if (res.ok) {
+          toast.success("Post is now available — you can start editing.");
+          if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+            new Notification("Post unlocked", { body: "You can now start editing." });
+          }
           setLockBlocked(false);
           setLockBlockedBy("");
         }
