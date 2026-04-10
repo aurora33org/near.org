@@ -37,8 +37,8 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-gray-900 flex items-center justify-center">
-      <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-8">
+    <div className="admin-wrapper dark fixed inset-0 z-50 bg-background flex items-center justify-center">
+      <div className="w-full max-w-md bg-card text-foreground rounded-lg shadow-lg p-8">
         <h1 className="text-2xl font-bold mb-6 text-center">NEAR CMS Login</h1>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -55,7 +55,7 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="admin@example.com"
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-gray-900"
+              className="w-full border border-border rounded-lg px-4 py-2 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               required
             />
           </div>
@@ -67,7 +67,7 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-gray-900"
+              className="w-full border border-border rounded-lg px-4 py-2 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               required
             />
           </div>
@@ -75,20 +75,20 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-gray-900 text-white font-medium py-2 rounded-lg hover:bg-gray-800 transition disabled:opacity-50"
+            className="w-full bg-primary text-primary-foreground font-medium py-2 rounded-lg hover:bg-primary/90 transition disabled:opacity-50"
           >
             {isLoading ? "Signing in..." : "Sign In"}
           </button>
         </form>
 
         <div className="mt-4 text-center">
-          <Link href="/admin/forgot-password" className="text-sm text-gray-500 hover:underline">
+          <Link href="/admin/forgot-password" className="text-sm text-muted-foreground hover:underline">
             Forgot your password?
           </Link>
         </div>
 
         {process.env.NODE_ENV === "development" && (
-          <p className="text-sm text-gray-600 text-center mt-4">
+          <p className="text-sm text-muted-foreground text-center mt-4">
             Demo credentials: admin@example.com / password
           </p>
         )}
