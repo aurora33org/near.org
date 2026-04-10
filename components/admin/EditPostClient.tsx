@@ -647,6 +647,7 @@ export default function EditPostClient() {
                       value={seoTitle}
                       onChange={(e) => { markDirty(); setSeoTitle(e.target.value); }}
                       placeholder="Optimized title for search engines"
+                      maxLength={60}
                       className="bg-muted/30 border-border/70"
                     />
                     <p className={`text-xs text-right ${
@@ -664,6 +665,7 @@ export default function EditPostClient() {
                       value={seoDesc}
                       onChange={(e) => { markDirty(); setSeoDesc(e.target.value); }}
                       placeholder="Description for search results (160 chars)"
+                      maxLength={160}
                       rows={2}
                       className="bg-muted/30 border-border/70"
                     />
