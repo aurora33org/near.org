@@ -15,7 +15,7 @@ type AuditEntityType = (typeof VALID_ENTITY_TYPES)[number];
 export default async function AuditLogPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; action?: string; entityType?: string; userEmail?: string }>;
+  searchParams: Promise<{ page?: string; action?: string; entityType?: string; userEmail?: string; fromDate?: string; toDate?: string }>;
 }) {
   const session = await auth();
   const userRole = (session?.user as any)?.role;
@@ -28,7 +28,7 @@ export default async function AuditLogPage({
     );
   }
 
-  const { page: pageParam, action: actionParam, entityType: entityTypeParam, userEmail: userEmailParam } = await searchParams;
+  const { page: pageParam, action: actionParam, entityType: entityTypeParam, userEmail: userEmailParam, fromDate: fromDateParam, toDate: toDateParam } = await searchParams;
   const page = Math.max(1, Number(pageParam ?? 1));
   const skip = (page - 1) * PAGE_SIZE;
 
@@ -39,7 +39,26 @@ export default async function AuditLogPage({
     where.entityType = entityTypeParam as AuditEntityType;
   if (userEmailParam) where.userEmail = userEmailParam;
 
-  const hasFilters = !!(actionParam || entityTypeParam || userEmailParam);
+  // Date range filter
+  const createdAtFilter: any = {};
+  if (fromDateParam) {
+    const fromDate = new Date(fromDateParam);
+    if (!isNaN(fromDate.getTime())) {
+      createdAtFilter.gte = fromDate;
+    }
+  }
+  if (toDateParam) {
+    const toDate = new Date(toDateParam);
+    if (!isNaN(toDate.getTime())) {
+      toDate.setHours(23, 59, 59, 999);
+      createdAtFilter.lte = toDate;
+    }
+  }
+  if (Object.keys(createdAtFilter).length > 0) {
+    where.createdAt = createdAtFilter;
+  }
+
+  const hasFilters = !!(actionParam || entityTypeParam || userEmailParam || fromDateParam || toDateParam);
 
   const [logs, total, distinctUsers] = await Promise.all([
     (prisma as any).auditLog.findMany({
@@ -85,8 +104,20 @@ export default async function AuditLogPage({
     if (actionParam) params.set("action", actionParam);
     if (entityTypeParam) params.set("entityType", entityTypeParam);
     if (userEmailParam) params.set("userEmail", userEmailParam);
+    if (fromDateParam) params.set("fromDate", fromDateParam);
+    if (toDateParam) params.set("toDate", toDateParam);
     params.set("page", String(p));
     return `/admin/audit-log?${params.toString()}`;
+  }
+
+  function buildExportUrl() {
+    const params = new URLSearchParams();
+    if (actionParam) params.set("action", actionParam);
+    if (entityTypeParam) params.set("entityType", entityTypeParam);
+    if (userEmailParam) params.set("userEmail", userEmailParam);
+    if (fromDateParam) params.set("fromDate", fromDateParam);
+    if (toDateParam) params.set("toDate", toDateParam);
+    return `/api/audit-log/export?${params.toString()}`;
   }
 
   const actionBadgeVariant = (action: string) => {
@@ -131,12 +162,35 @@ export default async function AuditLogPage({
             <option key={u.userEmail} value={u.userEmail}>{u.userEmail}</option>
           ))}
         </select>
+
+        <input
+          type="date"
+          name="fromDate"
+          defaultValue={fromDateParam ?? ""}
+          className="border border-border rounded-[var(--radius)] px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+          placeholder="From date"
+        />
+        <input
+          type="date"
+          name="toDate"
+          defaultValue={toDateParam ?? ""}
+          className="border border-border rounded-[var(--radius)] px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+          placeholder="To date"
+        />
+
         <Button type="submit" variant="outline" size="sm">Filter</Button>
         {hasFilters && (
           <Link href="/admin/audit-log" className="text-sm text-muted-foreground hover:text-foreground transition">
             Clear
           </Link>
         )}
+
+        {hasFilters && (
+          <Button asChild variant="outline" size="sm">
+            <a href={buildExportUrl()}>Export CSV</a>
+          </Button>
+        )}
+
         <p className="ml-auto text-sm text-muted-foreground">{total} events</p>
       </form>
 
