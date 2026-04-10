@@ -4,6 +4,16 @@ import { useState, useEffect, KeyboardEvent } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Pencil, Check, X } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface TaxonomyItem {
   id: string;
@@ -26,6 +36,7 @@ function TaxonomySection({ title, apiPath, isAdmin }: TaxonomySectionProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
   const [editError, setEditError] = useState("");
+  const [pendingDelete, setPendingDelete] = useState<TaxonomyItem | null>(null);
 
   useEffect(() => {
     fetch(apiPath)
@@ -57,9 +68,12 @@ function TaxonomySection({ title, apiPath, isAdmin }: TaxonomySectionProps) {
     if (e.key === "Enter") { e.preventDefault(); handleAdd(); }
   }
 
-  async function handleDelete(id: string) {
+  async function confirmDelete(id: string) {
     const res = await fetch(`${apiPath}/${id}`, { method: "DELETE" });
-    if (res.ok) setItems((prev) => prev.filter((i) => i.id !== id));
+    if (res.ok) {
+      setItems((prev) => prev.filter((i) => i.id !== id));
+      setPendingDelete(null);
+    }
   }
 
   function startEdit(item: TaxonomyItem) {
@@ -166,7 +180,7 @@ function TaxonomySection({ title, apiPath, isAdmin }: TaxonomySectionProps) {
                   </button>
                   <button
                     type="button"
-                    onClick={() => handleDelete(item.id)}
+                    onClick={() => setPendingDelete(item)}
                     className="text-xs text-destructive hover:underline"
                   >
                     Delete
@@ -177,6 +191,25 @@ function TaxonomySection({ title, apiPath, isAdmin }: TaxonomySectionProps) {
           ))}
         </ul>
       )}
+
+      <AlertDialog open={pendingDelete !== null} onOpenChange={(open) => { if (!open) setPendingDelete(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete "{pendingDelete?.name}"?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingDelete?._count?.posts
+                ? `This ${title.toLowerCase().slice(0, -1)} is used by ${pendingDelete._count.posts} ${pendingDelete._count.posts === 1 ? "post" : "posts"}. Their categorization will be removed.`
+                : "This action cannot be undone."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => confirmDelete(pendingDelete!.id)}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
