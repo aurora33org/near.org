@@ -67,6 +67,15 @@ export default function EditPostClient() {
   const [showUpdateConfirm, setShowUpdateConfirm] = useState(false);
   const { isDirty, setIsDirty, requestNavigation } = useNavigationGuard();
   const markDirty = () => setIsDirty(true);
+  const [editorKey, setEditorKey] = useState(0);
+  const [autosavedAt, setAutosavedAt] = useState<Date | null>(null);
+  const [draftRecovery, setDraftRecovery] = useState<{ savedAt: Date; draft: any } | null>(null);
+  const autosaveStateRef = useRef({
+    isDirty: false, title: "", content: {} as any, slug: "", excerpt: "",
+    coverImage: "", heroBgColor: "#ffffff", heroBgImage: "", seoTitle: "",
+    seoDesc: "", ogImage: "", publishedAt: "", selectedCategoryIds: [] as string[],
+    selectedTagIds: [] as string[], excludeFromSitemap: false,
+  });
 
   // Initialize contentEditable title div once when post loads
   useEffect(() => {
@@ -107,6 +116,26 @@ export default function EditPostClient() {
         setHeroBgColor(expandHexColor(post.heroBgColor || "#ffffff"));
         setHeroBgImage(post.heroBgImage || "");
         setExcludeFromSitemap(post.excludeFromSitemap === true);
+
+        // Check for a draft newer than the last server save
+        try {
+          const stored = localStorage.getItem(`cms_draft_${post.id}`);
+          if (stored) {
+            const draft = JSON.parse(stored);
+            if (draft.savedAt && post.updatedAt) {
+              const draftDate = new Date(draft.savedAt);
+              const serverDate = new Date(post.updatedAt);
+              if (draftDate > serverDate) {
+                setDraftRecovery({ savedAt: draftDate, draft });
+              } else {
+                // Draft is stale — clean it up
+                localStorage.removeItem(`cms_draft_${post.id}`);
+              }
+            }
+          }
+        } catch {
+          localStorage.removeItem(`cms_draft_${post.id}`);
+        }
 
         if (catRes.ok) setCategories(await catRes.json());
         if (tagRes.ok) setTags(await tagRes.json());
@@ -191,6 +220,67 @@ export default function EditPostClient() {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [isDirty]);
 
+  // Keep autosave ref current with latest state
+  useEffect(() => {
+    autosaveStateRef.current = {
+      isDirty, title, content, slug, excerpt, coverImage, heroBgColor,
+      heroBgImage, seoTitle, seoDesc, ogImage, publishedAt,
+      selectedCategoryIds, selectedTagIds, excludeFromSitemap,
+    };
+  }, [isDirty, title, content, slug, excerpt, coverImage, heroBgColor,
+      heroBgImage, seoTitle, seoDesc, ogImage, publishedAt, selectedCategoryIds,
+      selectedTagIds, excludeFromSitemap]);
+
+  // Autosave every 30s when dirty (only after post is loaded)
+  useEffect(() => {
+    if (isLoading) return;
+    const key = `cms_draft_${postId}`;
+    const interval = setInterval(() => {
+      const s = autosaveStateRef.current;
+      if (!s.isDirty) return;
+      try {
+        localStorage.setItem(key, JSON.stringify({
+          title: s.title, content: s.content, slug: s.slug, excerpt: s.excerpt,
+          coverImage: s.coverImage, heroBgColor: s.heroBgColor, heroBgImage: s.heroBgImage,
+          seoTitle: s.seoTitle, seoDesc: s.seoDesc, ogImage: s.ogImage,
+          publishedAt: s.publishedAt, selectedCategoryIds: s.selectedCategoryIds,
+          selectedTagIds: s.selectedTagIds, excludeFromSitemap: s.excludeFromSitemap,
+          savedAt: new Date().toISOString(),
+        }));
+        setAutosavedAt(new Date());
+      } catch { /* storage quota exceeded */ }
+    }, 30_000);
+    return () => clearInterval(interval);
+  }, [isLoading, postId]);
+
+  function handleRestoreDraft() {
+    if (!draftRecovery) return;
+    const d = draftRecovery.draft;
+    setTitle(d.title || "");
+    setContent(d.content || { type: "doc", content: [{ type: "paragraph" }] });
+    setSlug(d.slug || "");
+    setExcerpt(d.excerpt || "");
+    setCoverImage(d.coverImage || "");
+    setHeroBgColor(d.heroBgColor || "#ffffff");
+    setHeroBgImage(d.heroBgImage || "");
+    setSeoTitle(d.seoTitle || "");
+    setSeoDesc(d.seoDesc || "");
+    setOgImage(d.ogImage || "");
+    setPublishedAt(d.publishedAt || "");
+    setSelectedCategoryIds(d.selectedCategoryIds || []);
+    setSelectedTagIds(d.selectedTagIds || []);
+    setExcludeFromSitemap(d.excludeFromSitemap ?? false);
+    setEditorKey((k) => k + 1);
+    if (titleInputRef.current) titleInputRef.current.textContent = d.title || "";
+    setDraftRecovery(null);
+    markDirty();
+  }
+
+  function handleDiscardDraft() {
+    localStorage.removeItem(`cms_draft_${postId}`);
+    setDraftRecovery(null);
+  }
+
   // Cmd+S / Ctrl+S keyboard shortcut to save
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -246,6 +336,8 @@ export default function EditPostClient() {
 
       setStatus(finalStatus);
       setIsDirty(false);
+      localStorage.removeItem(`cms_draft_${postId}`);
+      setAutosavedAt(null);
       toast.success("Post saved");
     } catch (err) {
       console.error(err);
@@ -316,6 +408,9 @@ export default function EditPostClient() {
 
   const displaySlug = slug;
   const isPublished = status === "PUBLISHED";
+  const autosaveLabel = autosavedAt
+    ? `Autosaved at ${autosavedAt.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "UTC" })} UTC`
+    : undefined;
 
   return (
     <div className="-m-8 flex flex-col h-screen bg-background">
@@ -358,6 +453,11 @@ export default function EditPostClient() {
 
             {/* Separator */}
             <div className="w-px h-5 bg-border" />
+
+            {/* Autosave status */}
+            {autosaveLabel && (
+              <span className="text-xs text-muted-foreground hidden sm:block">{autosaveLabel}</span>
+            )}
 
             {/* Publish & Delete Section */}
             <div className="flex items-center gap-2">
@@ -403,6 +503,19 @@ export default function EditPostClient() {
         {/* LEFT PANEL - Editor */}
         <div className="flex-1 flex flex-col overflow-auto bg-background">
           <div className="p-6 space-y-4 max-w-4xl mx-auto w-full">
+            {/* Draft recovery banner */}
+            {draftRecovery && (
+              <div className="flex items-center justify-between gap-4 rounded-lg border border-amber-400/50 bg-amber-500/10 px-4 py-3">
+                <span className="text-sm text-amber-700 dark:text-amber-400">
+                  Draft recovered from {formatAdminDate(draftRecovery.savedAt.toISOString())}
+                </span>
+                <div className="flex gap-2 shrink-0">
+                  <Button size="sm" variant="outline" onClick={handleRestoreDraft}>Restore</Button>
+                  <Button size="sm" variant="ghost" onClick={handleDiscardDraft}>Discard</Button>
+                </div>
+              </div>
+            )}
+
             {/* Title */}
             <div
               ref={titleInputRef}
@@ -432,7 +545,12 @@ export default function EditPostClient() {
 
             {/* Editor */}
             <div className="mt-6">
-              <BlockEditor content={content} onChange={(v) => { markDirty(); setContent(v); }} />
+              <BlockEditor
+                key={editorKey}
+                content={content}
+                onChange={(v) => { markDirty(); setContent(v); }}
+                autosaveLabel={autosaveLabel}
+              />
             </div>
           </div>
         </div>
