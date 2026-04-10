@@ -68,14 +68,19 @@ export async function DELETE(
   const { id } = await params;
   const post = await prisma.post.findUnique({
     where: { id },
-    select: { lockedBy: true },
+    select: { lockedBy: true, lockedByEmail: true },
   });
 
   if (!post) {
     return NextResponse.json({ error: "Post not found" }, { status: 404 });
   }
 
-  if (post.lockedBy !== session.user.id) {
+  const userRole = (session.user as any).role;
+  const isOwnLock = post.lockedBy === session.user.id;
+  const isAdmin = userRole === "ADMIN";
+
+  // Allow lock release if user owns the lock OR is an admin
+  if (!isOwnLock && !isAdmin) {
     return NextResponse.json({ error: "Not your lock" }, { status: 403 });
   }
 

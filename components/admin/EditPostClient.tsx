@@ -32,7 +32,7 @@ function expandHexColor(color: string): string {
   return color;
 }
 
-export default function EditPostClient() {
+export default function EditPostClient({ userRole = "EDITOR" }: { userRole?: string }) {
   const router = useRouter();
   const params = useParams();
   const postId = params.id as string;
@@ -43,6 +43,8 @@ export default function EditPostClient() {
   const [isSaving, setIsSaving] = useState(false);
   const [lockBlocked, setLockBlocked] = useState(false);
   const [lockBlockedBy, setLockBlockedBy] = useState("");
+  const [showTakeOverConfirm, setShowTakeOverConfirm] = useState(false);
+  const [isTakingOver, setIsTakingOver] = useState(false);
   const [isCoverPickerOpen, setIsCoverPickerOpen] = useState(false);
   const [isOgPickerOpen, setIsOgPickerOpen] = useState(false);
   const [heroBgColor, setHeroBgColor] = useState("#ffffff");
@@ -293,6 +295,38 @@ export default function EditPostClient() {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [handleSubmit]);
 
+  async function handleTakeOver() {
+    if (!lockBlocked || userRole !== "ADMIN") {
+      return;
+    }
+
+    setIsTakingOver(true);
+    try {
+      // Force release the lock
+      const releaseRes = await fetch(`/api/posts/${postId}/lock`, { method: "DELETE" });
+      if (!releaseRes.ok) {
+        toast.error("Failed to release the lock. Try again.");
+        return;
+      }
+
+      // Re-acquire the lock
+      const acquireRes = await fetch(`/api/posts/${postId}/lock`, { method: "POST" });
+      if (acquireRes.ok) {
+        setLockBlocked(false);
+        setLockBlockedBy("");
+        setShowTakeOverConfirm(false);
+        toast.success("Post lock acquired — you can now edit.");
+      } else {
+        toast.error("Failed to acquire the lock. Try again.");
+      }
+    } catch (error) {
+      console.error("Take over lock error:", error);
+      toast.error("An error occurred while taking over the lock.");
+    } finally {
+      setIsTakingOver(false);
+    }
+  }
+
   async function handleSubmit(statusOverride?: "DRAFT" | "PUBLISHED") {
     setIsSaving(true);
     const finalStatus = statusOverride || status;
@@ -358,10 +392,42 @@ export default function EditPostClient() {
             You cannot edit it at the same time.
           </p>
           <p className="text-xs text-muted-foreground">The lock expires automatically after 90 seconds of inactivity.</p>
-          <Button asChild variant="outline">
-            <Link href="/admin/posts">← Back to Posts</Link>
-          </Button>
+          <div className="flex flex-col gap-2 pt-2">
+            <Button asChild variant="outline">
+              <Link href="/admin/posts">← Back to Posts</Link>
+            </Button>
+            {userRole === "ADMIN" && (
+              <Button
+                variant="destructive"
+                onClick={() => setShowTakeOverConfirm(true)}
+                disabled={isTakingOver}
+              >
+                {isTakingOver ? "Taking over..." : "Take Over Editing"}
+              </Button>
+            )}
+          </div>
         </div>
+
+        {/* Take Over Confirmation Dialog */}
+        <Dialog open={showTakeOverConfirm} onOpenChange={setShowTakeOverConfirm}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Take Over Editing?</DialogTitle>
+              <DialogDescription>
+                This will interrupt <span className="font-medium">{lockBlockedBy}</span>'s editing session.
+                Any unsaved changes they have will be lost.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowTakeOverConfirm(false)}>
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={handleTakeOver} disabled={isTakingOver}>
+                {isTakingOver ? "Taking over..." : "Take Over"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }
