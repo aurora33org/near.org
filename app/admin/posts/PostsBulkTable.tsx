@@ -4,8 +4,13 @@ import { useState, useTransition, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AlertTriangle } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog, DialogContent, DialogHeader, DialogFooter,
+  DialogTitle, DialogDescription, DialogClose,
+} from "@/components/ui/dialog";
 import { PostDeleteButton } from "@/components/admin/PostDeleteButton";
 import { DuplicatePostButton } from "@/components/admin/DuplicatePostButton";
 import { formatAdminDate } from "@/lib/utils";
@@ -32,6 +37,7 @@ export function PostsBulkTable({ posts, userRole }: PostsBulkTableProps) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isPending, startTransition] = useTransition();
   const [bulkError, setBulkError] = useState("");
+  const [pendingBulkAction, setPendingBulkAction] = useState<"publish" | "archive" | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteStep, setDeleteStep] = useState<1 | 2>(1);
   const [deleteConfirmInput, setDeleteConfirmInput] = useState("");
@@ -87,6 +93,9 @@ export function PostsBulkTable({ posts, userRole }: PostsBulkTableProps) {
       setBulkError(data.error ?? "Bulk action failed");
       return;
     }
+    const count = Array.from(selectedIds).length;
+    if (action === "publish") toast.success(`${count} post${count !== 1 ? "s" : ""} published`);
+    if (action === "archive") toast.success(`${count} post${count !== 1 ? "s" : ""} archived`);
     setSelectedIds(new Set());
     startTransition(() => router.refresh());
   }
@@ -217,10 +226,10 @@ export function PostsBulkTable({ posts, userRole }: PostsBulkTableProps) {
             <Button variant="outline" size="sm" onClick={() => setSelectedIds(new Set())}>
               Clear
             </Button>
-            <Button variant="outline" size="sm" disabled={isPending} onClick={() => handleBulkAction("publish")}>
+            <Button variant="outline" size="sm" disabled={isPending} onClick={() => setPendingBulkAction("publish")}>
               Publish
             </Button>
-            <Button variant="outline" size="sm" disabled={isPending} onClick={() => handleBulkAction("archive")}>
+            <Button variant="outline" size="sm" disabled={isPending} onClick={() => setPendingBulkAction("archive")}>
               Archive
             </Button>
             <Button variant="destructive" size="sm" disabled={isPending} onClick={openBulkDeleteModal}>
@@ -346,6 +355,37 @@ export function PostsBulkTable({ posts, userRole }: PostsBulkTableProps) {
           </div>
         </div>
       )}
+
+      {/* Bulk publish/archive confirmation dialog */}
+      <Dialog open={pendingBulkAction !== null} onOpenChange={(open) => { if (!open) setPendingBulkAction(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {pendingBulkAction === "publish" ? "Publish posts?" : "Archive posts?"}
+            </DialogTitle>
+            <DialogDescription>
+              {pendingBulkAction === "publish"
+                ? `Publish ${selectedIds.size} post${selectedIds.size !== 1 ? "s" : ""}? They will become immediately visible on the site.`
+                : `Archive ${selectedIds.size} post${selectedIds.size !== 1 ? "s" : ""}? They will be hidden from the public site.`}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </DialogClose>
+            <Button
+              variant={pendingBulkAction === "publish" ? "default" : "secondary"}
+              onClick={async () => {
+                const action = pendingBulkAction!;
+                setPendingBulkAction(null);
+                await handleBulkAction(action);
+              }}
+            >
+              {pendingBulkAction === "publish" ? "Publish" : "Archive"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
