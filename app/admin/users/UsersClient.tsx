@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatAdminDate } from "@/lib/utils";
+import { toast } from "sonner";
 
 type Role = "ADMIN" | "EDITOR"; // VIEWER exists in DB/backend but is not assignable from the UI
 
@@ -142,9 +143,9 @@ export function UsersClient({ initialUsers, currentUserId }: UsersClientProps) {
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error ?? "Failed to send invitation"); return; }
+      const sentEmail = inviteEmail;
       closeInvite();
-      // Show success message (optional: add toast)
-      alert("Invitation sent successfully!");
+      toast.success(`Invitation sent to ${sentEmail}`);
     } finally {
       setIsLoading(false);
     }
