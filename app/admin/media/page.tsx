@@ -31,6 +31,9 @@ export default function MediaPage() {
   const [oversizedFiles, setOversizedFiles] = useState<File[]>([]);
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   async function fetchMedia(p: number, append = false, q = "", type = "all") {
@@ -96,6 +99,54 @@ export default function MediaPage() {
       setItems((prev) => prev.filter((i) => i.id !== id));
       setTotal((t) => t - 1);
       setSelectedItem(null);
+    }
+  }
+
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }
+
+  function selectAll() {
+    if (selectedIds.size === items.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(items.map((i) => i.id)));
+    }
+  }
+
+  async function handleBulkDelete() {
+    if (selectedIds.size === 0) return;
+
+    setIsBulkDeleting(true);
+    try {
+      const res = await fetch("/api/media/bulk", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: Array.from(selectedIds) }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        // Remove deleted items from local state
+        setItems((prev) => prev.filter((i) => !selectedIds.has(i.id)));
+        setTotal((t) => Math.max(0, t - data.deleted));
+        setSelectedIds(new Set());
+        setShowBulkDeleteConfirm(false);
+        // Optionally show toast about partial failures
+        if (data.failed > 0) {
+          console.warn(`Failed to delete ${data.failed} items`);
+        }
+      }
+    } finally {
+      setIsBulkDeleting(false);
     }
   }
 
@@ -200,12 +251,38 @@ export default function MediaPage() {
         )
       ) : (
         <>
+          {/* Bulk select controls */}
+          {items.length > 0 && (
+            <div className="flex items-center gap-3 mb-4 p-3 bg-muted/30 rounded-lg">
+              <input
+                type="checkbox"
+                checked={selectedIds.size === items.length && items.length > 0}
+                onChange={selectAll}
+                className="w-4 h-4 cursor-pointer"
+              />
+              <span className="text-sm text-muted-foreground">
+                {selectedIds.size === 0 ? "Select items" : `${selectedIds.size} selected`}
+              </span>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             {items.map((item) => (
               <div
                 key={item.id}
                 className="group relative border border-border rounded-t-lg rounded-b-2xl overflow-hidden bg-muted/20 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 hover:border-primary/40"
               >
+                {/* Checkbox */}
+                <div className="absolute top-2 right-2 z-10 bg-background/80 backdrop-blur-sm rounded-md p-1">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.has(item.id)}
+                    onChange={() => toggleSelect(item.id)}
+                    className="w-4 h-4 cursor-pointer"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </div>
+
                 <div className="aspect-video cursor-pointer" onClick={() => openOptions(item)}>
                   <img
                     src={item.url}
@@ -457,6 +534,71 @@ export default function MediaPage() {
               </div>
             </div>
           </div>
+          </div>
+        </div>
+      )}
+
+      {/* Sticky bulk action bar */}
+      {selectedIds.size > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/95 backdrop-blur-sm p-4 shadow-lg">
+          <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
+            <span className="text-sm font-medium">
+              {selectedIds.size} item{selectedIds.size !== 1 ? "s" : ""} selected
+            </span>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setSelectedIds(new Set())}
+                className="px-4 py-2 text-sm rounded-lg border border-border hover:bg-muted transition"
+              >
+                Clear
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowBulkDeleteConfirm(true)}
+                className="px-4 py-2 text-sm rounded-lg bg-destructive text-destructive-foreground hover:bg-destructive/90 transition disabled:opacity-50"
+                disabled={isBulkDeleting}
+              >
+                {isBulkDeleting ? "Deleting..." : "Delete Selected"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk delete confirmation modal */}
+      {showBulkDeleteConfirm && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40"
+          onClick={() => setShowBulkDeleteConfirm(false)}
+        >
+          <div
+            className="bg-background border border-border rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6 space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="space-y-1">
+              <p className="font-semibold text-base">Delete {selectedIds.size} file{selectedIds.size !== 1 ? "s" : ""}?</p>
+              <p className="text-sm text-muted-foreground">
+                These files will be permanently removed from storage. This action cannot be undone.
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setShowBulkDeleteConfirm(false)}
+                className="flex-1 text-sm px-4 py-2 rounded-lg border border-border hover:bg-muted transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleBulkDelete}
+                disabled={isBulkDeleting}
+                className="flex-1 text-sm px-4 py-2 rounded-lg bg-destructive text-destructive-foreground hover:bg-destructive/90 transition disabled:opacity-50"
+              >
+                {isBulkDeleting ? "Deleting..." : "Delete All"}
+              </button>
+            </div>
           </div>
         </div>
       )}
