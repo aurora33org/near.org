@@ -56,6 +56,39 @@ export async function POST(
   return NextResponse.json({ acquired: true });
 }
 
+export async function GET(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { id } = await params;
+  const post = await prisma.post.findUnique({
+    where: { id },
+    select: { lockedBy: true, lockedByEmail: true, lockedAt: true },
+  });
+
+  if (!post) {
+    return NextResponse.json({ error: "Post not found" }, { status: 404 });
+  }
+
+  const now = new Date();
+  const isStale =
+    !post.lockedAt || now.getTime() - post.lockedAt.getTime() > LOCK_TTL_MS;
+
+  if (isStale || post.lockedBy === session.user.id) {
+    return NextResponse.json({ lockedByMe: true });
+  }
+
+  return NextResponse.json(
+    { lockedByMe: false, lockedByEmail: post.lockedByEmail },
+    { status: 409 }
+  );
+}
+
 export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }

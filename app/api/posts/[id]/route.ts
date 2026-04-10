@@ -65,6 +65,10 @@ export async function PUT(
 
     const post = await prisma.post.findUnique({
       where: { id },
+      select: {
+        id: true, slug: true, authorId: true, status: true, publishedAt: true,
+        lockedBy: true, lockedAt: true,
+      },
     });
 
     if (!post) {
@@ -74,6 +78,17 @@ export async function PUT(
     const userRole = (session.user as any)?.role;
     if (userRole === "VIEWER") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    // Enforce lock ownership — reject saves from users who no longer hold the lock
+    const lockIsStale =
+      !post.lockedAt ||
+      new Date().getTime() - new Date(post.lockedAt).getTime() > 90_000;
+    if (!lockIsStale && post.lockedBy !== session.user.id) {
+      return NextResponse.json(
+        { error: "You no longer hold the edit lock for this post." },
+        { status: 423 }
+      );
     }
 
     const body = await req.json();
