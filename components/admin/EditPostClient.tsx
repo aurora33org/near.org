@@ -882,6 +882,9 @@ export default function EditPostClient({ userRole = "EDITOR" }: { userRole?: str
                     rows={3}
                     className="bg-muted/30 border-border/70"
                   />
+                  <p className="text-xs text-muted-foreground text-right">
+                    {excerpt.trim() === "" ? 0 : excerpt.trim().split(/\s+/).length} words
+                  </p>
                 </div>
 
                 {/* SEO */}
@@ -895,8 +898,16 @@ export default function EditPostClient({ userRole = "EDITOR" }: { userRole?: str
                       value={seoTitle}
                       onChange={(e) => { markDirty(); setSeoTitle(e.target.value); }}
                       placeholder="Optimized title for search engines"
+                      maxLength={60}
                       className="bg-muted/30 border-border/70"
                     />
+                    <p className={`text-xs text-right ${
+                      seoTitle.length > 60 ? "text-red-500" :
+                      seoTitle.length > 50 ? "text-amber-500" :
+                      "text-muted-foreground"
+                    }`}>
+                      {seoTitle.length} / 60
+                    </p>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="seoDesc" className="text-xs font-medium">Meta Description</Label>
@@ -905,9 +916,17 @@ export default function EditPostClient({ userRole = "EDITOR" }: { userRole?: str
                       value={seoDesc}
                       onChange={(e) => { markDirty(); setSeoDesc(e.target.value); }}
                       placeholder="Description for search results (160 chars)"
+                      maxLength={160}
                       rows={2}
                       className="bg-muted/30 border-border/70"
                     />
+                    <p className={`text-xs text-right ${
+                      seoDesc.length > 160 ? "text-red-500" :
+                      seoDesc.length > 150 ? "text-amber-500" :
+                      "text-muted-foreground"
+                    }`}>
+                      {seoDesc.length} / 160
+                    </p>
                   </div>
                   <div className="space-y-2">
                     <Label className="text-xs font-medium">OG Image</Label>
