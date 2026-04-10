@@ -5,5 +5,6 @@ import EditPostClient from "@/components/admin/EditPostClient";
 export default async function EditPostPage() {
   const session = await auth();
   if ((session?.user as any)?.role === "VIEWER") redirect("/admin/posts");
-  return <EditPostClient />;
+  const userRole = (session?.user as any)?.role || "VIEWER";
+  return <EditPostClient userRole={userRole} />;
 }
