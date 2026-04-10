@@ -10,12 +10,9 @@ import {
   Image,
   Tag,
   Users,
-  ClipboardList,
+  Settings,
   PanelLeftClose,
   PanelLeftOpen,
-  Map,
-  Bot,
-  ChevronDown,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/admin/ThemeToggle";
 import { SidebarProfileMenu } from "@/components/admin/SidebarProfileMenu";
@@ -30,7 +27,6 @@ interface AdminSidebarProps {
 export function AdminSidebar({ children, role, userName }: AdminSidebarProps) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
-  const [advancedExpanded, setAdvancedExpanded] = useState(false);
   const { isDirty, requestNavigation } = useNavigationGuard();
 
   useEffect(() => {
@@ -42,12 +38,6 @@ export function AdminSidebar({ children, role, userName }: AdminSidebarProps) {
     localStorage.setItem("sidebar-collapsed", String(collapsed));
   }, [collapsed]);
 
-  // Auto-expand Advanced if user is on an advanced page, collapse otherwise
-  useEffect(() => {
-    const isAdvancedPage = pathname.startsWith("/admin/audit-log") || pathname.startsWith("/admin/sitemap") || pathname.startsWith("/admin/robots");
-    setAdvancedExpanded(isAdvancedPage);
-  }, [pathname]);
-
   const isAuthPage =
     pathname === "/admin/login" ||
     pathname === "/admin/forgot-password" ||
@@ -57,7 +47,7 @@ export function AdminSidebar({ children, role, userName }: AdminSidebarProps) {
     return <>{children}</>;
   }
 
-  const iconSize = "w-4 h-4 shrink-0";
+  const iconSize = "w-4 h-4";
 
   const navLink = (href: string, label: string, icon: ReactNode, exact = false) => {
     const active = exact ? pathname === href : pathname.startsWith(href);
@@ -71,15 +61,15 @@ export function AdminSidebar({ children, role, userName }: AdminSidebarProps) {
             requestNavigation(href);
           }
         }}
-        className={`flex items-center rounded-lg transition-all ${
-          collapsed ? "justify-center p-2" : "gap-3 px-4 py-2"
+        className={`flex items-center rounded-xl transition-all ${
+          collapsed ? "justify-center p-2" : "gap-3 px-3 py-2.5"
         } ${
           active
             ? "bg-secondary text-secondary-foreground"
             : "hover:bg-secondary/50 hover:text-secondary-foreground"
         }`}
       >
-        <span className="shrink-0 opacity-70">{icon}</span>
+        <span className="opacity-70">{icon}</span>
         {!collapsed && <span>{label}</span>}
       </Link>
     );
@@ -131,7 +121,7 @@ export function AdminSidebar({ children, role, userName }: AdminSidebarProps) {
         )}
 
         {/* Nav */}
-        <nav className={`flex-1 py-4 space-y-1 ${collapsed ? "px-2" : "px-0"}`}>
+        <nav className={`flex-1 py-4 space-y-1 px-3`}>
           {navLink("/admin/dashboard",  "Dashboard",         <LayoutDashboard className={iconSize} />, true)}
           {navLink("/admin/posts",      "Blog Posts",        <FileText        className={iconSize} />)}
           {navLink("/admin/pages",      "Pages",             <Layers          className={iconSize} />)}
@@ -141,31 +131,7 @@ export function AdminSidebar({ children, role, userName }: AdminSidebarProps) {
             <>
               {sectionLabel("Management")}
               {navLink("/admin/users", "Users", <Users className={iconSize} />, true)}
-
-              {/* Advanced Submenu */}
-              <button
-                onClick={() => setAdvancedExpanded((v) => !v)}
-                title={collapsed ? "Advanced" : undefined}
-                className={`flex items-center rounded-lg transition-all w-full ${
-                  collapsed ? "justify-center p-2" : "gap-3 px-4 py-2"
-                } ${
-                  advancedExpanded
-                    ? "bg-secondary text-secondary-foreground"
-                    : "hover:bg-secondary/50 hover:text-secondary-foreground"
-                }`}
-              >
-                <ChevronDown className={`${iconSize} transition-transform ${advancedExpanded ? "rotate-0" : "-rotate-90"}`} />
-                {!collapsed && <span className="text-sm font-medium">Advanced</span>}
-              </button>
-
-              {/* Advanced Submenu Items */}
-              {advancedExpanded && !collapsed && (
-                <div className="pl-2 space-y-1">
-                  {navLink("/admin/audit-log", "Audit Log", <ClipboardList className={iconSize} />, true)}
-                  {navLink("/admin/sitemap", "Sitemap", <Map className={iconSize} />, true)}
-                  {navLink("/admin/robots", "Robots.txt", <Bot className={iconSize} />, true)}
-                </div>
-              )}
+              {navLink("/admin/advanced", "Advanced", <Settings className={iconSize} />, true)}
             </>
           )}
         </nav>

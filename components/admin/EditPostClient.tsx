@@ -281,6 +281,18 @@ export default function EditPostClient() {
     setDraftRecovery(null);
   }
 
+  // Cmd+S / Ctrl+S keyboard shortcut to save
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === "s") {
+        e.preventDefault();
+        handleSubmit();
+      }
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [handleSubmit]);
+
   async function handleSubmit(statusOverride?: "DRAFT" | "PUBLISHED") {
     setIsSaving(true);
     const finalStatus = statusOverride || status;
