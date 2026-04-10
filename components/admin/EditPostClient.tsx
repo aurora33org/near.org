@@ -43,6 +43,7 @@ export default function EditPostClient({ userRole = "EDITOR" }: { userRole?: str
   const [isSaving, setIsSaving] = useState(false);
   const [lockBlocked, setLockBlocked] = useState(false);
   const [lockBlockedBy, setLockBlockedBy] = useState("");
+  const [wasEvicted, setWasEvicted] = useState(false);
   const [showTakeOverConfirm, setShowTakeOverConfirm] = useState(false);
   const [isTakingOver, setIsTakingOver] = useState(false);
   const [isCoverPickerOpen, setIsCoverPickerOpen] = useState(false);
@@ -169,8 +170,20 @@ export default function EditPostClient({ userRole = "EDITOR" }: { userRole?: str
           return;
         }
         // Acquired — start heartbeat every 30s
-        heartbeat = setInterval(() => {
-          fetch(`/api/posts/${postId}/lock`, { method: "POST" }).catch(() => {});
+        heartbeat = setInterval(async () => {
+          try {
+            const res = await fetch(`/api/posts/${postId}/lock`, { method: "POST" });
+            if (res.status === 409) {
+              clearInterval(heartbeat);
+              const data = await res.json();
+              setLockBlocked(true);
+              setLockBlockedBy(data.lockedByEmail || "an admin");
+              setWasEvicted(true);
+              toast.error("An admin has taken over this post. Your session is now read-only.");
+            }
+          } catch {
+            // Network error — allow optimistically, retry next beat
+          }
         }, 30_000);
       } catch {
         // Network error — allow editing optimistically
@@ -191,9 +204,32 @@ export default function EditPostClient({ userRole = "EDITOR" }: { userRole?: str
     };
   }, [postId, isLoading]);
 
-  // Auto-retry lock acquisition when blocked, in case the lock expires
+  // Poll lock status every 10s while actively editing — detects takeover before next heartbeat
   useEffect(() => {
-    if (!lockBlocked) return;
+    if (isLoading || lockBlocked) return;
+
+    const poll = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/posts/${postId}/lock`);
+        if (res.status === 409) {
+          clearInterval(poll);
+          const data = await res.json();
+          setLockBlocked(true);
+          setLockBlockedBy(data.lockedByEmail || "an admin");
+          setWasEvicted(true);
+          toast.error("An admin has taken over this post. Your session is now read-only.");
+        }
+      } catch {
+        // Network error — keep polling
+      }
+    }, 10_000);
+
+    return () => clearInterval(poll);
+  }, [isLoading, lockBlocked, postId]);
+
+  // Auto-retry lock acquisition when blocked, in case the lock expires (but not after eviction)
+  useEffect(() => {
+    if (!lockBlocked || wasEvicted) return;
 
     const retryInterval = setInterval(async () => {
       try {
@@ -364,6 +400,12 @@ export default function EditPostClient({ userRole = "EDITOR" }: { userRole?: str
 
       if (!response.ok) {
         const error = await response.json();
+        if (response.status === 423) {
+          toast.error("Your editing session has been taken over. Changes were not saved.");
+          setLockBlocked(true);
+          setWasEvicted(true);
+          return;
+        }
         toast.error(error.error || error.message || "Failed to save post");
         return;
       }
@@ -386,17 +428,30 @@ export default function EditPostClient({ userRole = "EDITOR" }: { userRole?: str
       <div className="-m-8 flex flex-col h-screen bg-background items-center justify-center gap-6">
         <div className="max-w-md w-full mx-auto text-center space-y-4 p-8 bg-card border border-border rounded-2xl shadow-lg">
           <div className="text-4xl">🔒</div>
-          <h2 className="text-xl font-bold">Post is being edited</h2>
+          <h2 className="text-xl font-bold">
+            {wasEvicted ? "Your session was taken over" : "Post is being edited"}
+          </h2>
           <p className="text-muted-foreground text-sm">
-            <span className="font-medium text-foreground">{lockBlockedBy}</span> is currently editing this post.
-            You cannot edit it at the same time.
+            {wasEvicted ? (
+              <>
+                <span className="font-medium text-foreground">{lockBlockedBy}</span> has taken over this post.
+                Any unsaved changes were not saved.
+              </>
+            ) : (
+              <>
+                <span className="font-medium text-foreground">{lockBlockedBy}</span> is currently editing this post.
+                You cannot edit it at the same time.
+              </>
+            )}
           </p>
-          <p className="text-xs text-muted-foreground">The lock expires automatically after 90 seconds of inactivity.</p>
+          {!wasEvicted && (
+            <p className="text-xs text-muted-foreground">The lock expires automatically after 90 seconds of inactivity.</p>
+          )}
           <div className="flex flex-col gap-2 pt-2">
             <Button asChild variant="outline">
               <Link href="/admin/posts">← Back to Posts</Link>
             </Button>
-            {userRole === "ADMIN" && (
+            {userRole === "ADMIN" && !wasEvicted && (
               <Button
                 variant="destructive"
                 onClick={() => setShowTakeOverConfirm(true)}
