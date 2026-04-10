@@ -4,7 +4,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function sendPasswordResetEmail(to: string, resetUrl: string) {
   await resend.emails.send({
-    from: "onboarding@resend.dev",
+    from: "noreply@aurora33.online",
     to,
     subject: "Reset your NEAR CMS password",
     html: `
@@ -27,7 +27,7 @@ export async function sendPasswordResetEmail(to: string, resetUrl: string) {
 
 export async function sendInvitationEmail(to: string, name: string, inviteUrl: string) {
   await resend.emails.send({
-    from: "onboarding@resend.dev",
+    from: "noreply@aurora33.online",
     to,
     subject: "You're invited to join NEAR CMS",
     html: `
