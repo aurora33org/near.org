@@ -1,16 +1,14 @@
-import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
-import { renderBlocks } from "@/lib/tiptap-renderer";
 import { extractExcerpt } from "@/lib/excerpt";
-import { readingTime } from "@/lib/readingTime";
 import { extractHeadings } from "@/lib/extractHeadings";
 import TableOfContents from "@/components/(site)/TableOfContents";
 import ReadingProgressBar from "@/components/site/ReadingProgressBar";
 import ShareButtons from "@/components/site/ShareButtons";
+import PostRenderer from "@/components/blog/PostRenderer";
 
 export const revalidate = 60;
 
@@ -89,58 +87,13 @@ export default async function BlogPost({
     take: 3,
   });
 
-  const heroStyle: React.CSSProperties = post.heroBgImage
-    ? { backgroundImage: `url(${post.heroBgImage})`, backgroundSize: "cover", backgroundPosition: "center" }
-    : post.heroBgColor
-    ? { backgroundColor: post.heroBgColor }
-    : {};
-
   return (
     <>
       <ReadingProgressBar />
-      {/* HERO */}
-      <div style={heroStyle}>
-        <div className="max-w-4xl mx-auto px-4 pt-16 pb-12">
-          <Link href="/blog" className="text-sm text-black opacity-70 hover:opacity-100 mb-6 block transition">
-            Blog
-          </Link>
-          <h1 className="text-5xl font-bold mb-4 text-black">{post.title}</h1>
-          <div className="flex flex-wrap gap-2 mb-4">
-            {post.categories.map((cat) => (
-              <Link
-                key={cat.id}
-                href={`/blog/category/${cat.slug}`}
-                className="text-xs bg-opacity-20 bg-blue-500 text-blue-700 px-2 py-1 rounded hover:bg-opacity-30 transition"
-              >
-                {cat.name}
-              </Link>
-            ))}
-          </div>
-          <p className="text-sm text-black opacity-70 mb-8">
-            {new Date(post.publishedAt!).toLocaleDateString("en-US", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}{" "}
-            · {post.author.name} · {readingTime(content)}
-          </p>
-          {post.coverImage && (
-            <img
-              src={post.coverImage}
-              alt={post.title}
-              className="w-full rounded-lg object-cover"
-            />
-          )}
-        </div>
-      </div>
+      <PostRenderer post={post} layout="public" />
 
-      {/* CONTENT */}
-      <div className="max-w-3xl mx-auto px-4 py-12">
-        <div className="prose prose-lg max-w-none">
-          {renderBlocks(content?.content ?? [])}
-        </div>
-
-        {/* SHARE BUTTONS */}
+      {/* SHARE BUTTONS */}
+      <div className="max-w-3xl mx-auto px-4 py-0">
         <div className="border-t border-gray-200 mt-12 pt-8">
           <ShareButtons
             url={`https://near.org/blog/${post.slug}`}
