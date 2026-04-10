@@ -78,6 +78,18 @@ export default function NewPostClient() {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [isDirty]);
 
+  // Cmd+S / Ctrl+S keyboard shortcut to save
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === "s") {
+        e.preventDefault();
+        handleSubmit();
+      }
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [handleSubmit]);
+
   async function handleSubmit(statusOverride?: "DRAFT" | "PUBLISHED") {
     setIsLoading(true);
     const finalStatus = statusOverride || status;
