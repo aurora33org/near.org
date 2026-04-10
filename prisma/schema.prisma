@@ -15,6 +15,7 @@ model User {
   role            Role     @default(EDITOR)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+  lastLoginAt     DateTime?
   pages           Page[]   @relation("PageAuthor")
   lastEditedPages Page[]   @relation("PageLastEditor")
   posts           Post[]   @relation("PostAuthor")
