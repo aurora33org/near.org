@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ImageIcon, Loader2, CheckCircle2, UploadCloud, AlertTriangle } from "lucide-react";
+import { ImageIcon, Loader2, CheckCircle2, UploadCloud, AlertTriangle, Search } from "lucide-react";
 import { useAdminTheme } from "@/components/admin/ThemeProvider";
 
 interface MediaItem {
@@ -39,6 +39,8 @@ export default function MediaPickerModal({
   const [isLoading, setIsLoading] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
 
+  const [search, setSearch] = useState("");
+
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
@@ -47,10 +49,12 @@ export default function MediaPickerModal({
 
   const WEB_OPTIMAL_BYTES = 500 * 1024; // 500 KB
 
-  const fetchMedia = useCallback(async (pageNum: number, reset = false) => {
+  const fetchMedia = useCallback(async (pageNum: number, reset = false, q = "") => {
     setIsLoading(true);
     try {
-      const res = await fetch(`/api/media?page=${pageNum}&limit=${PAGE_SIZE}`);
+      const params = new URLSearchParams({ page: String(pageNum), limit: String(PAGE_SIZE) });
+      if (q) params.set("q", q);
+      const res = await fetch(`/api/media?${params}`);
       if (!res.ok) return;
       const data = await res.json();
       setItems((prev) => (reset ? data.items : [...prev, ...data.items]));
@@ -65,9 +69,20 @@ export default function MediaPickerModal({
     if (open) {
       setSelected(null);
       setUploadSuccess(false);
-      fetchMedia(1, true);
+    } else {
+      setItems([]);
+      setSearch("");
     }
-  }, [open, fetchMedia]);
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    setItems([]);
+    const timer = setTimeout(() => {
+      fetchMedia(1, true, search);
+    }, search ? 300 : 0);
+    return () => clearTimeout(timer);
+  }, [search, open, fetchMedia]);
 
   async function handleUpload(file: File) {
     setOversizedFile(null);
@@ -79,7 +94,7 @@ export default function MediaPickerModal({
       const res = await fetch("/api/upload", { method: "POST", body: formData });
       if (!res.ok) return;
       const { url } = await res.json();
-      await fetchMedia(1, true);
+      await fetchMedia(1, true, search);
       setSelected(url);
       setUploadSuccess(true);
       setTimeout(() => setUploadSuccess(false), 2000);
@@ -126,6 +141,18 @@ export default function MediaPickerModal({
               <p className="px-4 pt-3 pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground flex-shrink-0">
                 Media Library
               </p>
+              <div className="px-4 pb-2 flex-shrink-0">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                  <input
+                    type="text"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search by filename…"
+                    className="w-full pl-9 pr-3 py-2 text-sm border border-border rounded-lg bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+              </div>
               <div className="flex-1 overflow-y-auto px-4 pb-4">
                 {isLoading && items.length === 0 ? (
                   <div className="grid grid-cols-3 gap-3">
@@ -178,7 +205,7 @@ export default function MediaPickerModal({
                           type="button"
                           variant="outline"
                           size="sm"
-                          onClick={() => fetchMedia(page + 1)}
+                          onClick={() => fetchMedia(page + 1, false, search)}
                           disabled={isLoading}
                         >
                           {isLoading ? "Loading..." : "Load more"}
