@@ -7,8 +7,10 @@ import { formatAdminDate } from "@/lib/utils";
 
 export default async function AdminDashboard() {
   const session = await auth();
-  const [postsCount, pagesCount, usersCount] = await Promise.all([
-    prisma.post.count(),
+  const [publishedCount, draftCount, archivedCount, pagesCount, usersCount] = await Promise.all([
+    prisma.post.count({ where: { status: "PUBLISHED" } }),
+    prisma.post.count({ where: { status: "DRAFT" } }),
+    prisma.post.count({ where: { status: "ARCHIVED" } }),
     prisma.page.count(),
     prisma.user.count(),
   ]);
@@ -32,41 +34,50 @@ export default async function AdminDashboard() {
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-6">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardDescription>Blog Posts</CardDescription>
-            <CardTitle className="text-4xl">{postsCount}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Button asChild variant="link" className="p-0">
-              <Link href="/admin/posts">Manage Posts →</Link>
-            </Button>
-          </CardContent>
-        </Card>
+        <Link href="/admin/posts?status=PUBLISHED" className="group">
+          <Card className="h-full transition hover:bg-muted/30 cursor-pointer">
+            <CardHeader className="pb-3">
+              <CardDescription>Published Posts</CardDescription>
+              <CardTitle className="text-4xl">{publishedCount}</CardTitle>
+            </CardHeader>
+          </Card>
+        </Link>
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardDescription>Pages</CardDescription>
-            <CardTitle className="text-4xl">{pagesCount}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Button asChild variant="link" className="p-0">
-              <Link href="/admin/pages">Manage Pages →</Link>
-            </Button>
-          </CardContent>
-        </Card>
+        <Link href="/admin/posts?status=DRAFT" className="group">
+          <Card className="h-full transition hover:bg-muted/30 cursor-pointer">
+            <CardHeader className="pb-3">
+              <CardDescription>Draft Posts</CardDescription>
+              <CardTitle className="text-4xl">{draftCount}</CardTitle>
+            </CardHeader>
+          </Card>
+        </Link>
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardDescription>Users</CardDescription>
-            <CardTitle className="text-4xl">{usersCount}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Button asChild variant="link" className="p-0">
-              <Link href="/admin/users">Manage Users →</Link>
-            </Button>
-          </CardContent>
-        </Card>
+        <Link href="/admin/posts?status=ARCHIVED" className="group">
+          <Card className="h-full transition hover:bg-muted/30 cursor-pointer">
+            <CardHeader className="pb-3">
+              <CardDescription>Archived Posts</CardDescription>
+              <CardTitle className="text-4xl">{archivedCount}</CardTitle>
+            </CardHeader>
+          </Card>
+        </Link>
+
+        <Link href="/admin/pages" className="group">
+          <Card className="h-full transition hover:bg-muted/30 cursor-pointer">
+            <CardHeader className="pb-3">
+              <CardDescription>Pages</CardDescription>
+              <CardTitle className="text-4xl">{pagesCount}</CardTitle>
+            </CardHeader>
+          </Card>
+        </Link>
+
+        <Link href="/admin/users" className="group">
+          <Card className="h-full transition hover:bg-muted/30 cursor-pointer">
+            <CardHeader className="pb-3">
+              <CardDescription>Users</CardDescription>
+              <CardTitle className="text-4xl">{usersCount}</CardTitle>
+            </CardHeader>
+          </Card>
+        </Link>
       </div>
 
       {/* Quick actions */}
