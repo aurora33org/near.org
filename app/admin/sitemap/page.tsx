@@ -34,13 +34,10 @@ async function fetchSitemapData() {
   try {
     const posts = await prisma.post.findMany({
       where: { status: "PUBLISHED", publishedAt: { lte: new Date() } },
-      select: { id: true, title: true, slug: true, updatedAt: true },
+      select: { id: true, title: true, slug: true, updatedAt: true, excludeFromSitemap: true },
       orderBy: { publishedAt: "desc" },
     });
-    blogPosts = posts.map(p => ({
-      ...p,
-      excludeFromSitemap: false
-    }));
+    blogPosts = posts;
   } catch (error) {
     console.error("Failed to fetch blog posts for sitemap:", error);
   }
