@@ -70,7 +70,7 @@ export function CarouselNodeView(props: any) {
             {images.map((image, i) => (
               <div
                 key={i}
-                className="min-w-0 flex items-center justify-center bg-background"
+                className="min-w-0 flex items-center justify-center bg-transparent"
                 style={{
                   flex: `0 0 ${100 / slidesPerView}%`,
                   minHeight: "300px",

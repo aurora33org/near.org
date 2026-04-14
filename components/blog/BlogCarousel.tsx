@@ -55,7 +55,7 @@ export function BlogCarousel({ images, slidesPerView = 1, aspectRatio = "auto" }
             {images.map((image, i) => (
               <div
                 key={i}
-                className="min-w-0 flex items-center justify-center bg-muted"
+                className="min-w-0 flex items-center justify-center bg-transparent"
                 style={{
                   flex: `0 0 ${100 / slidesPerView}%`,
                   minHeight: "400px",
