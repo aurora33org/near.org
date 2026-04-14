@@ -25,7 +25,7 @@ export function BlogCarousel({ images }: BlogCarouselProps) {
     const emblaApi = EmblaCarousel(emblaRef.current, { loop: true }) as any;
     emblaApiRef.current = emblaApi;
 
-    const onSelect = () => setSelectedIndex(emblaApi.selectedIndex());
+    const onSelect = () => setSelectedIndex(emblaApi.selectedScrollSnap());
     const onInit = () => setScrollSnaps(emblaApi.scrollSnapList());
 
     emblaApi.on("init", onInit);
