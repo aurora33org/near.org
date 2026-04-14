@@ -66,7 +66,7 @@ export function CarouselNodeView(props: any) {
       <div className="bg-muted rounded-lg overflow-hidden">
         {/* Carousel */}
         <div ref={emblaRef} className="w-full" style={{ overflow: slidesPerView < 2 ? "hidden" : "visible" }}>
-          <div className="flex">
+          <div className="flex gap-4">
             {images.map((image, i) => (
               <div
                 key={i}
@@ -78,11 +78,11 @@ export function CarouselNodeView(props: any) {
               >
                 {aspectRatio !== "auto" ? (
                   <div
+                    className="rounded-lg overflow-hidden"
                     style={{
                       aspectRatio: aspectRatio.replace(":", " / "),
                       width: "100%",
                       height: "100%",
-                      overflow: "hidden",
                     }}
                   >
                     <img
@@ -95,7 +95,7 @@ export function CarouselNodeView(props: any) {
                   <img
                     src={image.src}
                     alt={image.alt || `Slide ${i + 1}`}
-                    className="max-h-full max-w-full object-contain"
+                    className="rounded-lg max-h-full max-w-full object-contain"
                   />
                 )}
               </div>
