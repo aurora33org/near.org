@@ -2,6 +2,7 @@ import React from "react";
 import DOMPurify from "isomorphic-dompurify";
 import { slugifyHeading } from "@/lib/extractHeadings";
 import { BlogCarousel } from "@/components/blog/BlogCarousel";
+import { ImageWithLightbox } from "@/components/blog/ImageWithLightbox";
 
 interface TipTapNode {
   type: string;
@@ -129,7 +130,7 @@ export function renderBlocks(nodes: TipTapNode[] | undefined): React.ReactNode {
 
       case "image":
         return (
-          <img
+          <ImageWithLightbox
             key={i}
             src={node.attrs?.src}
             alt={node.attrs?.alt ?? ""}
