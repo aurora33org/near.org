@@ -48,14 +48,14 @@ export function BlogCarousel({ images, slidesPerView = 1, aspectRatio = "auto" }
 
   return (
     <div className="not-prose my-6 w-full">
-      <div className="relative bg-muted rounded-lg overflow-hidden">
+      <div className="relative bg-transparent rounded-lg overflow-hidden">
         {/* Carousel container */}
         <div ref={emblaRef} className="w-full" style={{ overflow: slidesPerView < 2 ? "hidden" : "visible" }}>
-          <div className="flex gap-4">
+          <div className="flex">
             {images.map((image, i) => (
               <div
                 key={i}
-                className="min-w-0 flex items-center justify-center bg-transparent"
+                className="min-w-0 flex items-center justify-center bg-transparent pr-4"
                 style={{
                   flex: `0 0 ${100 / slidesPerView}%`,
                   minHeight: "400px",
