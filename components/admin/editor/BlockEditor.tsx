@@ -1,12 +1,13 @@
 "use client";
 
 import { useEditor, EditorContent } from "@tiptap/react";
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback } from "react";
 import { getExtensions } from "./extensions";
 import EditorBubbleMenu from "./menus/EditorBubbleMenu";
 import TableControls from "./menus/TableControls";
 import { createSlashCommandSuggestion } from "./menus/SlashCommandRenderer";
 import MediaPickerModal from "@/components/admin/MediaPickerModal";
+import { SlideCountPickerDialog } from "./SlideCountPickerDialog";
 
 interface BlockEditorProps {
   content: object;
@@ -16,10 +17,13 @@ interface BlockEditorProps {
 
 export default function BlockEditor({ content, onChange, autosaveLabel }: BlockEditorProps) {
   const [isMediaPickerOpen, setIsMediaPickerOpen] = useState(false);
-  const mediaPickerCallback = useRef<((url: string) => void) | null>(null);
+  const [mediaPickerMode, setMediaPickerMode] = useState<"single" | "carousel">("single");
+  const [isSlideCountPickerOpen, setIsSlideCountPickerOpen] = useState(false);
+  const [pendingCarouselImages, setPendingCarouselImages] = useState<string[]>([]);
   const [wordCount, setWordCount] = useState(0);
 
-  const openMediaPicker = useCallback(() => {
+  const openMediaPicker = useCallback((mode: "single" | "carousel" = "single") => {
+    setMediaPickerMode(mode);
     setIsMediaPickerOpen(true);
   }, []);
 
@@ -81,13 +85,41 @@ export default function BlockEditor({ content, onChange, autosaveLabel }: BlockE
       {/* Media Picker */}
       <MediaPickerModal
         open={isMediaPickerOpen}
+        multiSelect={mediaPickerMode === "carousel"}
         onClose={() => {
           setIsMediaPickerOpen(false);
-          mediaPickerCallback.current = null;
         }}
-        onSelect={(url) => {
-          editor?.chain().focus().setImage({ src: url }).run();
+        onSelect={(urlOrUrls) => {
+          if (mediaPickerMode === "carousel") {
+            const urls = Array.isArray(urlOrUrls) ? urlOrUrls : [urlOrUrls];
+            setPendingCarouselImages(urls);
+            setIsSlideCountPickerOpen(true);
+          } else {
+            const url = Array.isArray(urlOrUrls) ? urlOrUrls[0] : urlOrUrls;
+            editor?.chain().focus().setImage({ src: url }).run();
+          }
           setIsMediaPickerOpen(false);
+        }}
+      />
+
+      {/* Slide Count Picker */}
+      <SlideCountPickerDialog
+        open={isSlideCountPickerOpen}
+        onClose={() => {
+          setIsSlideCountPickerOpen(false);
+          setPendingCarouselImages([]);
+        }}
+        onConfirm={(slidesPerView) => {
+          const images = pendingCarouselImages.map((src) => ({ src, alt: "" }));
+          editor?.chain().focus().insertContent({
+            type: "carousel",
+            attrs: {
+              images: JSON.stringify(images),
+              slidesPerView,
+            },
+          }).run();
+          setIsSlideCountPickerOpen(false);
+          setPendingCarouselImages([]);
         }}
       />
     </div>

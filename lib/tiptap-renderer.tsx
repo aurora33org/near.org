@@ -1,6 +1,7 @@
 import React from "react";
 import DOMPurify from "isomorphic-dompurify";
 import { slugifyHeading } from "@/lib/extractHeadings";
+import { BlogCarousel } from "@/components/blog/BlogCarousel";
 
 interface TipTapNode {
   type: string;
@@ -136,6 +137,19 @@ export function renderBlocks(nodes: TipTapNode[] | undefined): React.ReactNode {
             className="rounded-lg max-w-full"
           />
         );
+
+      case "carousel": {
+        const images = (() => {
+          try {
+            return JSON.parse(node.attrs?.images || "[]");
+          } catch {
+            return [];
+          }
+        })();
+        const slidesPerView = node.attrs?.slidesPerView ?? 1;
+        const aspectRatio = node.attrs?.aspectRatio ?? "auto";
+        return <BlogCarousel key={i} images={images} slidesPerView={slidesPerView} aspectRatio={aspectRatio} />;
+      }
 
       // Table support
       case "table":

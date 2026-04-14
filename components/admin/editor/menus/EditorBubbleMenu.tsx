@@ -24,7 +24,7 @@ import type { SlashCommandItem } from "../SlashCommandItems";
 
 interface EditorBubbleMenuProps {
   editor: Editor;
-  openMediaPicker?: () => void;
+  openMediaPicker?: (mode?: "single" | "carousel") => void;
 }
 
 export default function EditorBubbleMenu({ editor, openMediaPicker }: EditorBubbleMenuProps) {
