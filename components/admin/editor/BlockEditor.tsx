@@ -17,6 +17,7 @@ interface BlockEditorProps {
 export default function BlockEditor({ content, onChange, autosaveLabel }: BlockEditorProps) {
   const [isMediaPickerOpen, setIsMediaPickerOpen] = useState(false);
   const mediaPickerCallback = useRef<((url: string) => void) | null>(null);
+  const [wordCount, setWordCount] = useState(0);
 
   const openMediaPicker = useCallback(() => {
     setIsMediaPickerOpen(true);
@@ -35,6 +36,8 @@ export default function BlockEditor({ content, onChange, autosaveLabel }: BlockE
     immediatelyRender: false,
     onUpdate: ({ editor }) => {
       onChange(editor.getJSON());
+      const text = editor.getText().trim();
+      setWordCount(text ? text.split(/\s+/).length : 0);
     },
   });
 
@@ -61,6 +64,11 @@ export default function BlockEditor({ content, onChange, autosaveLabel }: BlockE
           className="prose dark:prose-invert max-w-none p-4 pl-10 focus:outline-none [&_.ProseMirror]:outline-none"
           style={{ minHeight: "60vh" }}
         />
+      </div>
+
+      {/* Word count footer */}
+      <div className="text-xs text-muted-foreground/60 text-right pr-1">
+        {wordCount} {wordCount === 1 ? "word" : "words"} · ~{Math.ceil(wordCount / 200)} min read
       </div>
 
       {/* Autosave footer */}
