@@ -21,6 +21,16 @@ export const CarouselNode = Node.create({
           "data-images": attributes.images,
         }),
       },
+      slidesPerView: {
+        default: 1,
+        parseHTML: (element) => {
+          const value = element.getAttribute("data-slides-per-view");
+          return value ? parseFloat(value) : 1;
+        },
+        renderHTML: (attributes) => ({
+          "data-slides-per-view": attributes.slidesPerView,
+        }),
+      },
     };
   },
 

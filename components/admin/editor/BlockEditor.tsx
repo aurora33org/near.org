@@ -7,6 +7,7 @@ import EditorBubbleMenu from "./menus/EditorBubbleMenu";
 import TableControls from "./menus/TableControls";
 import { createSlashCommandSuggestion } from "./menus/SlashCommandRenderer";
 import MediaPickerModal from "@/components/admin/MediaPickerModal";
+import { SlideCountPickerDialog } from "./SlideCountPickerDialog";
 
 interface BlockEditorProps {
   content: object;
@@ -17,6 +18,8 @@ interface BlockEditorProps {
 export default function BlockEditor({ content, onChange, autosaveLabel }: BlockEditorProps) {
   const [isMediaPickerOpen, setIsMediaPickerOpen] = useState(false);
   const [mediaPickerMode, setMediaPickerMode] = useState<"single" | "carousel">("single");
+  const [isSlideCountPickerOpen, setIsSlideCountPickerOpen] = useState(false);
+  const [pendingCarouselImages, setPendingCarouselImages] = useState<string[]>([]);
   const [wordCount, setWordCount] = useState(0);
 
   const openMediaPicker = useCallback((mode: "single" | "carousel" = "single") => {
@@ -89,16 +92,34 @@ export default function BlockEditor({ content, onChange, autosaveLabel }: BlockE
         onSelect={(urlOrUrls) => {
           if (mediaPickerMode === "carousel") {
             const urls = Array.isArray(urlOrUrls) ? urlOrUrls : [urlOrUrls];
-            const images = urls.map((src) => ({ src, alt: "" }));
-            editor?.chain().focus().insertContent({
-              type: "carousel",
-              attrs: { images: JSON.stringify(images) },
-            }).run();
+            setPendingCarouselImages(urls);
+            setIsSlideCountPickerOpen(true);
           } else {
             const url = Array.isArray(urlOrUrls) ? urlOrUrls[0] : urlOrUrls;
             editor?.chain().focus().setImage({ src: url }).run();
           }
           setIsMediaPickerOpen(false);
+        }}
+      />
+
+      {/* Slide Count Picker */}
+      <SlideCountPickerDialog
+        open={isSlideCountPickerOpen}
+        onClose={() => {
+          setIsSlideCountPickerOpen(false);
+          setPendingCarouselImages([]);
+        }}
+        onConfirm={(slidesPerView) => {
+          const images = pendingCarouselImages.map((src) => ({ src, alt: "" }));
+          editor?.chain().focus().insertContent({
+            type: "carousel",
+            attrs: {
+              images: JSON.stringify(images),
+              slidesPerView,
+            },
+          }).run();
+          setIsSlideCountPickerOpen(false);
+          setPendingCarouselImages([]);
         }}
       />
     </div>

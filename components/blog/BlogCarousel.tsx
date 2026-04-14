@@ -11,9 +11,10 @@ interface CarouselImage {
 
 interface BlogCarouselProps {
   images: CarouselImage[];
+  slidesPerView?: number;
 }
 
-export function BlogCarousel({ images }: BlogCarouselProps) {
+export function BlogCarousel({ images, slidesPerView = 1 }: BlogCarouselProps) {
   const emblaRef = useRef<HTMLDivElement>(null);
   const emblaApiRef = useRef<any>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -48,13 +49,16 @@ export function BlogCarousel({ images }: BlogCarouselProps) {
     <div className="my-6 w-full">
       <div className="relative bg-muted rounded-lg overflow-hidden">
         {/* Carousel container */}
-        <div ref={emblaRef} className="w-full overflow-hidden">
+        <div ref={emblaRef} className="w-full" style={{ overflow: slidesPerView < 2 ? "hidden" : "visible" }}>
           <div className="flex">
             {images.map((image, i) => (
               <div
                 key={i}
-                className="flex-[0_0_100%] min-w-0 flex items-center justify-center bg-muted"
-                style={{ minHeight: "400px" }}
+                className="min-w-0 flex items-center justify-center bg-muted"
+                style={{
+                  flex: `0 0 ${100 / slidesPerView}%`,
+                  minHeight: "400px",
+                }}
               >
                 <img
                   src={image.src}

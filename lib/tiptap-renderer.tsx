@@ -146,7 +146,8 @@ export function renderBlocks(nodes: TipTapNode[] | undefined): React.ReactNode {
             return [];
           }
         })();
-        return <BlogCarousel key={i} images={images} />;
+        const slidesPerView = node.attrs?.slidesPerView ?? 1;
+        return <BlogCarousel key={i} images={images} slidesPerView={slidesPerView} />;
       }
 
       // Table support

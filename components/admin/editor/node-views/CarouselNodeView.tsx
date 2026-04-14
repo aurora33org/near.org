@@ -11,6 +11,8 @@ interface CarouselImage {
   alt: string;
 }
 
+const SLIDE_OPTIONS = [1, 1.5, 2, 2.5, 3];
+
 export function CarouselNodeView(props: any) {
   const { node, updateAttributes, deleteNode } = props;
   const emblaRef = useRef<HTMLDivElement>(null);
@@ -23,6 +25,8 @@ export function CarouselNodeView(props: any) {
       return [];
     }
   })();
+
+  const slidesPerView = node.attrs.slidesPerView ?? 1;
 
   useEffect(() => {
     if (!emblaRef.current || images.length <= 1) return;
@@ -60,13 +64,16 @@ export function CarouselNodeView(props: any) {
     <NodeViewWrapper className="my-4">
       <div className="bg-muted rounded-lg overflow-hidden">
         {/* Carousel */}
-        <div ref={emblaRef} className="w-full overflow-hidden">
+        <div ref={emblaRef} className="w-full" style={{ overflow: slidesPerView < 2 ? "hidden" : "visible" }}>
           <div className="flex">
             {images.map((image, i) => (
               <div
                 key={i}
-                className="flex-[0_0_100%] min-w-0 flex items-center justify-center bg-background"
-                style={{ minHeight: "300px" }}
+                className="min-w-0 flex items-center justify-center bg-background"
+                style={{
+                  flex: `0 0 ${100 / slidesPerView}%`,
+                  minHeight: "300px",
+                }}
               >
                 <img
                   src={image.src}
@@ -79,7 +86,7 @@ export function CarouselNodeView(props: any) {
         </div>
 
         {/* Controls */}
-        <div className="flex items-center justify-between gap-2 p-3 bg-background border-t">
+        <div className="flex items-center justify-between gap-2 p-3 bg-background border-t flex-wrap">
           <Button
             onClick={handlePrev}
             variant="ghost"
@@ -89,9 +96,21 @@ export function CarouselNodeView(props: any) {
             <ChevronLeft className="w-4 h-4" />
           </Button>
 
-          <span className="text-xs text-muted-foreground">
-            {images.length} image{images.length !== 1 ? "s" : ""}
-          </span>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span>{images.length} image{images.length !== 1 ? "s" : ""}</span>
+            <span>•</span>
+            <select
+              value={slidesPerView}
+              onChange={(e) => updateAttributes({ slidesPerView: parseFloat(e.target.value) })}
+              className="px-2 py-1 rounded border border-border bg-background text-foreground text-xs font-medium hover:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+            >
+              {SLIDE_OPTIONS.map((option) => (
+                <option key={option} value={option}>
+                  {option} per view
+                </option>
+              ))}
+            </select>
+          </div>
 
           <Button
             onClick={handleNext}
