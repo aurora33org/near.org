@@ -10,6 +10,7 @@ import {
   Quote,
   Minus,
   ImageIcon,
+  GalleryHorizontal,
   Table,
   Columns2,
   Columns3,
@@ -27,7 +28,7 @@ export interface SlashCommandItem {
   color?: string;
   category: "text" | "lists" | "media" | "advanced" | "colors";
   searchTerms: string[];
-  command: (editor: Editor, openMediaPicker?: () => void) => void;
+  command: (editor: Editor, openMediaPicker?: (mode?: "single" | "carousel") => void) => void;
 }
 
 export const slashCommandItems: SlashCommandItem[] = [
@@ -113,7 +114,17 @@ export const slashCommandItems: SlashCommandItem[] = [
     category: "media",
     searchTerms: ["image", "photo", "picture", "upload"],
     command: (_editor, openMediaPicker) => {
-      openMediaPicker?.();
+      openMediaPicker?.("single");
+    },
+  },
+  {
+    title: "Carousel",
+    description: "Insert a scrollable image carousel",
+    icon: GalleryHorizontal,
+    category: "media",
+    searchTerms: ["carousel", "gallery", "slider", "images"],
+    command: (_editor, openMediaPicker) => {
+      openMediaPicker?.("carousel");
     },
   },
   {

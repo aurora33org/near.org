@@ -191,7 +191,10 @@ export default function BlockEditor({ content, onChange }: BlockEditorProps) {
         <MediaPickerModal
           open={isMediaPickerOpen}
           onClose={() => setIsMediaPickerOpen(false)}
-          onSelect={(url) => editor?.chain().focus().setImage({ src: url }).run()}
+          onSelect={(urlOrUrls) => {
+            const url = Array.isArray(urlOrUrls) ? urlOrUrls[0] : urlOrUrls;
+            editor?.chain().focus().setImage({ src: url }).run();
+          }}
         />
       </div>
 

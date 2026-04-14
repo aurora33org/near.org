@@ -732,7 +732,11 @@ export default function EditPostClient({ userRole = "EDITOR" }: { userRole?: str
                   <MediaPickerModal
                     open={isCoverPickerOpen}
                     onClose={() => setIsCoverPickerOpen(false)}
-                    onSelect={(url) => { setCoverImage(url); markDirty(); }}
+                    onSelect={(urlOrUrls) => {
+                      const url = Array.isArray(urlOrUrls) ? urlOrUrls[0] : urlOrUrls;
+                      setCoverImage(url);
+                      markDirty();
+                    }}
                   />
                 </div>
 
@@ -803,7 +807,11 @@ export default function EditPostClient({ userRole = "EDITOR" }: { userRole?: str
                       <MediaPickerModal
                         open={isHeroBgPickerOpen}
                         onClose={() => setIsHeroBgPickerOpen(false)}
-                        onSelect={(url) => { setHeroBgImage(url); markDirty(); }}
+                        onSelect={(urlOrUrls) => {
+                          const url = Array.isArray(urlOrUrls) ? urlOrUrls[0] : urlOrUrls;
+                          setHeroBgImage(url);
+                          markDirty();
+                        }}
                       />
                     </div>
                   </div>
@@ -968,7 +976,11 @@ export default function EditPostClient({ userRole = "EDITOR" }: { userRole?: str
                     <MediaPickerModal
                       open={isOgPickerOpen}
                       onClose={() => setIsOgPickerOpen(false)}
-                      onSelect={(url) => { setOgImage(url); markDirty(); }}
+                      onSelect={(urlOrUrls) => {
+                        const url = Array.isArray(urlOrUrls) ? urlOrUrls[0] : urlOrUrls;
+                        setOgImage(url);
+                        markDirty();
+                      }}
                     />
                   </div>
                 </div>

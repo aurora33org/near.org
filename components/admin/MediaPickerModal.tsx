@@ -22,7 +22,8 @@ interface MediaItem {
 interface MediaPickerModalProps {
   open: boolean;
   onClose: () => void;
-  onSelect: (url: string) => void;
+  onSelect: (url: string | string[]) => void;
+  multiSelect?: boolean;
 }
 
 const PAGE_SIZE = 24;
@@ -31,6 +32,7 @@ export default function MediaPickerModal({
   open,
   onClose,
   onSelect,
+  multiSelect = false,
 }: MediaPickerModalProps) {
   const { theme } = useAdminTheme();
   const [items, setItems] = useState<MediaItem[]>([]);
@@ -38,6 +40,7 @@ export default function MediaPickerModal({
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
+  const [selectedMultiple, setSelectedMultiple] = useState<Set<string>>(new Set());
 
   const [search, setSearch] = useState("");
 
@@ -68,6 +71,7 @@ export default function MediaPickerModal({
   useEffect(() => {
     if (open) {
       setSelected(null);
+      setSelectedMultiple(new Set());
       setUploadSuccess(false);
     } else {
       setItems([]);
@@ -119,10 +123,29 @@ export default function MediaPickerModal({
   }
 
   function handleSelect() {
-    if (selected) {
-      onSelect(selected);
-      onClose();
+    if (multiSelect) {
+      if (selectedMultiple.size > 0) {
+        onSelect(Array.from(selectedMultiple));
+        onClose();
+      }
+    } else {
+      if (selected) {
+        onSelect(selected);
+        onClose();
+      }
     }
+  }
+
+  function toggleMultiSelect(url: string) {
+    setSelectedMultiple((prev) => {
+      const next = new Set(prev);
+      if (next.has(url)) {
+        next.delete(url);
+      } else {
+        next.add(url);
+      }
+      return next;
+    });
   }
 
   const hasMore = items.length < total;
@@ -169,34 +192,43 @@ export default function MediaPickerModal({
                 ) : (
                   <>
                     <div className="grid grid-cols-3 gap-3">
-                      {items.map((item) => (
-                        <button
-                          key={item.id}
-                          type="button"
-                          onClick={() => setSelected(item.url)}
-                          className={`group relative rounded-lg overflow-hidden border-2 transition focus:outline-none ${
-                            selected === item.url
-                              ? "border-primary"
-                              : "border-transparent hover:border-border"
-                          }`}
-                        >
-                          <div className="aspect-square bg-muted">
-                            <img
-                              src={item.url}
-                              alt={item.alt ?? item.filename}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          <p className="px-1 py-0.5 text-[10px] text-muted-foreground truncate text-left">
-                            {item.filename}
-                          </p>
-                          {selected === item.url && (
-                            <div className="absolute top-1 right-1 bg-primary text-primary-foreground rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
-                              ✓
+                      {items.map((item) => {
+                        const isSelected = multiSelect
+                          ? selectedMultiple.has(item.url)
+                          : selected === item.url;
+                        return (
+                          <button
+                            key={item.id}
+                            type="button"
+                            onClick={() => multiSelect ? toggleMultiSelect(item.url) : setSelected(item.url)}
+                            className={`group relative rounded-lg overflow-hidden border-2 transition focus:outline-none ${
+                              isSelected
+                                ? "border-primary"
+                                : "border-transparent hover:border-border"
+                            }`}
+                          >
+                            <div className="aspect-square bg-muted">
+                              <img
+                                src={item.url}
+                                alt={item.alt ?? item.filename}
+                                className="w-full h-full object-cover"
+                              />
                             </div>
-                          )}
-                        </button>
-                      ))}
+                            <p className="px-1 py-0.5 text-[10px] text-muted-foreground truncate text-left">
+                              {item.filename}
+                            </p>
+                            {isSelected && (
+                              <div className="absolute top-1 right-1 bg-primary text-primary-foreground rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
+                                {multiSelect ? (
+                                  <span className="text-xs">✓</span>
+                                ) : (
+                                  "✓"
+                                )}
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })}
                     </div>
 
                     {hasMore && (
@@ -333,10 +365,12 @@ export default function MediaPickerModal({
             <Button
               type="button"
               size="sm"
-              disabled={!selected}
+              disabled={multiSelect ? selectedMultiple.size === 0 : !selected}
               onClick={handleSelect}
             >
-              Insert image
+              {multiSelect
+                ? `Confirm (${selectedMultiple.size})`
+                : "Insert image"}
             </Button>
           </div>
         </div>
