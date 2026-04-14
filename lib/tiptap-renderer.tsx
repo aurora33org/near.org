@@ -147,7 +147,8 @@ export function renderBlocks(nodes: TipTapNode[] | undefined): React.ReactNode {
           }
         })();
         const slidesPerView = node.attrs?.slidesPerView ?? 1;
-        return <BlogCarousel key={i} images={images} slidesPerView={slidesPerView} />;
+        const aspectRatio = node.attrs?.aspectRatio ?? "auto";
+        return <BlogCarousel key={i} images={images} slidesPerView={slidesPerView} aspectRatio={aspectRatio} />;
       }
 
       // Table support

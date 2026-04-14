@@ -12,9 +12,10 @@ interface CarouselImage {
 interface BlogCarouselProps {
   images: CarouselImage[];
   slidesPerView?: number;
+  aspectRatio?: string;
 }
 
-export function BlogCarousel({ images, slidesPerView = 1 }: BlogCarouselProps) {
+export function BlogCarousel({ images, slidesPerView = 1, aspectRatio = "auto" }: BlogCarouselProps) {
   const emblaRef = useRef<HTMLDivElement>(null);
   const emblaApiRef = useRef<any>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -60,11 +61,28 @@ export function BlogCarousel({ images, slidesPerView = 1 }: BlogCarouselProps) {
                   minHeight: "400px",
                 }}
               >
-                <img
-                  src={image.src}
-                  alt={image.alt || `Slide ${i + 1}`}
-                  className="max-h-full max-w-full object-contain"
-                />
+                {aspectRatio !== "auto" ? (
+                  <div
+                    style={{
+                      aspectRatio: aspectRatio.replace(":", " / "),
+                      width: "100%",
+                      height: "100%",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <img
+                      src={image.src}
+                      alt={image.alt || `Slide ${i + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <img
+                    src={image.src}
+                    alt={image.alt || `Slide ${i + 1}`}
+                    className="max-h-full max-w-full object-contain"
+                  />
+                )}
               </div>
             ))}
           </div>

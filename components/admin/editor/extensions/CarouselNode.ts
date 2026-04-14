@@ -31,6 +31,13 @@ export const CarouselNode = Node.create({
           "data-slides-per-view": attributes.slidesPerView,
         }),
       },
+      aspectRatio: {
+        default: "auto",
+        parseHTML: (element) => element.getAttribute("data-aspect-ratio") || "auto",
+        renderHTML: (attributes) => ({
+          "data-aspect-ratio": attributes.aspectRatio,
+        }),
+      },
     };
   },
 

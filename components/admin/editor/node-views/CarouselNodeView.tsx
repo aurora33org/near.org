@@ -12,6 +12,7 @@ interface CarouselImage {
 }
 
 const SLIDE_OPTIONS = [1, 1.5, 2, 2.5, 3];
+const ASPECT_RATIO_OPTIONS = ["auto", "16:9", "4:3", "1:1", "3:4", "9:16"];
 
 export function CarouselNodeView(props: any) {
   const { node, updateAttributes, deleteNode } = props;
@@ -27,6 +28,7 @@ export function CarouselNodeView(props: any) {
   })();
 
   const slidesPerView = node.attrs.slidesPerView ?? 1;
+  const aspectRatio = node.attrs.aspectRatio ?? "auto";
 
   useEffect(() => {
     if (!emblaRef.current || images.length <= 1) return;
@@ -39,7 +41,6 @@ export function CarouselNodeView(props: any) {
   const handleNext = () => emblaApiRef.current?.scrollNext();
 
   const handleEdit = () => {
-    // Dispatch event to open media picker in carousel mode
     const event = new CustomEvent("editCarouselNode", {
       detail: {
         updateAttributes,
@@ -75,11 +76,28 @@ export function CarouselNodeView(props: any) {
                   minHeight: "300px",
                 }}
               >
-                <img
-                  src={image.src}
-                  alt={image.alt || `Slide ${i + 1}`}
-                  className="max-h-full max-w-full object-contain"
-                />
+                {aspectRatio !== "auto" ? (
+                  <div
+                    style={{
+                      aspectRatio: aspectRatio.replace(":", " / "),
+                      width: "100%",
+                      height: "100%",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <img
+                      src={image.src}
+                      alt={image.alt || `Slide ${i + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <img
+                    src={image.src}
+                    alt={image.alt || `Slide ${i + 1}`}
+                    className="max-h-full max-w-full object-contain"
+                  />
+                )}
               </div>
             ))}
           </div>
@@ -96,7 +114,7 @@ export function CarouselNodeView(props: any) {
             <ChevronLeft className="w-4 h-4" />
           </Button>
 
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
             <span>{images.length} image{images.length !== 1 ? "s" : ""}</span>
             <span>•</span>
             <select
@@ -107,6 +125,18 @@ export function CarouselNodeView(props: any) {
               {SLIDE_OPTIONS.map((option) => (
                 <option key={option} value={option}>
                   {option} per view
+                </option>
+              ))}
+            </select>
+            <span>•</span>
+            <select
+              value={aspectRatio}
+              onChange={(e) => updateAttributes({ aspectRatio: e.target.value })}
+              className="px-2 py-1 rounded border border-border bg-background text-foreground text-xs font-medium hover:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+            >
+              {ASPECT_RATIO_OPTIONS.map((option) => (
+                <option key={option} value={option}>
+                  {option === "auto" ? "Auto" : option}
                 </option>
               ))}
             </select>
