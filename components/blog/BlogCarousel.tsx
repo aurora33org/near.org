@@ -47,7 +47,7 @@ export function BlogCarousel({ images, slidesPerView = 1, aspectRatio = "auto" }
   }
 
   return (
-    <div className="my-6 w-full">
+    <div className="not-prose my-6 w-full">
       <div className="relative bg-muted rounded-lg overflow-hidden">
         {/* Carousel container */}
         <div ref={emblaRef} className="w-full" style={{ overflow: slidesPerView < 2 ? "hidden" : "visible" }}>
