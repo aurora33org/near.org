@@ -35,17 +35,18 @@ export function ImageWithLightbox({
       />
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent showCloseButton className="max-w-4xl w-full">
-          <div className="flex flex-col gap-4">
+        <DialogContent showCloseButton className="w-full max-h-[90vh] overflow-hidden sm:max-w-4xl">
+          <div className="flex flex-col gap-4 h-full">
             {/* Image container with zoom */}
-            <div className="flex items-center justify-center bg-muted rounded-lg overflow-hidden" style={{ minHeight: "400px" }}>
+            <div className="flex items-center justify-center bg-muted rounded-lg overflow-auto flex-1" style={{ minHeight: "500px" }}>
               <div
                 style={{
                   transform: `scale(${zoom})`,
                   transition: "transform 0.2s ease-in-out",
+                  transformOrigin: "center",
                 }}
               >
-                <img src={src} alt={alt} className="max-h-[500px] max-w-[500px]" />
+                <img src={src} alt={alt} className="max-h-[80vh] max-w-[80vw]" />
               </div>
             </div>
 
