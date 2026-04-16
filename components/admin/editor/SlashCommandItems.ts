@@ -11,12 +11,17 @@ import {
   Minus,
   ImageIcon,
   GalleryHorizontal,
+  Video,
   Table,
   Columns2,
   Columns3,
   FileCode,
   Palette,
   Highlighter,
+  AlertCircle,
+  AlertTriangle,
+  CheckCircle,
+  XCircle,
   type LucideIcon,
 } from "lucide-react";
 import type { Editor } from "@tiptap/react";
@@ -26,7 +31,7 @@ export interface SlashCommandItem {
   description: string;
   icon: LucideIcon;
   color?: string;
-  category: "text" | "lists" | "media" | "advanced" | "colors";
+  category: "text" | "lists" | "media" | "advanced" | "callout" | "colors";
   searchTerms: string[];
   command: (editor: Editor, openMediaPicker?: (mode?: "single" | "carousel") => void) => void;
 }
@@ -126,6 +131,15 @@ export const slashCommandItems: SlashCommandItem[] = [
     command: (_editor, openMediaPicker) => {
       openMediaPicker?.("carousel");
     },
+  },
+  {
+    title: "Video/Embed",
+    description: "YouTube, Vimeo, or other video",
+    icon: Video,
+    category: "media",
+    searchTerms: ["video", "embed", "youtube", "vimeo", "media"],
+    command: (editor) =>
+      editor.chain().focus().insertContent({ type: "embedBlock", attrs: { url: "" } }).run(),
   },
   {
     title: "Code Block",
@@ -270,6 +284,39 @@ export const slashCommandItems: SlashCommandItem[] = [
     searchTerms: ["highlight", "background", "pink"],
     command: (editor) => editor.chain().focus().toggleHighlight({ color: "#fbcfe8" }).run(),
   },
+  // Callouts
+  {
+    title: "Info Callout",
+    description: "Blue info box",
+    icon: AlertCircle,
+    category: "callout",
+    searchTerms: ["callout", "info", "note", "blue"],
+    command: (editor) => editor.chain().focus().insertCallout({ type: "info" }).run(),
+  },
+  {
+    title: "Warning Callout",
+    description: "Yellow warning box",
+    icon: AlertTriangle,
+    category: "callout",
+    searchTerms: ["callout", "warning", "yellow"],
+    command: (editor) => editor.chain().focus().insertCallout({ type: "warning" }).run(),
+  },
+  {
+    title: "Success Callout",
+    description: "Green success box",
+    icon: CheckCircle,
+    category: "callout",
+    searchTerms: ["callout", "success", "green"],
+    command: (editor) => editor.chain().focus().insertCallout({ type: "success" }).run(),
+  },
+  {
+    title: "Error Callout",
+    description: "Red error box",
+    icon: XCircle,
+    category: "callout",
+    searchTerms: ["callout", "error", "red"],
+    command: (editor) => editor.chain().focus().insertCallout({ type: "error" }).run(),
+  },
 ];
 
 const categoryLabels: Record<string, string> = {
@@ -277,6 +324,7 @@ const categoryLabels: Record<string, string> = {
   lists: "Lists",
   media: "Media",
   advanced: "Advanced",
+  callout: "Callout",
   colors: "Colors",
 };
 
@@ -292,7 +340,7 @@ export function getGroupedItems(query: string) {
   });
 
   const groups: { label: string; items: SlashCommandItem[] }[] = [];
-  const categoryOrder = ["text", "lists", "media", "advanced", "colors"];
+  const categoryOrder = ["text", "lists", "media", "advanced", "callout", "colors"];
 
   for (const cat of categoryOrder) {
     const items = filtered.filter((item) => item.category === cat);

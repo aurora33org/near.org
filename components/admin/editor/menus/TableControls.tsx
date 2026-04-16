@@ -8,6 +8,8 @@ import {
   ArrowDown,
   ArrowLeft,
   ArrowRight,
+  Merge,
+  Square,
 } from "lucide-react";
 
 interface TableControlsProps {
@@ -107,6 +109,47 @@ export default function TableControls({ editor }: TableControlsProps) {
         title="Toggle header row"
       >
         H
+      </button>
+
+      <button
+        type="button"
+        onMouseDown={(e) => {
+          e.preventDefault();
+          editor.chain().focus().toggleHeaderColumn().run();
+        }}
+        className={`${btnClass} text-xs font-medium`}
+        title="Toggle header column"
+        disabled={!editor.can().toggleHeaderColumn()}
+      >
+        C
+      </button>
+
+      <div className="w-px h-4 bg-border mx-0.5" />
+
+      <button
+        type="button"
+        onMouseDown={(e) => {
+          e.preventDefault();
+          editor.chain().focus().mergeCells().run();
+        }}
+        className={btnClass}
+        title="Merge cells"
+        disabled={!editor.can().mergeCells()}
+      >
+        <Merge size={14} />
+      </button>
+
+      <button
+        type="button"
+        onMouseDown={(e) => {
+          e.preventDefault();
+          editor.chain().focus().splitCell().run();
+        }}
+        className={btnClass}
+        title="Split cell"
+        disabled={!editor.can().splitCell()}
+      >
+        <Square size={14} />
       </button>
 
       <div className="w-px h-4 bg-border mx-0.5" />

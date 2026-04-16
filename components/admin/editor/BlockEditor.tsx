@@ -1,12 +1,13 @@
 "use client";
 
 import { useEditor, EditorContent } from "@tiptap/react";
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { Undo2, Redo2 } from "lucide-react";
 import { getExtensions } from "./extensions";
 import EditorBubbleMenu from "./menus/EditorBubbleMenu";
 import TableControls from "./menus/TableControls";
 import { createSlashCommandSuggestion } from "./menus/SlashCommandRenderer";
+import { FindReplaceBar } from "./menus/FindReplaceBar";
 import MediaPickerModal from "@/components/admin/MediaPickerModal";
 import { SlideCountPickerDialog } from "./SlideCountPickerDialog";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,7 @@ export default function BlockEditor({ content, onChange, autosaveLabel }: BlockE
   const [isSlideCountPickerOpen, setIsSlideCountPickerOpen] = useState(false);
   const [pendingCarouselImages, setPendingCarouselImages] = useState<string[]>([]);
   const [wordCount, setWordCount] = useState(0);
+  const [showFindReplace, setShowFindReplace] = useState(false);
 
   const openMediaPicker = useCallback((mode: "single" | "carousel" = "single") => {
     setMediaPickerMode(mode);
@@ -49,6 +51,24 @@ export default function BlockEditor({ content, onChange, autosaveLabel }: BlockE
       setWordCount(text ? text.split(/\s+/).length : 0);
     },
   });
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Cmd+F or Ctrl+F to open find/replace
+      if ((e.metaKey || e.ctrlKey) && e.key === "f") {
+        e.preventDefault();
+        setShowFindReplace(true);
+      }
+      // Escape to close find/replace
+      if (e.key === "Escape" && showFindReplace) {
+        e.preventDefault();
+        setShowFindReplace(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showFindReplace]);
 
   if (!editor) {
     return <div className="text-muted-foreground">Loading editor...</div>;
@@ -149,6 +169,14 @@ export default function BlockEditor({ content, onChange, autosaveLabel }: BlockE
           setPendingCarouselImages([]);
         }}
       />
+
+      {/* Find & Replace Bar */}
+      {showFindReplace && (
+        <FindReplaceBar
+          editor={editor}
+          onClose={() => setShowFindReplace(false)}
+        />
+      )}
     </div>
   );
 }

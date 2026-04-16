@@ -27,6 +27,10 @@ import { RawHtmlBlock } from "./RawHtmlBlock";
 import { ColumnLayout, Column } from "./ColumnLayout";
 import { DragHandle } from "./DragHandle";
 import { CarouselNode } from "./CarouselNode";
+import { EmbedBlock } from "./EmbedBlock";
+import { FindReplace } from "./FindReplace";
+import { Callout } from "./Callout";
+import { Footnote } from "./Footnote";
 
 const lowlight = createLowlight();
 lowlight.register("javascript", javascript);
@@ -74,6 +78,10 @@ export function getExtensions() {
     ColumnLayout,
     Column,
     CarouselNode,
+    EmbedBlock,
     DragHandle,
+    FindReplace,
+    Callout,
+    Footnote,
   ];
 }

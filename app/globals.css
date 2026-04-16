@@ -335,3 +335,100 @@
 .ProseMirror > * {
   position: relative;
 }
+
+/* Find & Replace highlights */
+.find-match {
+  background-color: #fef08a;
+  color: #000;
+  border-radius: 2px;
+  padding: 0 2px;
+}
+
+.find-match-active {
+  background-color: #facc15;
+  color: #000;
+  border-radius: 2px;
+  padding: 0 2px;
+  box-shadow: 0 0 0 2px var(--primary);
+}
+
+.dark .find-match {
+  background-color: #713f12;
+  color: #fef08a;
+}
+
+.dark .find-match-active {
+  background-color: #b45309;
+  color: #fef08a;
+  box-shadow: 0 0 0 2px var(--primary);
+}
+
+/* Callout styles */
+.callout {
+  border-radius: 0.5rem;
+  border-width: 2px;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.callout-info {
+  background-color: #f0f9ff;
+  border-color: #bfdbfe;
+  color: #0c4a6e;
+}
+
+.dark .callout-info {
+  background-color: #082f49;
+  border-color: #0c4a6e;
+  color: #bae6fd;
+}
+
+.callout-warning {
+  background-color: #fffbeb;
+  border-color: #fde68a;
+  color: #713f12;
+}
+
+.dark .callout-warning {
+  background-color: #451a03;
+  border-color: #713f12;
+  color: #fef3c7;
+}
+
+.callout-success {
+  background-color: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #15803d;
+}
+
+.dark .callout-success {
+  background-color: #052e16;
+  border-color: #15803d;
+  color: #bbf7d0;
+}
+
+.callout-error {
+  background-color: #fef2f2;
+  border-color: #fecaca;
+  color: #9f1239;
+}
+
+.dark .callout-error {
+  background-color: #4c0519;
+  border-color: #9f1239;
+  color: #fecaca;
+}
+
+/* Footnote styles */
+.footnote-marker {
+  font-size: 0.875em;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+  top: -0.4em;
+}
+
+.footnote-marker:hover {
+  text-decoration: underline;
+  cursor: pointer;
+}
