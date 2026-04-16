@@ -30,6 +30,10 @@ function renderInlineContent(nodes: TipTapNode[] | undefined): React.ReactNode {
         else if (mark.type === "code") el = <code key={i}>{el}</code>;
         else if (mark.type === "strike") el = <s key={i}>{el}</s>;
         else if (mark.type === "underline") el = <u key={i}>{el}</u>;
+        else if (mark.type === "textStyle")
+          el = <span key={i} style={{ color: mark.attrs?.color }}>{el}</span>;
+        else if (mark.type === "highlight")
+          el = <mark key={i} style={{ backgroundColor: mark.attrs?.color }}>{el}</mark>;
         else if (mark.type === "link")
           el = (
             <a key={i} href={mark.attrs?.href} target={mark.attrs?.target ?? "_blank"} rel="noopener noreferrer">
@@ -153,14 +157,34 @@ export function renderBlocks(nodes: TipTapNode[] | undefined): React.ReactNode {
       }
 
       // Table support
-      case "table":
+      case "table": {
+        const rows = node.content ?? [];
+        const headerRows: TipTapNode[] = [];
+        const bodyRows: TipTapNode[] = [];
+
+        for (const row of rows) {
+          const cells = row.content ?? [];
+          const hasHeaderCell = cells.some(cell => cell.type === "tableHeader");
+          if (hasHeaderCell) {
+            headerRows.push(row);
+          } else {
+            bodyRows.push(row);
+          }
+        }
+
         return (
           <div key={i} className="overflow-x-auto my-4">
             <table className="w-full border-collapse border border-border">
-              <tbody>{renderBlocks(node.content)}</tbody>
+              {headerRows.length > 0 && (
+                <thead>{renderBlocks(headerRows)}</thead>
+              )}
+              {bodyRows.length > 0 && (
+                <tbody>{renderBlocks(bodyRows)}</tbody>
+              )}
             </table>
           </div>
         );
+      }
 
       case "tableRow":
         return <tr key={i}>{renderBlocks(node.content)}</tr>;

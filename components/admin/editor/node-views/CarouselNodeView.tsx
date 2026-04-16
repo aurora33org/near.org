@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { NodeViewWrapper } from "@tiptap/react";
 import { ChevronLeft, ChevronRight, Edit2, Trash2 } from "lucide-react";
 import EmblaCarousel from "embla-carousel";
@@ -18,14 +18,15 @@ export function CarouselNodeView(props: any) {
   const { node, updateAttributes, deleteNode } = props;
   const emblaRef = useRef<HTMLDivElement>(null);
   const emblaApiRef = useRef<any>(null);
+  const [isEditingAlt, setIsEditingAlt] = useState(false);
 
-  const images: CarouselImage[] = (() => {
+  const images: CarouselImage[] = useMemo(() => {
     try {
       return JSON.parse(node.attrs.images || "[]");
     } catch {
       return [];
     }
-  })();
+  }, [node.attrs.images]);
 
   const slidesPerView = node.attrs.slidesPerView ?? 1;
   const aspectRatio = node.attrs.aspectRatio ?? "auto";
@@ -41,12 +42,13 @@ export function CarouselNodeView(props: any) {
   const handleNext = () => emblaApiRef.current?.scrollNext();
 
   const handleEdit = () => {
-    const event = new CustomEvent("editCarouselNode", {
-      detail: {
-        updateAttributes,
-      },
-    });
-    document.dispatchEvent(event);
+    setIsEditingAlt(true);
+  };
+
+  const handleAltUpdate = (index: number, newAlt: string) => {
+    const updated = [...images];
+    updated[index].alt = newAlt;
+    updateAttributes({ images: JSON.stringify(updated) });
   };
 
   if (images.length === 0) {
@@ -161,6 +163,36 @@ export function CarouselNodeView(props: any) {
             <Trash2 className="w-4 h-4" />
           </Button>
         </div>
+
+        {/* Alt text editing section */}
+        {isEditingAlt && (
+          <div className="border-t p-4 bg-muted/50">
+            <div className="text-sm font-medium mb-3">Edit Alt Text</div>
+            <div className="space-y-2 max-h-48 overflow-y-auto">
+              {images.map((image, i) => (
+                <div key={i} className="flex gap-2">
+                  <span className="text-xs text-muted-foreground pt-2 min-w-fit">Slide {i + 1}:</span>
+                  <input
+                    type="text"
+                    value={image.alt}
+                    onChange={(e) => handleAltUpdate(i, e.target.value)}
+                    placeholder="Describe image..."
+                    className="flex-1 px-2 py-1 border rounded text-sm bg-background"
+                  />
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-2 mt-3">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setIsEditingAlt(false)}
+              >
+                Done
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </NodeViewWrapper>
   );

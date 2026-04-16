@@ -27,6 +27,10 @@ export function BlogCarousel({ images, slidesPerView = 1, aspectRatio = "auto" }
     const emblaApi = EmblaCarousel(emblaRef.current, { loop: true }) as any;
     emblaApiRef.current = emblaApi;
 
+    // Initialize scroll snaps immediately to avoid empty dots on first render
+    setScrollSnaps(emblaApi.scrollSnapList());
+    setSelectedIndex(emblaApi.selectedScrollSnap());
+
     const onSelect = () => setSelectedIndex(emblaApi.selectedScrollSnap());
     const onInit = () => setScrollSnaps(emblaApi.scrollSnapList());
 

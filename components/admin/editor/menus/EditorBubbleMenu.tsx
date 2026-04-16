@@ -72,13 +72,12 @@ export default function EditorBubbleMenu({ editor, openMediaPicker }: EditorBubb
   }, [editor]);
 
   useEffect(() => {
-    const handler = () => {
+    const selectionHandler = () => {
       // Small delay to let selection settle
       requestAnimationFrame(updatePosition);
     };
 
-    editor.on("selectionUpdate", handler);
-    editor.on("blur", () => {
+    const blurHandler = () => {
       // Delay hiding to allow clicking buttons
       setTimeout(() => {
         if (!menuRef.current?.contains(document.activeElement)) {
@@ -86,10 +85,14 @@ export default function EditorBubbleMenu({ editor, openMediaPicker }: EditorBubb
           setShowLinkInput(false);
         }
       }, 200);
-    });
+    };
+
+    editor.on("selectionUpdate", selectionHandler);
+    editor.on("blur", blurHandler);
 
     return () => {
-      editor.off("selectionUpdate", handler);
+      editor.off("selectionUpdate", selectionHandler);
+      editor.off("blur", blurHandler);
     };
   }, [editor, updatePosition]);
 

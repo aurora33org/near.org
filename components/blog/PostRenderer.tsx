@@ -47,25 +47,28 @@ export default function PostRenderer({
       ? { backgroundColor: post.heroBgColor }
       : {};
 
+  // Determine text color based on whether there's a background image (assume dark)
+  const textColorClass = post.heroBgImage ? "text-white" : "text-foreground";
+
   return (
     <>
       {/* HERO */}
       <div style={heroStyle}>
         <div className="max-w-4xl mx-auto px-4 pt-16 pb-12">
           {layout === "public" ? (
-            <Link href="/blog" className="text-sm text-black opacity-70 hover:opacity-100 mb-6 block transition">
+            <Link href="/blog" className={`text-sm ${textColorClass} opacity-70 hover:opacity-100 mb-6 block transition`}>
               Blog
             </Link>
           ) : (
             <div className="flex items-center gap-3 mb-6">
-              <span className="text-sm text-black opacity-70">Blog</span>
+              <span className={`text-sm ${textColorClass} opacity-70`}>Blog</span>
               <span className="bg-yellow-200 text-yellow-800 text-xs font-semibold px-2 py-0.5 rounded">
                 DRAFT
               </span>
             </div>
           )}
 
-          <h1 className="text-5xl font-bold mb-4 text-black">{post.title}</h1>
+          <h1 className={`text-5xl font-bold mb-4 ${textColorClass}`}>{post.title}</h1>
 
           {showCategoryLinks && layout === "public" && post.categories.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-4">
@@ -81,7 +84,7 @@ export default function PostRenderer({
             </div>
           )}
 
-          <p className="text-sm text-black opacity-70 mb-8">
+          <p className={`text-sm ${textColorClass} opacity-70 mb-8`}>
             {new Date(displayDate).toLocaleDateString("en-US", {
               year: "numeric",
               month: "long",
@@ -100,6 +103,9 @@ export default function PostRenderer({
               src={post.coverImage}
               alt={post.title}
               className="w-full rounded-lg object-cover"
+              width={800}
+              height={400}
+              priority
             />
           )}
         </div>

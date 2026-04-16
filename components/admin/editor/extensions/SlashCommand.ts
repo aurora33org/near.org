@@ -9,6 +9,13 @@ export const SlashCommand = Extension.create({
       suggestion: {
         char: "/",
         startOfLine: false,
+        allow: ({ state, range }: any) => {
+          // Only allow slash at start of line or after whitespace
+          const before = range.from - 1;
+          if (before < 0) return true; // At the very start
+          const charBefore = state.doc.textBetween(before, range.from);
+          return charBefore === " " || charBefore === "\n";
+        },
         command: ({ editor, range, props }: any) => {
           editor.chain().focus().deleteRange(range).run();
           props.command(editor, props.openMediaPicker);

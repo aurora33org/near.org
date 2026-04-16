@@ -131,7 +131,7 @@ export const slashCommandItems: SlashCommandItem[] = [
     title: "Code Block",
     description: "Code with syntax highlighting",
     icon: Code,
-    category: "media",
+    category: "advanced",
     searchTerms: ["code", "codeblock", "snippet", "programming"],
     command: (editor) => editor.chain().focus().toggleCodeBlock().run(),
   },
