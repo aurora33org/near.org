@@ -11,6 +11,11 @@ export function RawHtmlBlockView({ node, updateAttributes, deleteNode }: any) {
   return (
     <NodeViewWrapper className="my-4" data-drag-handle>
       <div className="rounded-lg border border-border overflow-hidden bg-muted/30">
+        {/* Warning Banner */}
+        <div className="px-3 py-2 bg-yellow-500/10 border-b border-yellow-500/30 text-xs text-yellow-700 dark:text-yellow-400">
+          ⚠️ Inline <code className="bg-yellow-500/20 px-1 rounded">style</code> attributes and form elements will be removed for security.
+        </div>
+
         {/* Header */}
         <div className="flex items-center justify-between px-3 py-2 bg-muted border-b border-border">
           <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">

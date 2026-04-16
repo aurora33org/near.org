@@ -31,6 +31,9 @@ export default function EditorBubbleMenu({ editor, openMediaPicker }: EditorBubb
   const [showMenu, setShowMenu] = useState(false);
   const [showLinkInput, setShowLinkInput] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
+  const [showAltInput, setShowAltInput] = useState(false);
+  const [altText, setAltText] = useState("");
+  const [isImageSelected, setIsImageSelected] = useState(false);
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [commandQuery, setCommandQuery] = useState("");
@@ -39,6 +42,16 @@ export default function EditorBubbleMenu({ editor, openMediaPicker }: EditorBubb
 
   const updatePosition = useCallback(() => {
     const { from, to } = editor.state.selection;
+
+    // Check if we have an image selected
+    if (editor.isActive("image")) {
+      setIsImageSelected(true);
+      setAltText(editor.getAttributes("image").alt || "");
+      setShowMenu(true);
+      return;
+    }
+    setIsImageSelected(false);
+
     if (from === to) {
       setShowMenu(false);
       return;
@@ -161,7 +174,37 @@ export default function EditorBubbleMenu({ editor, openMediaPicker }: EditorBubb
         </div>
       )}
       <div className="flex items-center gap-0.5 rounded-lg border border-border bg-card shadow-lg p-1">
-        {showLinkInput ? (
+        {showAltInput ? (
+          <div className="flex items-center gap-1 px-1">
+            <input
+              type="text"
+              value={altText}
+              onChange={(e) => setAltText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  editor.chain().focus().updateAttributes("image", { alt: altText }).run();
+                  setShowAltInput(false);
+                }
+                if (e.key === "Escape") {
+                  setShowAltInput(false);
+                }
+              }}
+              placeholder="Describe image..."
+              className="text-sm bg-transparent border-none outline-none text-foreground placeholder-muted-foreground w-48"
+              autoFocus
+            />
+            <button
+              type="button"
+              onClick={() => {
+                editor.chain().focus().updateAttributes("image", { alt: altText }).run();
+                setShowAltInput(false);
+              }}
+              className="text-xs text-primary font-medium px-2 py-1 hover:bg-secondary rounded"
+            >
+              Save
+            </button>
+          </div>
+        ) : showLinkInput ? (
           <div className="flex items-center gap-1 px-1">
             <input
               type="url"
@@ -186,6 +229,20 @@ export default function EditorBubbleMenu({ editor, openMediaPicker }: EditorBubb
               Apply
             </button>
           </div>
+        ) : isImageSelected ? (
+          <>
+            <button
+              type="button"
+              onMouseDown={(e) => {
+                e.preventDefault();
+                setShowAltInput(true);
+              }}
+              className={`${btnClass}`}
+              title="Edit alt text"
+            >
+              Edit Alt
+            </button>
+          </>
         ) : (
           <>
             <button

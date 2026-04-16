@@ -231,15 +231,18 @@ export function renderBlocks(nodes: TipTapNode[] | undefined): React.ReactNode {
       // Column layout
       case "columnLayout": {
         const cols = node.attrs?.columns ?? 2;
+        // Generate responsive grid classes: 1 column on mobile, full columns on larger screens
+        const gridClass =
+          cols === 1 ? "grid-cols-1" :
+          cols === 2 ? "grid-cols-1 md:grid-cols-2" :
+          cols === 3 ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" :
+          cols === 4 ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-4" :
+          `grid-cols-1`;
+
         return (
           <div
             key={i}
-            className="my-4"
-            style={{
-              display: "grid",
-              gridTemplateColumns: `repeat(${cols}, 1fr)`,
-              gap: "1.5rem",
-            }}
+            className={`my-4 grid gap-6 ${gridClass}`}
           >
             {renderBlocks(node.content)}
           </div>

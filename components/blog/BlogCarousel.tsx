@@ -78,6 +78,7 @@ export function BlogCarousel({ images, slidesPerView = 1, aspectRatio = "auto" }
                       src={image.src}
                       alt={image.alt || `Slide ${i + 1}`}
                       className="w-full h-full object-cover"
+                      loading={i === 0 ? "eager" : "lazy"}
                     />
                   </div>
                 ) : (
@@ -85,6 +86,7 @@ export function BlogCarousel({ images, slidesPerView = 1, aspectRatio = "auto" }
                     src={image.src}
                     alt={image.alt || `Slide ${i + 1}`}
                     className="rounded-lg max-h-full max-w-full object-contain"
+                    loading={i === 0 ? "eager" : "lazy"}
                   />
                 )}
               </div>

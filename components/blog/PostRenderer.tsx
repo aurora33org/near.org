@@ -105,7 +105,6 @@ export default function PostRenderer({
               className="w-full rounded-lg object-cover"
               width={800}
               height={400}
-              priority
             />
           )}
         </div>

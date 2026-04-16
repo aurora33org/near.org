@@ -1,13 +1,15 @@
 "use client";
 
 import { useEditor, EditorContent } from "@tiptap/react";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
+import { Undo2, Redo2 } from "lucide-react";
 import { getExtensions } from "./extensions";
 import EditorBubbleMenu from "./menus/EditorBubbleMenu";
 import TableControls from "./menus/TableControls";
 import { createSlashCommandSuggestion } from "./menus/SlashCommandRenderer";
 import MediaPickerModal from "@/components/admin/MediaPickerModal";
 import { SlideCountPickerDialog } from "./SlideCountPickerDialog";
+import { Button } from "@/components/ui/button";
 
 interface BlockEditorProps {
   content: object;
@@ -27,7 +29,10 @@ export default function BlockEditor({ content, onChange, autosaveLabel }: BlockE
     setIsMediaPickerOpen(true);
   }, []);
 
-  const suggestion = createSlashCommandSuggestion(openMediaPicker);
+  const suggestion = useMemo(
+    () => createSlashCommandSuggestion(openMediaPicker),
+    [openMediaPicker]
+  );
 
   const editor = useEditor({
     extensions: getExtensions().map((ext) => {
@@ -56,6 +61,28 @@ export default function BlockEditor({ content, onChange, autosaveLabel }: BlockE
       </label>
 
       <div className="relative border border-border rounded-lg overflow-hidden bg-background">
+        {/* Undo/Redo Controls */}
+        <div className="flex gap-1 border-b border-border px-2 py-2">
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => editor.chain().focus().undo().run()}
+            disabled={!editor.can().undo()}
+            title="Undo (Cmd+Z)"
+          >
+            <Undo2 className="w-4 h-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => editor.chain().focus().redo().run()}
+            disabled={!editor.can().redo()}
+            title="Redo (Cmd+Shift+Z)"
+          >
+            <Redo2 className="w-4 h-4" />
+          </Button>
+        </div>
+
         {/* Table Controls */}
         <TableControls editor={editor} />
 

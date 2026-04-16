@@ -89,6 +89,16 @@ export const ColumnLayout = Node.create({
   addAttributes() {
     return {
       columns: { default: 2 },
+      widths: {
+        default: [],
+        parseHTML: (el) => {
+          const widths = el.getAttribute("data-widths");
+          return widths ? widths.split(",").map(w => parseFloat(w)) : [];
+        },
+        renderHTML: (attrs) => ({
+          "data-widths": attrs.widths?.join(",") || "",
+        }),
+      },
     };
   },
 
@@ -126,6 +136,51 @@ export const ColumnLayout = Node.create({
               content: columnNodes,
             })
             .run();
+        },
+      addColumn:
+        () =>
+        ({ commands, state }: any) => {
+          const { $from } = state.selection;
+          let layoutNode = null;
+
+          for (let d = $from.depth; d >= 0; d--) {
+            if ($from.node(d).type.name === "columnLayout") {
+              layoutNode = $from.node(d);
+              break;
+            }
+          }
+
+          if (!layoutNode) return false;
+
+          const newColumns = (layoutNode.attrs.columns || 2) + 1;
+          return commands.updateAttributes("columnLayout", {
+            columns: newColumns,
+            widths: [...(layoutNode.attrs.widths || []), 1],
+          });
+        },
+      removeColumn:
+        () =>
+        ({ commands, state }: any) => {
+          const { $from } = state.selection;
+          let layoutNode = null;
+
+          for (let d = $from.depth; d >= 0; d--) {
+            if ($from.node(d).type.name === "columnLayout") {
+              layoutNode = $from.node(d);
+              break;
+            }
+          }
+
+          if (!layoutNode || layoutNode.attrs.columns <= 1) return false;
+
+          const newColumns = layoutNode.attrs.columns - 1;
+          const widths = layoutNode.attrs.widths || [];
+          widths.pop();
+
+          return commands.updateAttributes("columnLayout", {
+            columns: newColumns,
+            widths,
+          });
         },
     };
   },

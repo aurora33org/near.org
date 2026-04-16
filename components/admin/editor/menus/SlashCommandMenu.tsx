@@ -17,13 +17,18 @@ interface SlashCommandMenuProps {
   query: string;
 }
 
-export const SlashCommandMenu = forwardRef<any, SlashCommandMenuProps>(
+interface SlashCommandMenuHandle {
+  onKeyDown: (props: { event: KeyboardEvent }) => boolean;
+}
+
+export const SlashCommandMenu = forwardRef<SlashCommandMenuHandle, SlashCommandMenuProps>(
   ({ command, query }, ref) => {
     const groups = getGroupedItems(query);
     const allItems = groups.flatMap((g) => g.items);
     const [selectedIndex, setSelectedIndex] = useState(0);
     const menuRef = useRef<HTMLDivElement>(null);
     const itemRefs = useRef<Map<number, HTMLButtonElement>>(new Map());
+    const lastInteractionRef = useRef<"mouse" | "keyboard">("keyboard");
 
     useEffect(() => {
       setSelectedIndex(0);
@@ -38,10 +43,12 @@ export const SlashCommandMenu = forwardRef<any, SlashCommandMenuProps>(
     }, [selectedIndex]);
 
     const upHandler = useCallback(() => {
+      lastInteractionRef.current = "keyboard";
       setSelectedIndex((prev) => (prev + allItems.length - 1) % allItems.length);
     }, [allItems.length]);
 
     const downHandler = useCallback(() => {
+      lastInteractionRef.current = "keyboard";
       setSelectedIndex((prev) => (prev + 1) % allItems.length);
     }, [allItems.length]);
 
@@ -107,7 +114,10 @@ export const SlashCommandMenu = forwardRef<any, SlashCommandMenuProps>(
                       : "text-foreground/80 hover:bg-accent/30"
                   }`}
                   onClick={() => command(item)}
-                  onMouseEnter={() => setSelectedIndex(index)}
+                  onMouseEnter={() => {
+                    lastInteractionRef.current = "mouse";
+                    setSelectedIndex(index);
+                  }}
                 >
                   <div
                     className="flex items-center justify-center w-8 h-8 rounded border border-border bg-muted shrink-0"
