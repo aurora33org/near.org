@@ -47,11 +47,6 @@ export default function TableControls({ editor }: TableControlsProps) {
         let top = coords.top - editorRect.top - toolbarHeight - 56;
         let left = coords.left - editorRect.left;
 
-        // If there's no room above, show it with minimum offset from top
-        if (top < 4) {
-          top = 4;
-        }
-
         // Clamp horizontal position to prevent overflow
         const maxLeft = editorRect.width - toolbarWidth - 16;
         if (left > maxLeft) {
