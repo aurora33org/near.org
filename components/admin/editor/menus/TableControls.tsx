@@ -9,9 +9,12 @@ interface TableControlsProps {
   editor: Editor;
 }
 
+const MAX_COLUMNS = 8;
+
 export default function TableControls({ editor }: TableControlsProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0 });
+  const [columnCount, setColumnCount] = useState(0);
 
   useEffect(() => {
     const updatePosition = () => {
@@ -28,10 +31,11 @@ export default function TableControls({ editor }: TableControlsProps) {
         if (!editorEl) return;
 
         const editorRect = editorEl.getBoundingClientRect();
-        const toolbarHeight = 48;
-        const toolbarWidth = 600; // approximate toolbar width
+        const toolbarHeight = 44;
+        const toolbarWidth = 600;
 
-        let top = coords.top - editorRect.top - toolbarHeight - 8;
+        // Position: 12px above the cursor instead of 56px
+        let top = coords.top - editorRect.top - toolbarHeight - 12;
         let left = coords.left - editorRect.left;
 
         // If toolbar would go above the editor, place it below the cursor instead
@@ -48,6 +52,20 @@ export default function TableControls({ editor }: TableControlsProps) {
 
         setPosition({ top: Math.max(4, top), left });
         setIsVisible(true);
+
+        // Count columns in the table by checking the first row
+        try {
+          let colCount = 0;
+          editor.state.doc.descendants((node) => {
+            // Count cells in the first row we find
+            if (node.type.name === "tableRow" && colCount === 0) {
+              colCount = node.childCount;
+            }
+          });
+          setColumnCount(colCount);
+        } catch {
+          setColumnCount(0);
+        }
       } catch {
         setIsVisible(false);
       }
@@ -70,12 +88,13 @@ export default function TableControls({ editor }: TableControlsProps) {
 
   return (
     <div
-      className="absolute z-40 flex gap-1 items-center rounded-lg border border-border bg-card shadow-lg p-2 flex-wrap max-w-2xl"
+      className="absolute z-40 flex gap-2 items-center rounded-lg border-2 border-primary/40 bg-card shadow-xl p-3 flex-wrap max-w-2xl backdrop-blur-sm"
       style={{
         top: `${position.top}px`,
         left: `${position.left}px`,
         pointerEvents: "auto",
-        maxWidth: "600px",
+        maxWidth: "620px",
+        background: "rgba(var(--card-rgb), 0.95)",
       }}
     >
       {/* Columns */}
@@ -87,7 +106,7 @@ export default function TableControls({ editor }: TableControlsProps) {
           editor.chain().focus().addColumnBefore().run();
         }}
         title="Add column before (left)"
-        className="h-8 px-2 text-xs whitespace-nowrap"
+        className="h-8 px-2.5 text-xs whitespace-nowrap font-medium"
       >
         <Plus size={14} className="mr-1" />
         Before
@@ -96,11 +115,12 @@ export default function TableControls({ editor }: TableControlsProps) {
       <Button
         size="sm"
         variant="outline"
+        disabled={columnCount >= MAX_COLUMNS}
         onMouseDown={(e) => {
           e.preventDefault();
           editor.chain().focus().addColumnAfter().run();
         }}
-        title="Add column after (right)"
+        title={columnCount >= MAX_COLUMNS ? `Maximum ${MAX_COLUMNS} columns reached` : "Add column after (right)"}
         className="h-8 px-2 text-xs whitespace-nowrap"
       >
         <Plus size={14} className="mr-1" />
@@ -122,7 +142,7 @@ export default function TableControls({ editor }: TableControlsProps) {
       </Button>
 
       {/* Separator */}
-      <div className="w-px h-5 bg-border mx-1" />
+      <div className="w-px h-6 bg-border/60" />
 
       {/* Rows */}
       <Button
@@ -168,7 +188,7 @@ export default function TableControls({ editor }: TableControlsProps) {
       </Button>
 
       {/* Separator */}
-      <div className="w-px h-5 bg-border mx-1" />
+      <div className="w-px h-6 bg-border/60" />
 
       {/* Headers */}
       <Button
