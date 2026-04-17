@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import BlockEditor from "@/components/admin/editor/BlockEditor";
@@ -275,27 +275,22 @@ export default function EditPostClient({ userRole = "EDITOR" }: { userRole?: str
       heroBgImage, seoTitle, seoDesc, ogImage, publishedAt, selectedCategoryIds,
       selectedTagIds, excludeFromSitemap]);
 
-  // Autosave every 30s when dirty (only after post is loaded)
-  useEffect(() => {
-    if (isLoading) return;
+  // Save draft to localStorage (manual save only)
+  const saveDraftToStorage = useCallback(() => {
     const key = `cms_draft_${postId}`;
-    const interval = setInterval(() => {
-      const s = autosaveStateRef.current;
-      if (!s.isDirty) return;
-      try {
-        localStorage.setItem(key, JSON.stringify({
-          title: s.title, content: s.content, slug: s.slug, excerpt: s.excerpt,
-          coverImage: s.coverImage, heroBgColor: s.heroBgColor, heroBgImage: s.heroBgImage,
-          seoTitle: s.seoTitle, seoDesc: s.seoDesc, ogImage: s.ogImage,
-          publishedAt: s.publishedAt, selectedCategoryIds: s.selectedCategoryIds,
-          selectedTagIds: s.selectedTagIds, excludeFromSitemap: s.excludeFromSitemap,
-          savedAt: new Date().toISOString(),
-        }));
-        setAutosavedAt(new Date());
-      } catch { /* storage quota exceeded */ }
-    }, 30_000);
-    return () => clearInterval(interval);
-  }, [isLoading, postId]);
+    const s = autosaveStateRef.current;
+    try {
+      localStorage.setItem(key, JSON.stringify({
+        title: s.title, content: s.content, slug: s.slug, excerpt: s.excerpt,
+        coverImage: s.coverImage, heroBgColor: s.heroBgColor, heroBgImage: s.heroBgImage,
+        seoTitle: s.seoTitle, seoDesc: s.seoDesc, ogImage: s.ogImage,
+        publishedAt: s.publishedAt, selectedCategoryIds: s.selectedCategoryIds,
+        selectedTagIds: s.selectedTagIds, excludeFromSitemap: s.excludeFromSitemap,
+        savedAt: new Date().toISOString(),
+      }));
+      setAutosavedAt(new Date());
+    } catch { /* storage quota exceeded */ }
+  }, [postId]);
 
   function handleRestoreDraft() {
     if (!draftRecovery) return;
@@ -325,17 +320,18 @@ export default function EditPostClient({ userRole = "EDITOR" }: { userRole?: str
     setDraftRecovery(null);
   }
 
-  // Cmd+S / Ctrl+S keyboard shortcut to save
+  // Cmd+S / Ctrl+S keyboard shortcut to save draft locally
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === "s") {
         e.preventDefault();
-        handleSubmit();
+        saveDraftToStorage();
+        toast.success("Draft saved locally");
       }
     }
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [handleSubmit]);
+  }, [saveDraftToStorage]);
 
   async function handleTakeOver() {
     if (!lockBlocked || userRole !== "ADMIN") {
@@ -535,9 +531,11 @@ export default function EditPostClient({ userRole = "EDITOR" }: { userRole?: str
 
   const displaySlug = slug;
   const isPublished = status === "PUBLISHED";
-  const autosaveLabel = autosavedAt
-    ? `Autosaved at ${autosavedAt.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "UTC" })} UTC`
-    : undefined;
+  const autosaveLabel = isDirty
+    ? "Unsaved changes (Press Cmd+S to save locally)"
+    : autosavedAt
+      ? `Saved to localStorage at ${autosavedAt.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "UTC" })} UTC`
+      : undefined;
 
   return (
     <div className="-m-8 flex flex-col h-screen bg-background">
@@ -591,13 +589,15 @@ export default function EditPostClient({ userRole = "EDITOR" }: { userRole?: str
               {!isPublished && (
                 <Button
                   type="button"
-                  onClick={() => handleSubmit("DRAFT")}
-                  disabled={isSaving}
+                  onClick={() => {
+                    saveDraftToStorage();
+                    toast.success("Draft saved locally");
+                  }}
                   variant="outline"
                   size="sm"
                   className="relative"
                 >
-                  {isSaving ? "Saving..." : "Save Draft"}
+                  Save Draft (Local)
                   {isDirty && (
                     <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-amber-500" />
                   )}
@@ -605,7 +605,14 @@ export default function EditPostClient({ userRole = "EDITOR" }: { userRole?: str
               )}
               <Button
                 type="button"
-                onClick={() => isPublished ? setShowUpdateConfirm(true) : handleSubmit("PUBLISHED")}
+                onClick={() => {
+                  saveDraftToStorage();
+                  if (isPublished) {
+                    setShowUpdateConfirm(true);
+                  } else {
+                    handleSubmit("PUBLISHED");
+                  }
+                }}
                 disabled={isSaving}
                 size="sm"
                 className="relative"
