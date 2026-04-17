@@ -9,8 +9,6 @@ interface TableControlsProps {
   editor: Editor;
 }
 
-const MAX_COLUMNS = 8;
-
 export default function TableControls({ editor }: TableControlsProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0 });
@@ -31,16 +29,27 @@ export default function TableControls({ editor }: TableControlsProps) {
         if (!editorEl) return;
 
         const editorRect = editorEl.getBoundingClientRect();
-        const toolbarHeight = 44;
-        const toolbarWidth = 600;
+        const toolbarHeight = 48;
+        const toolbarWidth = 600; // approximate toolbar width
 
-        // Position: 80px above the cursor to stay out of the way
-        let top = coords.top - editorRect.top - toolbarHeight - 80;
+        // Get current table and count columns
+        const table = editor.state.selection.$anchor.node(-2);
+        let cols = 0;
+        if (table && table.type.name === "table") {
+          const firstRow = table.firstChild;
+          if (firstRow) {
+            cols = firstRow.childCount;
+          }
+        }
+        setColumnCount(cols);
+
+        // Always position above the table for better UX
+        let top = coords.top - editorRect.top - toolbarHeight - 12;
         let left = coords.left - editorRect.left;
 
-        // If toolbar would go above the editor, place it below the cursor instead
-        if (top < 0) {
-          top = coords.bottom - editorRect.top + 8;
+        // If there's no room above, show it with minimum offset from top
+        if (top < 4) {
+          top = 4;
         }
 
         // Clamp horizontal position to prevent overflow
@@ -50,22 +59,8 @@ export default function TableControls({ editor }: TableControlsProps) {
         }
         left = Math.max(4, left);
 
-        setPosition({ top: Math.max(4, top), left });
+        setPosition({ top, left });
         setIsVisible(true);
-
-        // Count columns in the table by checking the first row
-        try {
-          let colCount = 0;
-          editor.state.doc.descendants((node) => {
-            // Count cells in the first row we find
-            if (node.type.name === "tableRow" && colCount === 0) {
-              colCount = node.childCount;
-            }
-          });
-          setColumnCount(colCount);
-        } catch {
-          setColumnCount(0);
-        }
       } catch {
         setIsVisible(false);
       }
@@ -88,25 +83,25 @@ export default function TableControls({ editor }: TableControlsProps) {
 
   return (
     <div
-      className="absolute z-40 flex gap-2 items-center rounded-lg border-2 border-primary/40 bg-card shadow-lg p-3 flex-wrap max-w-2xl"
+      className="absolute z-40 flex gap-1 items-center rounded-lg border border-border bg-card shadow-lg p-2 flex-wrap max-w-2xl"
       style={{
         top: `${position.top}px`,
         left: `${position.left}px`,
         pointerEvents: "auto",
-        maxWidth: "620px",
-        background: "rgba(var(--card-rgb), 0.95)",
+        maxWidth: "600px",
       }}
     >
       {/* Columns */}
       <Button
         size="sm"
         variant="outline"
+        disabled={columnCount >= 8}
         onMouseDown={(e) => {
           e.preventDefault();
           editor.chain().focus().addColumnBefore().run();
         }}
-        title="Add column before (left)"
-        className="h-8 px-2.5 text-xs whitespace-nowrap font-medium"
+        title={columnCount >= 8 ? "Maximum 8 columns reached" : "Add column before (left)"}
+        className="h-8 px-2 text-xs whitespace-nowrap"
       >
         <Plus size={14} className="mr-1" />
         Before
@@ -115,12 +110,12 @@ export default function TableControls({ editor }: TableControlsProps) {
       <Button
         size="sm"
         variant="outline"
-        disabled={columnCount >= MAX_COLUMNS}
+        disabled={columnCount >= 8}
         onMouseDown={(e) => {
           e.preventDefault();
           editor.chain().focus().addColumnAfter().run();
         }}
-        title={columnCount >= MAX_COLUMNS ? `Maximum ${MAX_COLUMNS} columns reached` : "Add column after (right)"}
+        title={columnCount >= 8 ? "Maximum 8 columns reached" : "Add column after (right)"}
         className="h-8 px-2 text-xs whitespace-nowrap"
       >
         <Plus size={14} className="mr-1" />
@@ -142,7 +137,7 @@ export default function TableControls({ editor }: TableControlsProps) {
       </Button>
 
       {/* Separator */}
-      <div className="w-px h-6 bg-border/60" />
+      <div className="w-px h-5 bg-border mx-1" />
 
       {/* Rows */}
       <Button
@@ -188,7 +183,7 @@ export default function TableControls({ editor }: TableControlsProps) {
       </Button>
 
       {/* Separator */}
-      <div className="w-px h-6 bg-border/60" />
+      <div className="w-px h-5 bg-border mx-1" />
 
       {/* Headers */}
       <Button
