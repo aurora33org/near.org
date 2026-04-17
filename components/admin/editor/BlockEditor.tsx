@@ -103,11 +103,9 @@ export default function BlockEditor({ content, onChange, autosaveLabel }: BlockE
           </Button>
         </div>
 
-        {/* Table Controls */}
-        <TableControls editor={editor} />
-
-        {/* Bubble Menu */}
+        {/* Floating Menus (absolute positioned) */}
         <EditorBubbleMenu editor={editor} openMediaPicker={openMediaPicker} />
+        <TableControls editor={editor} />
 
         {/* Editor Content */}
         <EditorContent

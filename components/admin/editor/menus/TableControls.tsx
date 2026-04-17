@@ -1,14 +1,8 @@
 "use client";
 
 import type { Editor } from "@tiptap/react";
-import {
-  Plus,
-  Trash2,
-  ArrowUp,
-  ArrowDown,
-  Merge,
-  Square,
-} from "lucide-react";
+import { Plus, Trash2, ArrowUp, ArrowDown } from "lucide-react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 
 interface TableControlsProps {
@@ -16,184 +10,179 @@ interface TableControlsProps {
 }
 
 export default function TableControls({ editor }: TableControlsProps) {
-  if (!editor.isActive("table")) return null;
+  const [isVisible, setIsVisible] = useState(false);
+  const [position, setPosition] = useState({ top: 0, left: 0 });
 
-  const iconSize = 16;
+  useEffect(() => {
+    const updatePosition = () => {
+      if (!editor.isActive("table")) {
+        setIsVisible(false);
+        return;
+      }
+
+      try {
+        const { from } = editor.state.selection;
+        const coords = editor.view.coordsAtPos(from);
+        const editorEl = editor.view.dom.closest(".relative");
+
+        if (!editorEl) return;
+
+        const editorRect = editorEl.getBoundingClientRect();
+        const top = coords.top - editorRect.top - 48; // 48px = toolbar height + spacing
+        const left = Math.max(8, coords.left - editorRect.left);
+
+        setPosition({ top: Math.max(4, top), left });
+        setIsVisible(true);
+      } catch {
+        setIsVisible(false);
+      }
+    };
+
+    const handleBlur = () => setIsVisible(false);
+
+    editor.on("selectionUpdate", updatePosition);
+    editor.on("blur", handleBlur);
+    editor.on("focus", updatePosition);
+
+    return () => {
+      editor.off("selectionUpdate", updatePosition);
+      editor.off("blur", handleBlur);
+      editor.off("focus", updatePosition);
+    };
+  }, [editor]);
+
+  if (!isVisible) return null;
+
+  const btnSize = "sm";
 
   return (
-    <div className="bg-primary/5 border-2 border-primary/30 rounded-lg p-4 mb-4 shadow-md">
-      {/* Header */}
-      <div className="mb-3">
-        <h3 className="text-sm font-bold text-foreground">📊 Table Controls</h3>
-      </div>
+    <div
+      className="absolute z-40 flex gap-1 items-center rounded-lg border border-border bg-card shadow-lg p-2"
+      style={{
+        top: `${position.top}px`,
+        left: `${position.left}px`,
+        pointerEvents: "auto",
+      }}
+    >
+      {/* Columns */}
+      <Button
+        size={btnSize}
+        variant="outline"
+        onMouseDown={(e) => {
+          e.preventDefault();
+          editor.chain().focus().addColumnBefore().run();
+        }}
+        title="Add column before (left)"
+        className="h-8 px-2"
+      >
+        <Plus size={14} className="mr-1" />
+        Col Before
+      </Button>
 
-      <div className="space-y-3">
-        {/* Columns Section */}
-        <div>
-          <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">Columns</p>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onMouseDown={(e) => {
-                e.preventDefault();
-                editor.chain().focus().addColumnBefore().run();
-              }}
-              title="Add column before (left)"
-            >
-              <Plus size={iconSize} className="mr-1" />
-              Before
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onMouseDown={(e) => {
-                e.preventDefault();
-                editor.chain().focus().addColumnAfter().run();
-              }}
-              title="Add column after (right)"
-            >
-              <Plus size={iconSize} className="mr-1" />
-              After
-            </Button>
-            <Button
-              size="sm"
-              variant="destructive"
-              onMouseDown={(e) => {
-                e.preventDefault();
-                editor.chain().focus().deleteColumn().run();
-              }}
-              title="Delete column"
-            >
-              <Trash2 size={iconSize} className="mr-1" />
-              Delete
-            </Button>
-          </div>
-        </div>
+      <Button
+        size={btnSize}
+        variant="outline"
+        onMouseDown={(e) => {
+          e.preventDefault();
+          editor.chain().focus().addColumnAfter().run();
+        }}
+        title="Add column after (right)"
+        className="h-8 px-2"
+      >
+        <Plus size={14} className="mr-1" />
+        Col After
+      </Button>
 
-        {/* Rows Section */}
-        <div>
-          <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">Rows</p>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onMouseDown={(e) => {
-                e.preventDefault();
-                editor.chain().focus().addRowBefore().run();
-              }}
-              title="Add row above"
-            >
-              <ArrowUp size={iconSize} className="mr-1" />
-              Above
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onMouseDown={(e) => {
-                e.preventDefault();
-                editor.chain().focus().addRowAfter().run();
-              }}
-              title="Add row below"
-            >
-              <ArrowDown size={iconSize} className="mr-1" />
-              Below
-            </Button>
-            <Button
-              size="sm"
-              variant="destructive"
-              onMouseDown={(e) => {
-                e.preventDefault();
-                editor.chain().focus().deleteRow().run();
-              }}
-              title="Delete row"
-            >
-              <Trash2 size={iconSize} className="mr-1" />
-              Delete
-            </Button>
-          </div>
-        </div>
+      <Button
+        size={btnSize}
+        variant="outline"
+        onMouseDown={(e) => {
+          e.preventDefault();
+          editor.chain().focus().deleteColumn().run();
+        }}
+        title="Delete column"
+        className="h-8 px-2"
+      >
+        <Trash2 size={14} className="mr-1" />
+        Col Del
+      </Button>
 
-        {/* Headers Section */}
-        <div>
-          <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">Headers</p>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onMouseDown={(e) => {
-                e.preventDefault();
-                editor.chain().focus().toggleHeaderRow().run();
-              }}
-              title="Toggle header row"
-            >
-              Toggle Row Header
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={!editor.can().toggleHeaderColumn()}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                editor.chain().focus().toggleHeaderColumn().run();
-              }}
-              title="Toggle header column"
-            >
-              Toggle Column Header
-            </Button>
-          </div>
-        </div>
+      {/* Separator */}
+      <div className="w-px h-5 bg-border mx-1" />
 
-        {/* Merge/Split Section */}
-        <div>
-          <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">Cells</p>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={!editor.can().mergeCells()}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                editor.chain().focus().mergeCells().run();
-              }}
-              title="Merge selected cells"
-            >
-              <Merge size={iconSize} className="mr-1" />
-              Merge
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={!editor.can().splitCell()}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                editor.chain().focus().splitCell().run();
-              }}
-              title="Split cell"
-            >
-              <Square size={iconSize} className="mr-1" />
-              Split
-            </Button>
-          </div>
-        </div>
+      {/* Rows */}
+      <Button
+        size={btnSize}
+        variant="outline"
+        onMouseDown={(e) => {
+          e.preventDefault();
+          editor.chain().focus().addRowBefore().run();
+        }}
+        title="Add row above"
+        className="h-8 px-2"
+      >
+        <ArrowUp size={14} className="mr-1" />
+        Row Above
+      </Button>
 
-        {/* Delete Table */}
-        <div className="border-t border-border pt-3">
-          <Button
-            size="sm"
-            variant="destructive"
-            className="w-full"
-            onMouseDown={(e) => {
-              e.preventDefault();
-              editor.chain().focus().deleteTable().run();
-            }}
-            title="Delete entire table"
-          >
-            <Trash2 size={iconSize} className="mr-2" />
-            Delete Entire Table
-          </Button>
-        </div>
-      </div>
+      <Button
+        size={btnSize}
+        variant="outline"
+        onMouseDown={(e) => {
+          e.preventDefault();
+          editor.chain().focus().addRowAfter().run();
+        }}
+        title="Add row below"
+        className="h-8 px-2"
+      >
+        <ArrowDown size={14} className="mr-1" />
+        Row Below
+      </Button>
+
+      <Button
+        size={btnSize}
+        variant="outline"
+        onMouseDown={(e) => {
+          e.preventDefault();
+          editor.chain().focus().deleteRow().run();
+        }}
+        title="Delete row"
+        className="h-8 px-2"
+      >
+        <Trash2 size={14} className="mr-1" />
+        Row Del
+      </Button>
+
+      {/* Separator */}
+      <div className="w-px h-5 bg-border mx-1" />
+
+      {/* Headers */}
+      <Button
+        size={btnSize}
+        variant="outline"
+        onMouseDown={(e) => {
+          e.preventDefault();
+          editor.chain().focus().toggleHeaderRow().run();
+        }}
+        title="Toggle header row"
+        className="h-8 px-2 text-xs"
+      >
+        Header Row
+      </Button>
+
+      <Button
+        size={btnSize}
+        variant="outline"
+        disabled={!editor.can().toggleHeaderColumn()}
+        onMouseDown={(e) => {
+          e.preventDefault();
+          editor.chain().focus().toggleHeaderColumn().run();
+        }}
+        title="Toggle header column"
+        className="h-8 px-2 text-xs"
+      >
+        Header Col
+      </Button>
     </div>
   );
 }
