@@ -34,8 +34,8 @@ export default function TableControls({ editor }: TableControlsProps) {
         const toolbarHeight = 44;
         const toolbarWidth = 600;
 
-        // Position: 12px above the cursor instead of 56px
-        let top = coords.top - editorRect.top - toolbarHeight - 12;
+        // Position: 80px above the cursor to stay out of the way
+        let top = coords.top - editorRect.top - toolbarHeight - 80;
         let left = coords.left - editorRect.left;
 
         // If toolbar would go above the editor, place it below the cursor instead
@@ -88,7 +88,7 @@ export default function TableControls({ editor }: TableControlsProps) {
 
   return (
     <div
-      className="absolute z-40 flex gap-2 items-center rounded-lg border-2 border-primary/40 bg-card shadow-xl p-3 flex-wrap max-w-2xl backdrop-blur-sm"
+      className="absolute z-40 flex gap-2 items-center rounded-lg border-2 border-primary/40 bg-card shadow-lg p-3 flex-wrap max-w-2xl"
       style={{
         top: `${position.top}px`,
         left: `${position.left}px`,
