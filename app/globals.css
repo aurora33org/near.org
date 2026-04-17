@@ -228,7 +228,14 @@
   border-collapse: collapse;
   width: 100%;
   margin: 1rem 0;
-  overflow: hidden;
+}
+
+/* Make tables scrollable horizontally on small screens */
+.ProseMirror > table {
+  display: block;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
 }
 
 .ProseMirror table td,

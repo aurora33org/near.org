@@ -213,7 +213,7 @@ export function renderBlocks(nodes: TipTapNode[] | undefined): React.ReactNode {
         }
 
         return (
-          <div key={i} className="overflow-x-auto my-4">
+          <div key={i} className="overflow-x-auto my-4 rounded-lg border border-border">
             <table className="w-full border-collapse border border-border">
               {headerRows.length > 0 && (
                 <thead>{renderBlocks(headerRows)}</thead>

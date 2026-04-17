@@ -28,8 +28,23 @@ export default function TableControls({ editor }: TableControlsProps) {
         if (!editorEl) return;
 
         const editorRect = editorEl.getBoundingClientRect();
-        const top = coords.top - editorRect.top - 48; // 48px = toolbar height + spacing
-        const left = Math.max(8, coords.left - editorRect.left);
+        const toolbarHeight = 48;
+        const toolbarWidth = 600; // approximate toolbar width
+
+        let top = coords.top - editorRect.top - toolbarHeight - 8;
+        let left = coords.left - editorRect.left;
+
+        // If toolbar would go above the editor, place it below the cursor instead
+        if (top < 0) {
+          top = coords.bottom - editorRect.top + 8;
+        }
+
+        // Clamp horizontal position to prevent overflow
+        const maxLeft = editorRect.width - toolbarWidth - 16;
+        if (left > maxLeft) {
+          left = maxLeft;
+        }
+        left = Math.max(4, left);
 
         setPosition({ top: Math.max(4, top), left });
         setIsVisible(true);
@@ -53,58 +68,57 @@ export default function TableControls({ editor }: TableControlsProps) {
 
   if (!isVisible) return null;
 
-  const btnSize = "sm";
-
   return (
     <div
-      className="absolute z-40 flex gap-1 items-center rounded-lg border border-border bg-card shadow-lg p-2"
+      className="absolute z-40 flex gap-1 items-center rounded-lg border border-border bg-card shadow-lg p-2 flex-wrap max-w-2xl"
       style={{
         top: `${position.top}px`,
         left: `${position.left}px`,
         pointerEvents: "auto",
+        maxWidth: "600px",
       }}
     >
       {/* Columns */}
       <Button
-        size={btnSize}
+        size="sm"
         variant="outline"
         onMouseDown={(e) => {
           e.preventDefault();
           editor.chain().focus().addColumnBefore().run();
         }}
         title="Add column before (left)"
-        className="h-8 px-2"
+        className="h-8 px-2 text-xs whitespace-nowrap"
       >
         <Plus size={14} className="mr-1" />
-        Col Before
+        Before
       </Button>
 
       <Button
-        size={btnSize}
+        size="sm"
         variant="outline"
         onMouseDown={(e) => {
           e.preventDefault();
           editor.chain().focus().addColumnAfter().run();
         }}
         title="Add column after (right)"
-        className="h-8 px-2"
+        className="h-8 px-2 text-xs whitespace-nowrap"
       >
         <Plus size={14} className="mr-1" />
-        Col After
+        After
       </Button>
 
       <Button
-        size={btnSize}
+        size="sm"
         variant="outline"
         onMouseDown={(e) => {
           e.preventDefault();
           editor.chain().focus().deleteColumn().run();
         }}
         title="Delete column"
-        className="h-8 px-2"
+        className="h-8 px-2 text-xs whitespace-nowrap"
       >
         <Trash2 size={14} className="mr-1" />
-        Col Del
+        Col
       </Button>
 
       {/* Separator */}
@@ -112,45 +126,45 @@ export default function TableControls({ editor }: TableControlsProps) {
 
       {/* Rows */}
       <Button
-        size={btnSize}
+        size="sm"
         variant="outline"
         onMouseDown={(e) => {
           e.preventDefault();
           editor.chain().focus().addRowBefore().run();
         }}
         title="Add row above"
-        className="h-8 px-2"
+        className="h-8 px-2 text-xs whitespace-nowrap"
       >
         <ArrowUp size={14} className="mr-1" />
-        Row Above
+        Above
       </Button>
 
       <Button
-        size={btnSize}
+        size="sm"
         variant="outline"
         onMouseDown={(e) => {
           e.preventDefault();
           editor.chain().focus().addRowAfter().run();
         }}
         title="Add row below"
-        className="h-8 px-2"
+        className="h-8 px-2 text-xs whitespace-nowrap"
       >
         <ArrowDown size={14} className="mr-1" />
-        Row Below
+        Below
       </Button>
 
       <Button
-        size={btnSize}
+        size="sm"
         variant="outline"
         onMouseDown={(e) => {
           e.preventDefault();
           editor.chain().focus().deleteRow().run();
         }}
         title="Delete row"
-        className="h-8 px-2"
+        className="h-8 px-2 text-xs whitespace-nowrap"
       >
         <Trash2 size={14} className="mr-1" />
-        Row Del
+        Row
       </Button>
 
       {/* Separator */}
@@ -158,20 +172,20 @@ export default function TableControls({ editor }: TableControlsProps) {
 
       {/* Headers */}
       <Button
-        size={btnSize}
+        size="sm"
         variant="outline"
         onMouseDown={(e) => {
           e.preventDefault();
           editor.chain().focus().toggleHeaderRow().run();
         }}
         title="Toggle header row"
-        className="h-8 px-2 text-xs"
+        className="h-8 px-2 text-xs whitespace-nowrap"
       >
-        Header Row
+        Row Header
       </Button>
 
       <Button
-        size={btnSize}
+        size="sm"
         variant="outline"
         disabled={!editor.can().toggleHeaderColumn()}
         onMouseDown={(e) => {
@@ -179,9 +193,9 @@ export default function TableControls({ editor }: TableControlsProps) {
           editor.chain().focus().toggleHeaderColumn().run();
         }}
         title="Toggle header column"
-        className="h-8 px-2 text-xs"
+        className="h-8 px-2 text-xs whitespace-nowrap"
       >
-        Header Col
+        Col Header
       </Button>
     </div>
   );
