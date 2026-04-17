@@ -27,6 +27,10 @@ export function BlogCarousel({ images, slidesPerView = 1, aspectRatio = "auto" }
     const emblaApi = EmblaCarousel(emblaRef.current, { loop: true }) as any;
     emblaApiRef.current = emblaApi;
 
+    // Initialize scroll snaps immediately to avoid empty dots on first render
+    setScrollSnaps(emblaApi.scrollSnapList());
+    setSelectedIndex(emblaApi.selectedScrollSnap());
+
     const onSelect = () => setSelectedIndex(emblaApi.selectedScrollSnap());
     const onInit = () => setScrollSnaps(emblaApi.scrollSnapList());
 
@@ -74,6 +78,7 @@ export function BlogCarousel({ images, slidesPerView = 1, aspectRatio = "auto" }
                       src={image.src}
                       alt={image.alt || `Slide ${i + 1}`}
                       className="w-full h-full object-cover"
+                      loading={i === 0 ? "eager" : "lazy"}
                     />
                   </div>
                 ) : (
@@ -81,6 +86,7 @@ export function BlogCarousel({ images, slidesPerView = 1, aspectRatio = "auto" }
                     src={image.src}
                     alt={image.alt || `Slide ${i + 1}`}
                     className="rounded-lg max-h-full max-w-full object-contain"
+                    loading={i === 0 ? "eager" : "lazy"}
                   />
                 )}
               </div>

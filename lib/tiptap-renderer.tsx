@@ -30,11 +30,21 @@ function renderInlineContent(nodes: TipTapNode[] | undefined): React.ReactNode {
         else if (mark.type === "code") el = <code key={i}>{el}</code>;
         else if (mark.type === "strike") el = <s key={i}>{el}</s>;
         else if (mark.type === "underline") el = <u key={i}>{el}</u>;
+        else if (mark.type === "textStyle")
+          el = <span key={i} style={{ color: mark.attrs?.color }}>{el}</span>;
+        else if (mark.type === "highlight")
+          el = <mark key={i} style={{ backgroundColor: mark.attrs?.color }}>{el}</mark>;
         else if (mark.type === "link")
           el = (
             <a key={i} href={mark.attrs?.href} target={mark.attrs?.target ?? "_blank"} rel="noopener noreferrer">
               {el}
             </a>
+          );
+        else if (mark.type === "footnote")
+          el = (
+            <sup key={i} className="footnote-marker" data-footnote-id={mark.attrs?.id}>
+              {el}
+            </sup>
           );
       }
 
@@ -152,15 +162,69 @@ export function renderBlocks(nodes: TipTapNode[] | undefined): React.ReactNode {
         return <BlogCarousel key={i} images={images} slidesPerView={slidesPerView} aspectRatio={aspectRatio} />;
       }
 
-      // Table support
-      case "table":
+      case "embedBlock": {
+        const url = node.attrs?.url;
+        if (!url) return null;
+
+        // Extract embed URL for supported platforms
+        const getEmbedUrl = (sourceUrl: string) => {
+          if (sourceUrl.includes("youtube.com") || sourceUrl.includes("youtu.be")) {
+            const videoId = sourceUrl.includes("youtu.be")
+              ? sourceUrl.split("youtu.be/")[1]?.split("?")[0]
+              : sourceUrl.split("v=")[1]?.split("&")[0];
+            return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+          }
+          if (sourceUrl.includes("vimeo.com")) {
+            const videoId = sourceUrl.split("vimeo.com/")[1]?.split("?")[0];
+            return videoId ? `https://player.vimeo.com/video/${videoId}` : null;
+          }
+          return sourceUrl;
+        };
+
+        const embedUrl = getEmbedUrl(url);
+        if (!embedUrl) return null;
+
         return (
-          <div key={i} className="overflow-x-auto my-4">
+          <div key={i} className="my-6 aspect-video rounded-lg overflow-hidden">
+            <iframe
+              src={embedUrl}
+              className="w-full h-full"
+              allowFullScreen
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            />
+          </div>
+        );
+      }
+
+      // Table support
+      case "table": {
+        const rows = node.content ?? [];
+        const headerRows: TipTapNode[] = [];
+        const bodyRows: TipTapNode[] = [];
+
+        for (const row of rows) {
+          const cells = row.content ?? [];
+          const hasHeaderCell = cells.some(cell => cell.type === "tableHeader");
+          if (hasHeaderCell) {
+            headerRows.push(row);
+          } else {
+            bodyRows.push(row);
+          }
+        }
+
+        return (
+          <div key={i} className="overflow-x-auto my-4 rounded-lg border border-border">
             <table className="w-full border-collapse border border-border">
-              <tbody>{renderBlocks(node.content)}</tbody>
+              {headerRows.length > 0 && (
+                <thead>{renderBlocks(headerRows)}</thead>
+              )}
+              {bodyRows.length > 0 && (
+                <tbody>{renderBlocks(bodyRows)}</tbody>
+              )}
             </table>
           </div>
         );
+      }
 
       case "tableRow":
         return <tr key={i}>{renderBlocks(node.content)}</tr>;
@@ -207,15 +271,27 @@ export function renderBlocks(nodes: TipTapNode[] | undefined): React.ReactNode {
       // Column layout
       case "columnLayout": {
         const cols = node.attrs?.columns ?? 2;
+        const widths = node.attrs?.widths || [];
+        const collapseAt = node.attrs?.collapseAt ?? "md";
+
+        // Generate responsive grid classes with collapse breakpoint support
+        const gridClass =
+          cols === 1 ? "grid-cols-1" :
+          cols === 2 ? `grid-cols-1 ${collapseAt}:grid-cols-2` :
+          cols === 3 ? `grid-cols-1 ${collapseAt}:grid-cols-3` :
+          cols === 4 ? `grid-cols-1 ${collapseAt}:grid-cols-4` :
+          `grid-cols-1`;
+
+        // Use custom widths if available
+        const style = widths.length === cols
+          ? { gridTemplateColumns: widths.map((w: number) => `${w}fr`).join(" ") }
+          : undefined;
+
         return (
           <div
             key={i}
-            className="my-4"
-            style={{
-              display: "grid",
-              gridTemplateColumns: `repeat(${cols}, 1fr)`,
-              gap: "1.5rem",
-            }}
+            className={`my-4 grid gap-6 ${gridClass}`}
+            style={style}
           >
             {renderBlocks(node.content)}
           </div>
@@ -224,6 +300,29 @@ export function renderBlocks(nodes: TipTapNode[] | undefined): React.ReactNode {
 
       case "column":
         return <div key={i}>{renderBlocks(node.content)}</div>;
+
+      case "callout": {
+        const calloutType = node.attrs?.type ?? "info";
+        const calloutStyles: Record<string, { bg: string; border: string; icon: string }> = {
+          info: { bg: "bg-blue-50 dark:bg-blue-950", border: "border-blue-200 dark:border-blue-800", icon: "ℹ️" },
+          warning: { bg: "bg-yellow-50 dark:bg-yellow-950", border: "border-yellow-200 dark:border-yellow-800", icon: "⚠️" },
+          success: { bg: "bg-green-50 dark:bg-green-950", border: "border-green-200 dark:border-green-800", icon: "✓" },
+          error: { bg: "bg-red-50 dark:bg-red-950", border: "border-red-200 dark:border-red-800", icon: "✕" },
+        };
+
+        const style = calloutStyles[calloutType] || calloutStyles.info;
+
+        return (
+          <div
+            key={i}
+            className={`rounded-lg border-2 ${style.bg} ${style.border} p-4 my-4`}
+          >
+            <div className="prose dark:prose-invert max-w-none">
+              {renderBlocks(node.content)}
+            </div>
+          </div>
+        );
+      }
 
       default:
         return null;

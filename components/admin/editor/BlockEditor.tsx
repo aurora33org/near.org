@@ -1,13 +1,16 @@
 "use client";
 
 import { useEditor, EditorContent } from "@tiptap/react";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
+import { Undo2, Redo2 } from "lucide-react";
 import { getExtensions } from "./extensions";
 import EditorBubbleMenu from "./menus/EditorBubbleMenu";
 import TableControls from "./menus/TableControls";
 import { createSlashCommandSuggestion } from "./menus/SlashCommandRenderer";
+import { FindReplaceBar } from "./menus/FindReplaceBar";
 import MediaPickerModal from "@/components/admin/MediaPickerModal";
 import { SlideCountPickerDialog } from "./SlideCountPickerDialog";
+import { Button } from "@/components/ui/button";
 
 interface BlockEditorProps {
   content: object;
@@ -21,13 +24,17 @@ export default function BlockEditor({ content, onChange, autosaveLabel }: BlockE
   const [isSlideCountPickerOpen, setIsSlideCountPickerOpen] = useState(false);
   const [pendingCarouselImages, setPendingCarouselImages] = useState<string[]>([]);
   const [wordCount, setWordCount] = useState(0);
+  const [showFindReplace, setShowFindReplace] = useState(false);
 
   const openMediaPicker = useCallback((mode: "single" | "carousel" = "single") => {
     setMediaPickerMode(mode);
     setIsMediaPickerOpen(true);
   }, []);
 
-  const suggestion = createSlashCommandSuggestion(openMediaPicker);
+  const suggestion = useMemo(
+    () => createSlashCommandSuggestion(openMediaPicker),
+    [openMediaPicker]
+  );
 
   const editor = useEditor({
     extensions: getExtensions().map((ext) => {
@@ -45,6 +52,24 @@ export default function BlockEditor({ content, onChange, autosaveLabel }: BlockE
     },
   });
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Cmd+F or Ctrl+F to open find/replace
+      if ((e.metaKey || e.ctrlKey) && e.key === "f") {
+        e.preventDefault();
+        setShowFindReplace(true);
+      }
+      // Escape to close find/replace
+      if (e.key === "Escape" && showFindReplace) {
+        e.preventDefault();
+        setShowFindReplace(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showFindReplace]);
+
   if (!editor) {
     return <div className="text-muted-foreground">Loading editor...</div>;
   }
@@ -56,11 +81,31 @@ export default function BlockEditor({ content, onChange, autosaveLabel }: BlockE
       </label>
 
       <div className="relative border border-border rounded-lg overflow-hidden bg-background">
-        {/* Table Controls */}
-        <TableControls editor={editor} />
+        {/* Undo/Redo Controls */}
+        <div className="flex gap-1 border-b border-border px-2 py-2">
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => editor.chain().focus().undo().run()}
+            disabled={!editor.can().undo()}
+            title="Undo (Cmd+Z)"
+          >
+            <Undo2 className="w-4 h-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => editor.chain().focus().redo().run()}
+            disabled={!editor.can().redo()}
+            title="Redo (Cmd+Shift+Z)"
+          >
+            <Redo2 className="w-4 h-4" />
+          </Button>
+        </div>
 
-        {/* Bubble Menu */}
+        {/* Floating Menus (absolute positioned) */}
         <EditorBubbleMenu editor={editor} openMediaPicker={openMediaPicker} />
+        <TableControls editor={editor} />
 
         {/* Editor Content */}
         <EditorContent
@@ -122,6 +167,14 @@ export default function BlockEditor({ content, onChange, autosaveLabel }: BlockE
           setPendingCarouselImages([]);
         }}
       />
+
+      {/* Find & Replace Bar */}
+      {showFindReplace && (
+        <FindReplaceBar
+          editor={editor}
+          onClose={() => setShowFindReplace(false)}
+        />
+      )}
     </div>
   );
 }

@@ -73,12 +73,6 @@ export default function EditPostClient({ userRole = "EDITOR" }: { userRole?: str
   const [editorKey, setEditorKey] = useState(0);
   const [autosavedAt, setAutosavedAt] = useState<Date | null>(null);
   const [draftRecovery, setDraftRecovery] = useState<{ savedAt: Date; draft: any } | null>(null);
-  const autosaveStateRef = useRef({
-    isDirty: false, title: "", content: {} as any, slug: "", excerpt: "",
-    coverImage: "", heroBgColor: "#ffffff", heroBgImage: "", seoTitle: "",
-    seoDesc: "", ogImage: "", publishedAt: "", selectedCategoryIds: [] as string[],
-    selectedTagIds: [] as string[], excludeFromSitemap: false,
-  });
 
   // Initialize contentEditable title div once when post loads
   useEffect(() => {
@@ -204,48 +198,50 @@ export default function EditPostClient({ userRole = "EDITOR" }: { userRole?: str
     };
   }, [postId, isLoading]);
 
-  // Poll lock status every 10s while actively editing — detects takeover before next heartbeat
-  useEffect(() => {
-    if (isLoading || lockBlocked) return;
-
-    const poll = setInterval(async () => {
-      try {
-        const res = await fetch(`/api/posts/${postId}/lock`);
-        if (res.status === 409) {
-          clearInterval(poll);
-          const data = await res.json();
-          setLockBlocked(true);
-          setLockBlockedBy(data.lockedByEmail || "an admin");
-          setWasEvicted(true);
-          toast.error("An admin has taken over this post. Your session is now read-only.");
-        }
-      } catch {
-        // Network error — keep polling
-      }
-    }, 10_000);
-
-    return () => clearInterval(poll);
-  }, [isLoading, lockBlocked, postId]);
-
   // Auto-retry lock acquisition when blocked, in case the lock expires (but not after eviction)
+  // With error backoff: pause 60s after 3 consecutive failures
   useEffect(() => {
     if (!lockBlocked || wasEvicted) return;
 
-    const retryInterval = setInterval(async () => {
+    let consecutiveErrors = 0;
+    let retryInterval: ReturnType<typeof setInterval>;
+
+    async function attemptRetry() {
       try {
         const res = await fetch(`/api/posts/${postId}/lock`, { method: "POST" });
         if (res.ok) {
+          consecutiveErrors = 0; // Reset error counter on success
           toast.success("Post is now available — you can start editing.");
           if (typeof Notification !== "undefined" && Notification.permission === "granted") {
             new Notification("Post unlocked", { body: "You can now start editing." });
           }
           setLockBlocked(false);
           setLockBlockedBy("");
+        } else if (res.status >= 500) {
+          // Server error — increment counter and check if we should backoff
+          consecutiveErrors++;
+          if (consecutiveErrors >= 3) {
+            // Pause for 60s after 3 consecutive errors
+            clearInterval(retryInterval);
+            setTimeout(() => {
+              retryInterval = setInterval(attemptRetry, 15_000);
+            }, 60_000);
+          }
         }
       } catch {
-        // Network error — retry again next interval
+        // Network error — increment counter
+        consecutiveErrors++;
+        if (consecutiveErrors >= 3) {
+          // Pause for 60s after 3 consecutive errors
+          clearInterval(retryInterval);
+          setTimeout(() => {
+            retryInterval = setInterval(attemptRetry, 15_000);
+          }, 60_000);
+        }
       }
-    }, 5_000);
+    }
+
+    retryInterval = setInterval(attemptRetry, 15_000);
 
     return () => clearInterval(retryInterval);
   }, [lockBlocked, postId]);
@@ -262,38 +258,6 @@ export default function EditPostClient({ userRole = "EDITOR" }: { userRole?: str
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [isDirty]);
 
-  // Keep autosave ref current with latest state
-  useEffect(() => {
-    autosaveStateRef.current = {
-      isDirty, title, content, slug, excerpt, coverImage, heroBgColor,
-      heroBgImage, seoTitle, seoDesc, ogImage, publishedAt,
-      selectedCategoryIds, selectedTagIds, excludeFromSitemap,
-    };
-  }, [isDirty, title, content, slug, excerpt, coverImage, heroBgColor,
-      heroBgImage, seoTitle, seoDesc, ogImage, publishedAt, selectedCategoryIds,
-      selectedTagIds, excludeFromSitemap]);
-
-  // Autosave every 30s when dirty (only after post is loaded)
-  useEffect(() => {
-    if (isLoading) return;
-    const key = `cms_draft_${postId}`;
-    const interval = setInterval(() => {
-      const s = autosaveStateRef.current;
-      if (!s.isDirty) return;
-      try {
-        localStorage.setItem(key, JSON.stringify({
-          title: s.title, content: s.content, slug: s.slug, excerpt: s.excerpt,
-          coverImage: s.coverImage, heroBgColor: s.heroBgColor, heroBgImage: s.heroBgImage,
-          seoTitle: s.seoTitle, seoDesc: s.seoDesc, ogImage: s.ogImage,
-          publishedAt: s.publishedAt, selectedCategoryIds: s.selectedCategoryIds,
-          selectedTagIds: s.selectedTagIds, excludeFromSitemap: s.excludeFromSitemap,
-          savedAt: new Date().toISOString(),
-        }));
-        setAutosavedAt(new Date());
-      } catch { /* storage quota exceeded */ }
-    }, 30_000);
-    return () => clearInterval(interval);
-  }, [isLoading, postId]);
 
   function handleRestoreDraft() {
     if (!draftRecovery) return;
@@ -323,7 +287,7 @@ export default function EditPostClient({ userRole = "EDITOR" }: { userRole?: str
     setDraftRecovery(null);
   }
 
-  // Cmd+S / Ctrl+S keyboard shortcut to save
+  // Cmd+S / Ctrl+S keyboard shortcut to save to server
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === "s") {
@@ -417,7 +381,7 @@ export default function EditPostClient({ userRole = "EDITOR" }: { userRole?: str
       setStatus(finalStatus);
       setIsDirty(false);
       localStorage.removeItem(`cms_draft_${postId}`);
-      setAutosavedAt(null);
+      setAutosavedAt(new Date());
       toast.success("Post saved");
     } catch (err) {
       console.error(err);
@@ -533,8 +497,8 @@ export default function EditPostClient({ userRole = "EDITOR" }: { userRole?: str
 
   const displaySlug = slug;
   const isPublished = status === "PUBLISHED";
-  const autosaveLabel = autosavedAt
-    ? `Autosaved at ${autosavedAt.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "UTC" })} UTC`
+  const autosaveLabel = autosavedAt && !isDirty
+    ? `Last saved at ${autosavedAt.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "UTC" })} UTC`
     : undefined;
 
   return (
@@ -603,7 +567,13 @@ export default function EditPostClient({ userRole = "EDITOR" }: { userRole?: str
               )}
               <Button
                 type="button"
-                onClick={() => isPublished ? setShowUpdateConfirm(true) : handleSubmit("PUBLISHED")}
+                onClick={() => {
+                  if (isPublished) {
+                    setShowUpdateConfirm(true);
+                  } else {
+                    handleSubmit("PUBLISHED");
+                  }
+                }}
                 disabled={isSaving}
                 size="sm"
                 className="relative"

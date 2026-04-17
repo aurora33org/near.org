@@ -3,22 +3,10 @@
 import { ReactRenderer } from "@tiptap/react";
 import tippy, { type Instance } from "tippy.js";
 import { SlashCommandMenu } from "./SlashCommandMenu";
-import { slashCommandItems, type SlashCommandItem } from "../SlashCommandItems";
+import type { SlashCommandItem } from "../SlashCommandItems";
 
 export function createSlashCommandSuggestion(openMediaPicker: () => void) {
   return {
-    items: ({ query }: { query: string }) => {
-      return slashCommandItems.filter((item) => {
-        const q = query.toLowerCase();
-        if (!q) return true;
-        return (
-          item.title.toLowerCase().includes(q) ||
-          item.description.toLowerCase().includes(q) ||
-          item.searchTerms.some((term) => term.includes(q))
-        );
-      });
-    },
-
     render: () => {
       let component: ReactRenderer | null = null;
       let popup: Instance[] | null = null;

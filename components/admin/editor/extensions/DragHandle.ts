@@ -84,8 +84,8 @@ export const DragHandle = Extension.create({
             const nodeRect = domNode.getBoundingClientRect();
             currentNodePos = nodePos;
             wrapperEl.style.display = "flex";
-            wrapperEl.style.top = `${nodeRect.top + 4}px`;
-            wrapperEl.style.left = `${nodeRect.left - 48}px`;
+            wrapperEl.style.top = `${nodeRect.top + window.scrollY + 4}px`;
+            wrapperEl.style.left = `${nodeRect.left + window.scrollX - 48}px`;
           }
 
           document.addEventListener("mousemove", onDocMouseMove);

@@ -89,6 +89,23 @@ export const ColumnLayout = Node.create({
   addAttributes() {
     return {
       columns: { default: 2 },
+      widths: {
+        default: [],
+        parseHTML: (el) => {
+          const widths = el.getAttribute("data-widths");
+          return widths ? widths.split(",").map(w => parseFloat(w)) : [];
+        },
+        renderHTML: (attrs) => ({
+          "data-widths": attrs.widths?.join(",") || "",
+        }),
+      },
+      collapseAt: {
+        default: "md",
+        parseHTML: (el) => el.getAttribute("data-collapse-at") || "md",
+        renderHTML: (attrs) => ({
+          "data-collapse-at": attrs.collapseAt,
+        }),
+      },
     };
   },
 
@@ -98,12 +115,20 @@ export const ColumnLayout = Node.create({
 
   renderHTML({ node, HTMLAttributes }) {
     const cols = node.attrs.columns || 2;
+    const widths = (node.attrs.widths as number[]) || [];
+
+    // Build grid-template-columns: use custom widths if available, otherwise equal distribution
+    const gridTemplate = widths.length === cols
+      ? widths.map((w: number) => `${w}fr`).join(" ")
+      : `repeat(${cols}, 1fr)`;
+
     return [
       "div",
       mergeAttributes(HTMLAttributes, {
         "data-type": "column-layout",
         "data-columns": cols,
-        style: `display: grid; grid-template-columns: repeat(${cols}, 1fr); gap: 1rem; margin: 1rem 0;`,
+        "data-collapse-at": node.attrs.collapseAt || "md",
+        style: `display: grid; grid-template-columns: ${gridTemplate}; gap: 1rem; margin: 1rem 0;`,
       }),
       0,
     ];
@@ -126,6 +151,51 @@ export const ColumnLayout = Node.create({
               content: columnNodes,
             })
             .run();
+        },
+      addColumn:
+        () =>
+        ({ commands, state }: any) => {
+          const { $from } = state.selection;
+          let layoutNode = null;
+
+          for (let d = $from.depth; d >= 0; d--) {
+            if ($from.node(d).type.name === "columnLayout") {
+              layoutNode = $from.node(d);
+              break;
+            }
+          }
+
+          if (!layoutNode) return false;
+
+          const newColumns = (layoutNode.attrs.columns || 2) + 1;
+          return commands.updateAttributes("columnLayout", {
+            columns: newColumns,
+            widths: [...(layoutNode.attrs.widths || []), 1],
+          });
+        },
+      removeColumn:
+        () =>
+        ({ commands, state }: any) => {
+          const { $from } = state.selection;
+          let layoutNode = null;
+
+          for (let d = $from.depth; d >= 0; d--) {
+            if ($from.node(d).type.name === "columnLayout") {
+              layoutNode = $from.node(d);
+              break;
+            }
+          }
+
+          if (!layoutNode || layoutNode.attrs.columns <= 1) return false;
+
+          const newColumns = layoutNode.attrs.columns - 1;
+          const widths = layoutNode.attrs.widths || [];
+          widths.pop();
+
+          return commands.updateAttributes("columnLayout", {
+            columns: newColumns,
+            widths,
+          });
         },
     };
   },

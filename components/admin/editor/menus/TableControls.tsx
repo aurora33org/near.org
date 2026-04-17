@@ -1,127 +1,212 @@
 "use client";
 
 import type { Editor } from "@tiptap/react";
-import {
-  Minus,
-  Trash2,
-  ArrowUp,
-  ArrowDown,
-  ArrowLeft,
-  ArrowRight,
-} from "lucide-react";
+import { Plus, Trash2, ArrowUp, ArrowDown } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
 
 interface TableControlsProps {
   editor: Editor;
 }
 
 export default function TableControls({ editor }: TableControlsProps) {
-  if (!editor.isActive("table")) return null;
+  const [isVisible, setIsVisible] = useState(false);
+  const [position, setPosition] = useState({ top: 0, left: 0 });
+  const [columnCount, setColumnCount] = useState(0);
 
-  const btnClass =
-    "p-1 rounded hover:bg-secondary/80 transition text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:pointer-events-none";
+  useEffect(() => {
+    const updatePosition = () => {
+      if (!editor.isActive("table")) {
+        setIsVisible(false);
+        return;
+      }
+
+      try {
+        const { from } = editor.state.selection;
+        const coords = editor.view.coordsAtPos(from);
+        const editorEl = editor.view.dom.closest(".relative");
+
+        if (!editorEl) return;
+
+        const editorRect = editorEl.getBoundingClientRect();
+        const toolbarHeight = 48;
+        const toolbarWidth = 600; // approximate toolbar width
+
+        // Get current table and count columns
+        const table = editor.state.selection.$anchor.node(-2);
+        let cols = 0;
+        if (table && table.type.name === "table") {
+          const firstRow = table.firstChild;
+          if (firstRow) {
+            cols = firstRow.childCount;
+          }
+        }
+        setColumnCount(cols);
+
+        // Always position above the table for better UX
+        let top = coords.top - editorRect.top - toolbarHeight - 56;
+        let left = coords.left - editorRect.left;
+
+        // Clamp horizontal position to prevent overflow
+        const maxLeft = editorRect.width - toolbarWidth - 16;
+        if (left > maxLeft) {
+          left = maxLeft;
+        }
+        left = Math.max(4, left);
+
+        setPosition({ top, left });
+        setIsVisible(true);
+      } catch {
+        setIsVisible(false);
+      }
+    };
+
+    const handleBlur = () => setIsVisible(false);
+
+    editor.on("selectionUpdate", updatePosition);
+    editor.on("blur", handleBlur);
+    editor.on("focus", updatePosition);
+
+    return () => {
+      editor.off("selectionUpdate", updatePosition);
+      editor.off("blur", handleBlur);
+      editor.off("focus", updatePosition);
+    };
+  }, [editor]);
+
+  if (!isVisible) return null;
 
   return (
-    <div className="flex items-center gap-0.5 rounded-lg border border-border bg-card shadow-sm p-1 mb-2">
-      <span className="text-[10px] text-muted-foreground font-medium px-1.5">Table</span>
-      <div className="w-px h-4 bg-border mx-0.5" />
-
-      <button
-        type="button"
+    <div
+      className="absolute z-40 flex gap-1 items-center rounded-lg border border-border bg-card shadow-lg p-2 flex-wrap max-w-2xl"
+      style={{
+        top: `${position.top}px`,
+        left: `${position.left}px`,
+        pointerEvents: "auto",
+        maxWidth: "600px",
+      }}
+    >
+      {/* Columns */}
+      <Button
+        size="sm"
+        variant="outline"
+        disabled={columnCount >= 8}
         onMouseDown={(e) => {
           e.preventDefault();
           editor.chain().focus().addColumnBefore().run();
         }}
-        className={btnClass}
-        title="Add column before"
+        title={columnCount >= 8 ? "Maximum 8 columns reached" : "Add column before (left)"}
+        className="h-8 px-2 text-xs whitespace-nowrap"
       >
-        <ArrowLeft size={14} />
-      </button>
-      <button
-        type="button"
+        <Plus size={14} className="mr-1" />
+        Before
+      </Button>
+
+      <Button
+        size="sm"
+        variant="outline"
+        disabled={columnCount >= 8}
         onMouseDown={(e) => {
           e.preventDefault();
           editor.chain().focus().addColumnAfter().run();
         }}
-        className={btnClass}
-        title="Add column after"
+        title={columnCount >= 8 ? "Maximum 8 columns reached" : "Add column after (right)"}
+        className="h-8 px-2 text-xs whitespace-nowrap"
       >
-        <ArrowRight size={14} />
-      </button>
-      <button
-        type="button"
+        <Plus size={14} className="mr-1" />
+        After
+      </Button>
+
+      <Button
+        size="sm"
+        variant="outline"
         onMouseDown={(e) => {
           e.preventDefault();
           editor.chain().focus().deleteColumn().run();
         }}
-        className={btnClass}
         title="Delete column"
+        className="h-8 px-2 text-xs whitespace-nowrap"
       >
-        <Minus size={14} />
-      </button>
+        <Trash2 size={14} className="mr-1" />
+        Col
+      </Button>
 
-      <div className="w-px h-4 bg-border mx-0.5" />
+      {/* Separator */}
+      <div className="w-px h-5 bg-border mx-1" />
 
-      <button
-        type="button"
+      {/* Rows */}
+      <Button
+        size="sm"
+        variant="outline"
         onMouseDown={(e) => {
           e.preventDefault();
           editor.chain().focus().addRowBefore().run();
         }}
-        className={btnClass}
         title="Add row above"
+        className="h-8 px-2 text-xs whitespace-nowrap"
       >
-        <ArrowUp size={14} />
-      </button>
-      <button
-        type="button"
+        <ArrowUp size={14} className="mr-1" />
+        Above
+      </Button>
+
+      <Button
+        size="sm"
+        variant="outline"
         onMouseDown={(e) => {
           e.preventDefault();
           editor.chain().focus().addRowAfter().run();
         }}
-        className={btnClass}
         title="Add row below"
+        className="h-8 px-2 text-xs whitespace-nowrap"
       >
-        <ArrowDown size={14} />
-      </button>
-      <button
-        type="button"
+        <ArrowDown size={14} className="mr-1" />
+        Below
+      </Button>
+
+      <Button
+        size="sm"
+        variant="outline"
         onMouseDown={(e) => {
           e.preventDefault();
           editor.chain().focus().deleteRow().run();
         }}
-        className={btnClass}
         title="Delete row"
+        className="h-8 px-2 text-xs whitespace-nowrap"
       >
-        <Minus size={14} />
-      </button>
+        <Trash2 size={14} className="mr-1" />
+        Row
+      </Button>
 
-      <div className="w-px h-4 bg-border mx-0.5" />
+      {/* Separator */}
+      <div className="w-px h-5 bg-border mx-1" />
 
-      <button
-        type="button"
+      {/* Headers */}
+      <Button
+        size="sm"
+        variant="outline"
         onMouseDown={(e) => {
           e.preventDefault();
           editor.chain().focus().toggleHeaderRow().run();
         }}
-        className={`${btnClass} text-xs font-medium`}
         title="Toggle header row"
+        className="h-8 px-2 text-xs whitespace-nowrap"
       >
-        H
-      </button>
+        Row Header
+      </Button>
 
-      <div className="w-px h-4 bg-border mx-0.5" />
-
-      <button
-        type="button"
+      <Button
+        size="sm"
+        variant="outline"
+        disabled={!editor.can().toggleHeaderColumn()}
         onMouseDown={(e) => {
           e.preventDefault();
-          editor.chain().focus().deleteTable().run();
+          editor.chain().focus().toggleHeaderColumn().run();
         }}
-        className="p-1 rounded hover:bg-destructive/20 transition text-muted-foreground hover:text-destructive"
-        title="Delete table"
+        title="Toggle header column"
+        className="h-8 px-2 text-xs whitespace-nowrap"
       >
-        <Trash2 size={14} />
-      </button>
+        Col Header
+      </Button>
     </div>
   );
 }
