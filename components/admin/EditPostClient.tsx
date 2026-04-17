@@ -204,48 +204,50 @@ export default function EditPostClient({ userRole = "EDITOR" }: { userRole?: str
     };
   }, [postId, isLoading]);
 
-  // Poll lock status every 10s while actively editing — detects takeover before next heartbeat
-  useEffect(() => {
-    if (isLoading || lockBlocked) return;
-
-    const poll = setInterval(async () => {
-      try {
-        const res = await fetch(`/api/posts/${postId}/lock`);
-        if (res.status === 409) {
-          clearInterval(poll);
-          const data = await res.json();
-          setLockBlocked(true);
-          setLockBlockedBy(data.lockedByEmail || "an admin");
-          setWasEvicted(true);
-          toast.error("An admin has taken over this post. Your session is now read-only.");
-        }
-      } catch {
-        // Network error — keep polling
-      }
-    }, 10_000);
-
-    return () => clearInterval(poll);
-  }, [isLoading, lockBlocked, postId]);
-
   // Auto-retry lock acquisition when blocked, in case the lock expires (but not after eviction)
+  // With error backoff: pause 60s after 3 consecutive failures
   useEffect(() => {
     if (!lockBlocked || wasEvicted) return;
 
-    const retryInterval = setInterval(async () => {
+    let consecutiveErrors = 0;
+    let retryInterval: ReturnType<typeof setInterval>;
+
+    async function attemptRetry() {
       try {
         const res = await fetch(`/api/posts/${postId}/lock`, { method: "POST" });
         if (res.ok) {
+          consecutiveErrors = 0; // Reset error counter on success
           toast.success("Post is now available — you can start editing.");
           if (typeof Notification !== "undefined" && Notification.permission === "granted") {
             new Notification("Post unlocked", { body: "You can now start editing." });
           }
           setLockBlocked(false);
           setLockBlockedBy("");
+        } else if (res.status >= 500) {
+          // Server error — increment counter and check if we should backoff
+          consecutiveErrors++;
+          if (consecutiveErrors >= 3) {
+            // Pause for 60s after 3 consecutive errors
+            clearInterval(retryInterval);
+            setTimeout(() => {
+              retryInterval = setInterval(attemptRetry, 15_000);
+            }, 60_000);
+          }
         }
       } catch {
-        // Network error — retry again next interval
+        // Network error — increment counter
+        consecutiveErrors++;
+        if (consecutiveErrors >= 3) {
+          // Pause for 60s after 3 consecutive errors
+          clearInterval(retryInterval);
+          setTimeout(() => {
+            retryInterval = setInterval(attemptRetry, 15_000);
+          }, 60_000);
+        }
       }
-    }, 5_000);
+    }
+
+    retryInterval = setInterval(attemptRetry, 15_000);
 
     return () => clearInterval(retryInterval);
   }, [lockBlocked, postId]);
