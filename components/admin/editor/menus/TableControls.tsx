@@ -44,7 +44,7 @@ export default function TableControls({ editor }: TableControlsProps) {
         setColumnCount(cols);
 
         // Always position above the table for better UX
-        let top = coords.top - editorRect.top - toolbarHeight - 28;
+        let top = coords.top - editorRect.top - toolbarHeight - 56;
         let left = coords.left - editorRect.left;
 
         // If there's no room above, show it with minimum offset from top
