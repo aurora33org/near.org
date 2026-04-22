@@ -56,9 +56,19 @@ export default function PostRenderer({
       <div style={heroStyle}>
         <div className="max-w-4xl mx-auto px-4 pt-16 pb-12">
           {layout === "public" ? (
-            <Link href="/blog" className={`text-sm ${textColorClass} opacity-70 hover:opacity-100 mb-6 block transition`}>
-              Blog
-            </Link>
+            <div className={`text-sm ${textColorClass} opacity-70 mb-6 flex items-center gap-1`}>
+              <Link href="/blog" className="hover:opacity-100 transition">
+                Blog
+              </Link>
+              {post.categories.length > 0 && (
+                <>
+                  <span className="opacity-40">›</span>
+                  <Link href={`/blog/category/${post.categories[0].slug}`} className="hover:opacity-100 transition">
+                    {post.categories[0].name}
+                  </Link>
+                </>
+              )}
+            </div>
           ) : (
             <div className="flex items-center gap-3 mb-6">
               <span className={`text-sm ${textColorClass} opacity-70`}>Blog</span>
@@ -70,32 +80,13 @@ export default function PostRenderer({
 
           <h1 className={`text-5xl font-bold mb-4 ${textColorClass}`}>{post.title}</h1>
 
-          {showCategoryLinks && layout === "public" && post.categories.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-4">
-              {post.categories.map((cat) => (
-                <Link
-                  key={cat.id}
-                  href={`/blog/category/${cat.slug}`}
-                  className="text-xs bg-opacity-20 bg-blue-500 text-blue-700 px-2 py-1 rounded hover:bg-opacity-30 transition"
-                >
-                  {cat.name}
-                </Link>
-              ))}
-            </div>
-          )}
-
           <p className={`text-sm ${textColorClass} opacity-70 mb-8`}>
             {new Date(displayDate).toLocaleDateString("en-US", {
               year: "numeric",
               month: "long",
               day: "numeric",
             })}
-            {layout === "admin" ? " (last updated)" : ""}
-            {showAuthor && layout === "public" && (
-              <>
-                {" "}· {post.author.name} · {readTime}
-              </>
-            )}
+            {layout === "admin" ? " (last updated)" : ` · ${readTime}`}
           </p>
 
           {post.coverImage && (
