@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ChevronLeft, ChevronRight, X, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const STORAGE_KEY = "onboarding_posts_page_seen";
@@ -10,14 +11,10 @@ interface TourStep {
   targetSelector: string;
   title: string;
   body: string;
+  isCta?: boolean;
 }
 
 const TOUR_STEPS: TourStep[] = [
-  {
-    targetSelector: '[data-posts-tour-id="new-post"]',
-    title: "Create a new post",
-    body: "Click here to open the editor and start writing your first blog post.",
-  },
   {
     targetSelector: '[data-posts-tour-id="filter-bar"]',
     title: "Search and filter",
@@ -33,6 +30,12 @@ const TOUR_STEPS: TourStep[] = [
     title: "Post actions",
     body: "Edit, duplicate, or delete individual posts. Select multiple rows to bulk publish, archive, or delete.",
   },
+  {
+    targetSelector: '[data-posts-tour-id="new-post"]',
+    title: "¡Prueba crear tu primer post!",
+    body: "Ya conoces todo. Dale click al botón para abrir el editor y empieza a escribir.",
+    isCta: true,
+  },
 ];
 
 interface SpotlightRect {
@@ -43,6 +46,7 @@ interface SpotlightRect {
 }
 
 export function PostsPageTour() {
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [show, setShow] = useState(false);
   const [step, setStep] = useState(0);
@@ -60,6 +64,21 @@ export function PostsPageTour() {
     localStorage.setItem(STORAGE_KEY, "true");
     setShow(false);
   };
+
+  const goToEditor = () => {
+    dismiss();
+    router.push("/admin/posts/new");
+  };
+
+  // When on the last (CTA) step, clicking the highlighted button should also dismiss
+  useEffect(() => {
+    const isCtaStep = TOUR_STEPS[step]?.isCta;
+    if (!show || !isCtaStep) return;
+    const btn = document.querySelector('[data-posts-tour-id="new-post"]') as HTMLElement | null;
+    if (!btn) return;
+    btn.addEventListener("click", dismiss);
+    return () => btn.removeEventListener("click", dismiss);
+  }, [show, step]);
 
   const currentStep = TOUR_STEPS[step];
 
@@ -137,7 +156,7 @@ export function PostsPageTour() {
 
   return (
     <>
-      {/* Spotlight */}
+      {/* Spotlight — pointer-events: none so the highlighted element stays clickable */}
       <div
         style={{
           position: "fixed",
@@ -182,21 +201,41 @@ export function PostsPageTour() {
 
         <p className="text-sm text-muted-foreground">{currentStep.body}</p>
 
-        <div className="flex gap-2 pt-1">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setStep((s) => s - 1)}
-            disabled={step === 0}
-          >
-            <ChevronLeft className="w-4 h-4" />
-            Back
-          </Button>
-          <Button size="sm" className="flex-1" onClick={isLast ? dismiss : () => setStep((s) => s + 1)}>
-            {isLast ? "Done" : "Next"}
-            {!isLast && <ChevronRight className="w-4 h-4 ml-1" />}
-          </Button>
-        </div>
+        {currentStep.isCta ? (
+          /* CTA step: prominent action button */
+          <div className="flex flex-col gap-2 pt-1">
+            <Button size="sm" className="w-full gap-2" onClick={goToEditor}>
+              Crear mi primer post
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full text-muted-foreground"
+              onClick={() => setStep((s) => s - 1)}
+            >
+              <ChevronLeft className="w-4 h-4 mr-1" />
+              Volver
+            </Button>
+          </div>
+        ) : (
+          /* Normal navigation */
+          <div className="flex gap-2 pt-1">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setStep((s) => s - 1)}
+              disabled={step === 0}
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Back
+            </Button>
+            <Button size="sm" className="flex-1" onClick={() => setStep((s) => s + 1)}>
+              Next
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </Button>
+          </div>
+        )}
       </div>
     </>
   );
