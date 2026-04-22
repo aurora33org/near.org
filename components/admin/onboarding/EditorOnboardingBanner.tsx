@@ -10,8 +10,8 @@ interface EditorOnboardingBannerProps {
 
 const EDITOR_STEPS = [
   {
-    title: "Dale un título a tu post",
-    body: "Haz click en el área grande de arriba y escribe el headline de tu primer post.",
+    title: "El título es obligatorio",
+    body: "Haz click en el área grande y escribe un headline para tu post. Sin título no podrás guardar ni publicar.",
     highlightTarget: "title",
   },
   {
@@ -31,18 +31,68 @@ const EDITOR_STEPS = [
     highlightTarget: "editor",
   },
   {
+    title: "Featured Image",
+    body: "Esta imagen aparece en la portada del blog cuando la gente ve el listado de posts. También se usa en redes sociales. Es el primer elemento visual que la gente ve antes de hacer click.",
+    highlightTarget: "featured",
+    tab: "post",
+  },
+  {
+    title: "Categorías y Tags",
+    body: "Los tags y categorías ayudan a organizar tu contenido. Los visitantes pueden filtrar posts por estas etiquetas. Son opcionales pero recomendados para mejor navegabilidad.",
+    highlightTarget: "categories",
+    tab: "post",
+  },
+  {
+    title: "SEO: Excerpt (resumen)",
+    body: "El excerpt es la descripción corta que aparece debajo del título en Google, redes sociales y en el listado de posts. Máximo 160 caracteres para que no se corte.",
+    highlightTarget: "seo",
+    tab: "seo",
+  },
+  {
+    title: "SEO: Título y descripción",
+    body: "El 'SEO Title' es lo que aparece en Google (máx. 60 caracteres). La 'Meta description' es el texto debajo (máx. 160 caracteres). Si no completas, usamos el título y excerpt del post.",
+    highlightTarget: "seo-fields",
+    tab: "seo",
+  },
+  {
+    title: "Settings avanzados",
+    body: "Aquí configuras el Hero background (fondo del header), la URL personalizada del post, la fecha de publicación para programar posts, y la imagen para Open Graph en redes.",
+    highlightTarget: "settings",
+    tab: "settings",
+  },
+  {
     title: "Guarda tu trabajo",
     body: "Usa `Cmd+S` para guardar rápido. El CMS guarda automáticamente cada 30 segundos. Cuando estés listo, publica tu post.",
     highlightTarget: "actions",
   },
 ];
 
-export function EditorOnboardingBanner({ onDismiss }: EditorOnboardingBannerProps) {
+interface EditorOnboardingStep {
+  title: string;
+  body: string;
+  highlightTarget: string;
+  showSlashHint?: boolean;
+  tab?: "post" | "seo" | "settings";
+}
+
+interface EditorOnboardingBannerProps {
+  onDismiss: () => void;
+  onTabChange?: (tab: "post" | "seo" | "settings") => void;
+}
+
+export function EditorOnboardingBanner({ onDismiss, onTabChange }: EditorOnboardingBannerProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [highlightedElement, setHighlightedElement] = useState<HTMLElement | null>(null);
 
-  const step = EDITOR_STEPS[currentStep];
+  const step = EDITOR_STEPS[currentStep] as EditorOnboardingStep;
   const isLastStep = currentStep === EDITOR_STEPS.length - 1;
+
+  // Change tab if step requires it
+  useEffect(() => {
+    if (step.tab && onTabChange) {
+      onTabChange(step.tab);
+    }
+  }, [currentStep, step, onTabChange]);
 
   // Update highlight on step change
   useEffect(() => {
@@ -57,6 +107,16 @@ export function EditorOnboardingBanner({ onDismiss }: EditorOnboardingBannerProp
       selector = '[data-editor-highlight="title"]';
     } else if (step.highlightTarget === "editor") {
       selector = '[data-editor-highlight="editor"]';
+    } else if (step.highlightTarget === "featured") {
+      selector = '[data-editor-highlight="featured"]';
+    } else if (step.highlightTarget === "categories") {
+      selector = '[data-editor-highlight="categories"]';
+    } else if (step.highlightTarget === "seo") {
+      selector = '[data-editor-highlight="seo"]';
+    } else if (step.highlightTarget === "seo-fields") {
+      selector = '[data-editor-highlight="seo-fields"]';
+    } else if (step.highlightTarget === "settings") {
+      selector = '[data-editor-highlight="settings"]';
     } else if (step.highlightTarget === "actions") {
       selector = '[data-editor-highlight="actions"]';
     }
@@ -66,6 +126,8 @@ export function EditorOnboardingBanner({ onDismiss }: EditorOnboardingBannerProp
       if (element) {
         element.classList.add("ring-2", "ring-primary/50", "ring-offset-2");
         setHighlightedElement(element);
+        // Scroll into view if needed
+        element.scrollIntoView({ behavior: "smooth", block: "nearest" });
       }
     }
   }, [currentStep, step, highlightedElement]);
