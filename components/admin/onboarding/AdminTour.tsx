@@ -130,7 +130,7 @@ export function AdminTour({ userName }: { userName: string }) {
 
   // Keyboard navigation
   useEffect(() => {
-    if (!onboarding.showTour) return;
+    if (!onboarding.showTour || onboarding.showWelcome) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {

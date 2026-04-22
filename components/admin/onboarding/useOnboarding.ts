@@ -21,7 +21,8 @@ export function useOnboarding() {
     const editorSeen = localStorage.getItem("onboarding_editor_seen") === "true";
 
     setShowWelcome(!welcomeSeen);
-    setShowTour(!tourSeen && welcomeSeen === false); // Tour only if welcome not seen
+    // Tour shows only if welcome was already dismissed in a previous session
+    setShowTour(welcomeSeen && !tourSeen);
     setTourStep(savedStep);
     setShowEditorGuide(!editorSeen);
   }, []);

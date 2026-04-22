@@ -21,8 +21,13 @@ export function WelcomeModal({ userName, open, onTakeTour, onSkip }: WelcomeModa
   const firstName = userName.split(" ")[0];
 
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onSkip()}>
-      <DialogContent className="sm:max-w-md">
+    <Dialog open={open} onOpenChange={() => {}}>
+      <DialogContent
+        className="sm:max-w-md"
+        onEscapeKeyDown={(e) => e.preventDefault()}
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>Welcome to NEAR CMS, {firstName}! 👋</DialogTitle>
           <DialogDescription>
