@@ -4,6 +4,7 @@ import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
 import { Settings, LogOut, ExternalLink, ChevronUp } from "lucide-react";
+import { LogoutConfirmationModal } from "@/components/admin/LogoutConfirmationModal";
 
 interface SidebarProfileMenuProps {
   userName: string;
@@ -14,6 +15,7 @@ interface SidebarProfileMenuProps {
 
 export function SidebarProfileMenu({ userName, role, collapsed = false }: SidebarProfileMenuProps) {
   const [open, setOpen] = useState(false);
+  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -64,7 +66,7 @@ export function SidebarProfileMenu({ userName, role, collapsed = false }: Sideba
             </a>
             <div className="my-1 border-t border-border" />
             <button
-              onClick={() => signOut({ callbackUrl: "/admin/login" })}
+              onClick={() => setLogoutConfirmOpen(true)}
               className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-destructive hover:bg-destructive/10 transition"
             >
               <LogOut className="w-4 h-4" />
@@ -107,6 +109,12 @@ export function SidebarProfileMenu({ userName, role, collapsed = false }: Sideba
           />
         </button>
       )}
+
+      <LogoutConfirmationModal
+        open={logoutConfirmOpen}
+        onOpenChange={setLogoutConfirmOpen}
+        onConfirm={() => signOut({ callbackUrl: "/admin/login" })}
+      />
     </div>
   );
 }
