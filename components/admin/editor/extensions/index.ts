@@ -14,7 +14,7 @@ import TextAlign from "@tiptap/extension-text-align";
 import { TextStyle } from "@tiptap/extension-text-style";
 import { Color } from "@tiptap/extension-color";
 import { Highlight } from "@tiptap/extension-highlight";
-import { common } from "lowlight";
+import { common, createLowlight } from "lowlight";
 import { SlashCommand } from "./SlashCommand";
 import { RawHtmlBlock } from "./RawHtmlBlock";
 import { ColumnLayout, Column } from "./ColumnLayout";
@@ -25,7 +25,7 @@ import { FindReplace } from "./FindReplace";
 import { Callout } from "./Callout";
 import { Footnote } from "./Footnote";
 
-const lowlight = common;
+const lowlight = createLowlight(common);
 
 export function getExtensions() {
   return [
