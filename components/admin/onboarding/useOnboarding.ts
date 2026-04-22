@@ -63,6 +63,7 @@ export function useOnboarding() {
     localStorage.removeItem("onboarding_admin_tour_seen");
     localStorage.removeItem("onboarding_admin_tour_step");
     localStorage.removeItem("onboarding_editor_seen");
+    localStorage.removeItem("onboarding_posts_page_seen");
 
     setShowWelcome(true);
     setShowTour(false);

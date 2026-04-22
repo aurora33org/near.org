@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { PostsBulkTable } from "./PostsBulkTable";
+import { PostsPageTour } from "@/components/admin/onboarding/PostsPageTour";
 
 const PAGE_SIZE = 20;
 const VALID_STATUSES = ["DRAFT", "PUBLISHED", "ARCHIVED"] as const;
@@ -65,17 +66,19 @@ export default async function PostsPage({
 
   return (
     <div className="space-y-8">
+      <PostsPageTour />
+
       <div className="flex justify-between items-center">
         <h1 className="text-4xl font-bold">Blog Posts</h1>
         {userRole !== "VIEWER" && (
-          <Button asChild>
+          <Button asChild data-posts-tour-id="new-post">
             <Link href="/admin/posts/new">+ New Post</Link>
           </Button>
         )}
       </div>
 
       {/* Filter bar */}
-      <form method="GET" className="flex items-center gap-3 flex-wrap">
+      <form method="GET" data-posts-tour-id="filter-bar" className="flex items-center gap-3 flex-wrap">
         <Input
           name="q"
           defaultValue={q ?? ""}
