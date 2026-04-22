@@ -7,7 +7,7 @@ import { extractExcerpt } from "@/lib/excerpt";
 import { extractHeadings } from "@/lib/extractHeadings";
 import TableOfContents from "@/components/(site)/TableOfContents";
 import ReadingProgressBar from "@/components/site/ReadingProgressBar";
-import ShareButtons from "@/components/site/ShareButtons";
+import ShareCard from "@/components/site/ShareCard";
 import PostRenderer from "@/components/blog/PostRenderer";
 
 export const revalidate = 60;
@@ -92,22 +92,26 @@ export default async function BlogPost({
       <ReadingProgressBar />
       <PostRenderer post={post} layout="public" />
 
-      {/* SHARE BUTTONS */}
-      <div className="max-w-3xl mx-auto px-4 py-0">
+      {/* TOC + SHARE — fixed position, wide desktop only */}
+      {showToc && (
+        <div className="hidden xl:flex xl:flex-col fixed right-8 top-24 w-52 z-50 gap-3 max-h-[calc(100vh-120px)] overflow-y-auto">
+          <TableOfContents headings={headings} />
+          <ShareCard
+            url={`https://near.org/blog/${post.slug}`}
+            title={post.title}
+          />
+        </div>
+      )}
+
+      {/* MOBILE SHARE — inline below article for mobile/tablet */}
+      <div className="xl:hidden max-w-3xl mx-auto px-4 py-0">
         <div className="border-t border-gray-200 mt-12 pt-8">
-          <ShareButtons
+          <ShareCard
             url={`https://near.org/blog/${post.slug}`}
             title={post.title}
           />
         </div>
       </div>
-
-      {/* TOC — floating, fixed position, wide desktop only */}
-      {showToc && (
-        <div className="hidden xl:block fixed right-8 top-24 w-52 z-40">
-          <TableOfContents headings={headings} />
-        </div>
-      )}
 
       {/* TAGS */}
       {post.tags.length > 0 && (
