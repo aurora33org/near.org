@@ -14,14 +14,7 @@ import TextAlign from "@tiptap/extension-text-align";
 import { TextStyle } from "@tiptap/extension-text-style";
 import { Color } from "@tiptap/extension-color";
 import { Highlight } from "@tiptap/extension-highlight";
-import { createLowlight } from "lowlight";
-import javascript from "highlight.js/lib/languages/javascript";
-import typescript from "highlight.js/lib/languages/typescript";
-import css from "highlight.js/lib/languages/css";
-import html from "highlight.js/lib/languages/xml";
-import python from "highlight.js/lib/languages/python";
-import bash from "highlight.js/lib/languages/bash";
-import json from "highlight.js/lib/languages/json";
+import { common } from "lowlight";
 import { SlashCommand } from "./SlashCommand";
 import { RawHtmlBlock } from "./RawHtmlBlock";
 import { ColumnLayout, Column } from "./ColumnLayout";
@@ -32,14 +25,7 @@ import { FindReplace } from "./FindReplace";
 import { Callout } from "./Callout";
 import { Footnote } from "./Footnote";
 
-const lowlight = createLowlight();
-lowlight.register("javascript", javascript);
-lowlight.register("typescript", typescript);
-lowlight.register("css", css);
-lowlight.register("html", html);
-lowlight.register("python", python);
-lowlight.register("bash", bash);
-lowlight.register("json", json);
+const lowlight = common;
 
 export function getExtensions() {
   return [
