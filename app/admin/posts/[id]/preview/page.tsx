@@ -32,7 +32,7 @@ export default async function PreviewPage({
         </Link>
       </div>
 
-      <PostRenderer post={post} layout="admin" showCategoryLinks={false} showAuthor={false} />
+      <PostRenderer post={post} layout="admin" />
     </div>
   );
 }

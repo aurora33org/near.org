@@ -32,8 +32,8 @@ const TOUR_STEPS: TourStep[] = [
   },
   {
     targetSelector: '[data-posts-tour-id="new-post"]',
-    title: "¡Prueba crear tu primer post!",
-    body: "Ya conoces todo. Dale click al botón para abrir el editor y empieza a escribir.",
+    title: "Ready to create your first post?",
+    body: "You now know everything. Click the button to open the editor and start writing.",
     isCta: true,
   },
 ];
@@ -152,8 +152,6 @@ export function PostsPageTour() {
 
   if (!mounted || !show || !spotlightRect || !cardPos || !currentStep) return null;
 
-  const isLast = step === TOUR_STEPS.length - 1;
-
   return (
     <>
       {/* Spotlight — pointer-events: none so the highlighted element stays clickable */}
@@ -205,7 +203,7 @@ export function PostsPageTour() {
           /* CTA step: prominent action button */
           <div className="flex flex-col gap-2 pt-1">
             <Button size="sm" className="w-full gap-2" onClick={goToEditor}>
-              Crear mi primer post
+              Create my first post
               <ArrowRight className="w-4 h-4" />
             </Button>
             <Button
@@ -215,7 +213,7 @@ export function PostsPageTour() {
               onClick={() => setStep((s) => s - 1)}
             >
               <ChevronLeft className="w-4 h-4 mr-1" />
-              Volver
+              Back
             </Button>
           </div>
         ) : (
