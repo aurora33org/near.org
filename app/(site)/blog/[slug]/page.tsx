@@ -92,14 +92,16 @@ export default async function BlogPost({
       <ReadingProgressBar />
       <PostRenderer post={post} layout="public" />
 
-      {/* TOC + SHARE — floating, fixed position, wide desktop only */}
+      {/* TOC + SHARE — sticky top, wide desktop only */}
       {showToc && (
-        <div className="hidden xl:flex xl:flex-col fixed right-8 top-24 w-52 z-40 gap-3">
-          <TableOfContents headings={headings} />
-          <ShareCard
-            url={`https://near.org/blog/${post.slug}`}
-            title={post.title}
-          />
+        <div className="hidden xl:block fixed right-8 top-24 w-52 z-40">
+          <div className="sticky top-24 flex flex-col gap-3">
+            <TableOfContents headings={headings} />
+            <ShareCard
+              url={`https://near.org/blog/${post.slug}`}
+              title={post.title}
+            />
+          </div>
         </div>
       )}
 
