@@ -10,59 +10,59 @@ interface EditorOnboardingBannerProps {
 
 const EDITOR_STEPS = [
   {
-    title: "El título es obligatorio",
-    body: "Haz click en el área grande y escribe un headline para tu post. Sin título no podrás guardar ni publicar.",
+    title: "Title is required",
+    body: "Click the large title area and write a headline for your post. Without a title, you won't be able to save or publish.",
     highlightTarget: "title",
   },
   {
-    title: "El menú `/` — tu herramienta principal",
-    body: "Escribe `/` al inicio de cualquier línea para ver el menú de bloques. Ahí encontrarás headings, imágenes, listas, callouts, tablas, código y más.",
+    title: "The `/` menu — your main tool",
+    body: "Type `/` at the start of any line to see the blocks menu. You'll find headings, images, lists, callouts, tables, code, and more.",
     highlightTarget: "editor",
     showSlashHint: true,
   },
   {
-    title: "Selecciona texto para formatearlo",
-    body: "Haz doble click en una palabra o selecciona un fragmento. Aparecerá una barra flotante donde puedes poner negrita, itálica, links, colores y cambiar el tipo de bloque.",
+    title: "Select text to format it",
+    body: "Double-click any word or select a fragment. A floating toolbar will appear where you can add bold, italic, links, colors, and change the block type.",
     highlightTarget: "editor",
   },
   {
-    title: "Arrastra para reordenar bloques",
-    body: "Pasa el cursor por el lado izquierdo de cualquier bloque para ver el handle (⋮⋮). Arrástralo para reorganizar. El botón `+` al lado inserta un bloque debajo.",
+    title: "Drag to reorder blocks",
+    body: "Hover over the left side of any block to see the handle (⋮⋮). Drag it to reorganize. The `+` button inserts a new block below.",
     highlightTarget: "editor",
   },
   {
     title: "Featured Image",
-    body: "Esta imagen aparece en la portada del blog cuando la gente ve el listado de posts. También se usa en redes sociales. Es el primer elemento visual que la gente ve antes de hacer click.",
+    body: "This image appears at the top when people see your blog posts. It's also used on social media. It's the first visual people see before clicking.",
     highlightTarget: "featured",
     tab: "post",
   },
   {
-    title: "Categorías y Tags",
-    body: "Los tags y categorías ayudan a organizar tu contenido. Los visitantes pueden filtrar posts por estas etiquetas. Son opcionales pero recomendados para mejor navegabilidad.",
+    title: "Categories and Tags",
+    body: "Tags and categories help organize your content. Visitors can filter posts by these labels. They're optional but recommended for better navigation.",
     highlightTarget: "categories",
     tab: "post",
   },
   {
-    title: "SEO: Excerpt (resumen)",
-    body: "El excerpt es la descripción corta que aparece debajo del título en Google, redes sociales y en el listado de posts. Máximo 160 caracteres para que no se corte.",
+    title: "SEO: Excerpt",
+    body: "The excerpt is the short description shown below the title in Google, social media, and post listings. Max 160 characters so it doesn't get cut off.",
     highlightTarget: "seo",
     tab: "seo",
   },
   {
-    title: "SEO: Título y descripción",
-    body: "El 'SEO Title' es lo que aparece en Google (máx. 60 caracteres). La 'Meta description' es el texto debajo (máx. 160 caracteres). Si no completas, usamos el título y excerpt del post.",
+    title: "SEO: Title and Meta Description",
+    body: "The 'SEO Title' is what appears in Google (max 60 chars). 'Meta Description' is the text below (max 160 chars). If you don't fill them, we use your post title and excerpt.",
     highlightTarget: "seo-fields",
     tab: "seo",
   },
   {
-    title: "Settings avanzados",
-    body: "Aquí configuras el Hero background (fondo del header), la URL personalizada del post, la fecha de publicación para programar posts, y la imagen para Open Graph en redes.",
+    title: "Advanced Settings",
+    body: "Configure the hero background (header background), custom post URL, publish date for scheduling, and the Open Graph image for social media.",
     highlightTarget: "settings",
     tab: "settings",
   },
   {
-    title: "Guarda tu trabajo",
-    body: "Usa `Cmd+S` para guardar rápido. El CMS guarda automáticamente cada 30 segundos. Cuando estés listo, publica tu post.",
+    title: "Save your work",
+    body: "Use `Cmd+S` to save quickly. The CMS auto-saves every 30 seconds. When you're ready, publish your post.",
     highlightTarget: "actions",
   },
 ];
@@ -172,7 +172,7 @@ export function EditorOnboardingBanner({ onDismiss, onTabChange }: EditorOnboard
         {/* Slash command hint */}
         {step.showSlashHint && (
           <div className="flex flex-wrap gap-2 mt-3 pt-2 border-t border-primary/20">
-            <p className="text-xs text-muted-foreground w-full">Ejemplos:</p>
+            <p className="text-xs text-muted-foreground w-full">Examples:</p>
             <div className="flex gap-2 flex-wrap">
               {[
                 { cmd: "/ heading", icon: "H1" },
@@ -200,10 +200,10 @@ export function EditorOnboardingBanner({ onDismiss, onTabChange }: EditorOnboard
             className="gap-1"
           >
             <ChevronLeft className="w-4 h-4" />
-            Atrás
+            Back
           </Button>
           <Button size="sm" onClick={handleNext} className="gap-1">
-            {isLastStep ? "Listo" : "Siguiente"}
+            {isLastStep ? "Done" : "Next"}
             {!isLastStep && <ChevronRight className="w-4 h-4" />}
           </Button>
         </div>
