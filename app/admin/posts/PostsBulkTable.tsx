@@ -107,7 +107,7 @@ export function PostsBulkTable({ posts, userRole }: PostsBulkTableProps) {
 
   return (
     <div className="relative">
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto" data-posts-tour-id="posts-table">
         <table className="w-full">
           <thead>
             <tr className="border-b bg-muted/30">
@@ -126,7 +126,7 @@ export function PostsBulkTable({ posts, userRole }: PostsBulkTableProps) {
               <th className="px-6 py-3 text-left font-medium text-sm">Author</th>
               <th className="px-6 py-3 text-left font-medium text-sm">Status</th>
               <th className="px-6 py-3 text-left font-medium text-sm">Created</th>
-              <th className="px-6 py-3 text-right font-medium text-sm">Actions</th>
+              <th className="px-6 py-3 text-right font-medium text-sm" data-posts-tour-id="post-actions">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y">

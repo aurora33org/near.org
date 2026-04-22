@@ -29,10 +29,13 @@ import { ArrowLeft, ImageIcon, X } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigationGuard } from "@/components/admin/NavigationGuardProvider";
 import { formatAdminDate } from "@/lib/utils";
+import { EditorOnboardingBanner } from "@/components/admin/onboarding/EditorOnboardingBanner";
+import { useOnboarding } from "@/components/admin/onboarding/useOnboarding";
 
 export default function NewPostClient() {
   const router = useRouter();
   const titleInputRef = useRef<HTMLDivElement>(null);
+  const onboarding = useOnboarding();
   const [isLoading, setIsLoading] = useState(false);
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
@@ -242,7 +245,7 @@ export default function NewPostClient() {
             </span>
           </div>
 
-          <div className="flex items-center gap-3 ml-4">
+          <div className="flex items-center gap-3 ml-4" data-editor-highlight="actions">
             {autosaveLabel && (
               <span className="text-xs text-muted-foreground hidden sm:block">{autosaveLabel}</span>
             )}
@@ -280,6 +283,14 @@ export default function NewPostClient() {
         {/* LEFT PANEL - Editor */}
         <div className="flex-1 flex flex-col overflow-auto bg-background">
           <div className="p-6 space-y-4 max-w-4xl mx-auto w-full">
+            {/* Onboarding guide banner */}
+            {onboarding.showEditorGuide && (
+              <EditorOnboardingBanner
+                onDismiss={onboarding.dismissEditorGuide}
+                onTabChange={(tab) => setActiveTab(tab)}
+              />
+            )}
+
             {/* Draft recovery banner */}
             {draftRecovery && (
               <div className="flex items-center justify-between gap-4 rounded-lg border border-amber-400/50 bg-amber-500/10 px-4 py-3">
@@ -300,6 +311,7 @@ export default function NewPostClient() {
               suppressContentEditableWarning
               onInput={(e) => { markDirty(); setTitle(e.currentTarget.textContent ?? ""); }}
               data-placeholder="Post title..."
+              data-editor-highlight="title"
               className="w-full text-3xl font-bold bg-transparent text-foreground focus:outline-none outline-none break-words empty:before:content-[attr(data-placeholder)] empty:before:text-muted-foreground empty:before:pointer-events-none"
             />
             <hr className="border-border" />
@@ -310,7 +322,7 @@ export default function NewPostClient() {
             </div>
 
             {/* Editor */}
-            <div className="mt-6">
+            <div className="mt-6" data-editor-highlight="editor">
               <BlockEditor
                 key={editorKey}
                 content={content}
@@ -346,7 +358,7 @@ export default function NewPostClient() {
             {activeTab === "post" && (
               <>
                 {/* Featured Image */}
-                <div className="space-y-2">
+                <div className="space-y-2" data-editor-highlight="featured">
                   <Label className="text-xs font-semibold uppercase tracking-wide">Featured Image</Label>
                   {coverImage ? (
                     <div className="relative">
@@ -459,7 +471,7 @@ export default function NewPostClient() {
                 </div>
 
                 {/* Categories */}
-                <div className="space-y-2">
+                <div className="space-y-2" data-editor-highlight="categories">
                   <Label className="text-xs font-semibold uppercase tracking-wide">Categories</Label>
                   {categories.length === 0 ? (
                     <p className="text-xs text-muted-foreground">
@@ -525,7 +537,7 @@ export default function NewPostClient() {
             {activeTab === "seo" && (
               <>
                 {/* Excerpt */}
-                <div className="space-y-2">
+                <div className="space-y-2" data-editor-highlight="seo">
                   <Label htmlFor="excerpt" className="text-xs font-semibold uppercase tracking-wide">Excerpt</Label>
                   <Textarea
                     id="excerpt"
@@ -541,7 +553,7 @@ export default function NewPostClient() {
                 </div>
 
                 {/* SEO */}
-                <div className="space-y-4 border-t border-border pt-6">
+                <div className="space-y-4 border-t border-border pt-6" data-editor-highlight="seo-fields">
                   <Label className="text-xs font-semibold uppercase tracking-wide">SEO</Label>
                   <div className="space-y-2">
                     <Label htmlFor="seoTitle" className="text-xs font-medium">SEO Title</Label>
@@ -630,6 +642,7 @@ export default function NewPostClient() {
 
             {activeTab === "settings" && (
               <>
+                <div data-editor-highlight="settings" className="space-y-6">
                 {/* Status */}
                 <div className="space-y-2">
                   <Label htmlFor="status" className="text-xs font-semibold uppercase tracking-wide">Status</Label>
@@ -683,6 +696,7 @@ export default function NewPostClient() {
                     className="bg-muted/30 border-border/70"
                   />
                   <div className="text-xs text-muted-foreground font-mono">/blog/{displaySlug}</div>
+                </div>
                 </div>
               </>
             )}

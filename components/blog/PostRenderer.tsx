@@ -22,15 +22,11 @@ interface PostRendererProps {
       slug: string;
     }>;
   };
-  showCategoryLinks?: boolean;
-  showAuthor?: boolean;
   layout?: "admin" | "public";
 }
 
 export default function PostRenderer({
   post,
-  showCategoryLinks = true,
-  showAuthor = true,
   layout = "public",
 }: PostRendererProps) {
   const content = post.content as any;

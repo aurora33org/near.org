@@ -48,6 +48,7 @@ export function SidebarProfileMenu({ userName, role, collapsed = false }: Sideba
           <div className="py-1">
             <Link
               href="/admin/settings"
+              data-tour-id="settings"
               onClick={() => setOpen(false)}
               className="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted/50 transition"
             >

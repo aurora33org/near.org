@@ -13,10 +13,13 @@ import {
   Settings,
   PanelLeftClose,
   PanelLeftOpen,
+  RotateCcw,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/admin/ThemeToggle";
 import { SidebarProfileMenu } from "@/components/admin/SidebarProfileMenu";
 import { useNavigationGuard } from "@/components/admin/NavigationGuardProvider";
+import { AdminTour } from "@/components/admin/onboarding/AdminTour";
+import { useOnboarding } from "@/components/admin/onboarding/useOnboarding";
 
 interface AdminSidebarProps {
   children: ReactNode;
@@ -49,11 +52,12 @@ export function AdminSidebar({ children, role, userName }: AdminSidebarProps) {
 
   const iconSize = "w-4 h-4";
 
-  const navLink = (href: string, label: string, icon: ReactNode, exact = false) => {
+  const navLink = (href: string, label: string, icon: ReactNode, exact = false, tourId?: string) => {
     const active = exact ? pathname === href : pathname.startsWith(href);
     return (
       <Link
         href={href}
+        data-tour-id={tourId}
         title={collapsed ? label : undefined}
         onClick={(e) => {
           if (isDirty) {
@@ -122,11 +126,11 @@ export function AdminSidebar({ children, role, userName }: AdminSidebarProps) {
 
         {/* Nav */}
         <nav className={`flex-1 py-4 space-y-1 px-3`}>
-          {navLink("/admin/dashboard",  "Dashboard",         <LayoutDashboard className={iconSize} />, true)}
-          {navLink("/admin/posts",      "Blog Posts",        <FileText        className={iconSize} />)}
+          {navLink("/admin/dashboard",  "Dashboard",         <LayoutDashboard className={iconSize} />, true, "dashboard")}
+          {navLink("/admin/posts",      "Blog Posts",        <FileText        className={iconSize} />, false, "posts")}
           {navLink("/admin/pages",      "Pages",             <Layers          className={iconSize} />)}
-          {navLink("/admin/media",      "Media Library",     <Image           className={iconSize} />, true)}
-          {navLink("/admin/categories", "Categories & Tags", <Tag             className={iconSize} />, true)}
+          {navLink("/admin/media",      "Media Library",     <Image           className={iconSize} />, true, "media")}
+          {navLink("/admin/categories", "Categories & Tags", <Tag             className={iconSize} />, true, "categories")}
           {role === "ADMIN" && (
             <>
               {sectionLabel("Management")}
@@ -138,6 +142,7 @@ export function AdminSidebar({ children, role, userName }: AdminSidebarProps) {
 
         {/* Footer */}
         <div className={`border-t border-border space-y-3 ${collapsed ? "p-2" : "p-4"}`}>
+          <RestartTourButton collapsed={collapsed} />
           <ThemeToggle collapsed={collapsed} />
           <SidebarProfileMenu userName={userName} role={role} collapsed={collapsed} />
         </div>
@@ -146,6 +151,38 @@ export function AdminSidebar({ children, role, userName }: AdminSidebarProps) {
       <main className="flex-1 overflow-auto bg-background">
         <div className="p-8">{children}</div>
       </main>
+
+      <AdminTour userName={userName} />
     </div>
+  );
+}
+
+function RestartTourButton({ collapsed }: { collapsed: boolean }) {
+  const onboarding = useOnboarding();
+
+  const handleRestart = () => {
+    onboarding.restartTour();
+  };
+
+  if (collapsed) {
+    return (
+      <button
+        onClick={handleRestart}
+        title="Restart tour"
+        className="w-full p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition flex items-center justify-center"
+      >
+        <RotateCcw className="w-4 h-4" />
+      </button>
+    );
+  }
+
+  return (
+    <button
+      onClick={handleRestart}
+      className="w-full px-3 py-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/50 transition flex items-center gap-3 text-sm"
+    >
+      <RotateCcw className="w-4 h-4 opacity-70" />
+      <span>Restart tour</span>
+    </button>
   );
 }

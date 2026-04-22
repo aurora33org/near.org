@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { useOnboarding } from "@/components/admin/onboarding/useOnboarding";
 
 interface CurrentUser {
   id: string;
@@ -13,6 +15,8 @@ interface CurrentUser {
 }
 
 export default function SettingsPage() {
+  const router = useRouter();
+  const onboarding = useOnboarding();
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
 
@@ -223,6 +227,25 @@ export default function SettingsPage() {
             {isLoadingPassword ? "Updating…" : "Update Password"}
           </Button>
         </form>
+      </div>
+
+      {/* Onboarding Section */}
+      <div className="bg-card border border-border rounded-xl p-6 space-y-4">
+        <h2 className="text-lg font-semibold">Onboarding</h2>
+        <p className="text-sm text-muted-foreground">
+          Replay the getting-started tour to revisit how this CMS works.
+        </p>
+        <Button
+          variant="outline"
+          className="w-full"
+          onClick={() => {
+            onboarding.restartTour();
+            router.push("/admin/dashboard");
+            toast.success("Tour restarted — head to the dashboard to begin.");
+          }}
+        >
+          Restart tour
+        </Button>
       </div>
     </div>
   );
