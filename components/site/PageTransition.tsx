@@ -23,5 +23,5 @@ export default function PageTransition({ children }: { children: React.ReactNode
     );
   }, [pathname]);
 
-  return <div ref={ref}>{children}</div>;
+  return <div ref={ref} style={{ isolation: 'isolate' }}>{children}</div>;
 }

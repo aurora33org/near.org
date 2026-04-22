@@ -92,9 +92,9 @@ export default async function BlogPost({
       <ReadingProgressBar />
       <PostRenderer post={post} layout="public" />
 
-      {/* TOC + SHARE — sticky top, wide desktop only */}
+      {/* TOC + SHARE — fixed position, wide desktop only */}
       {showToc && (
-        <div className="hidden xl:flex xl:flex-col fixed right-8 top-24 w-52 z-40 gap-3 max-h-[calc(100vh-120px)] overflow-y-auto">
+        <div className="hidden xl:flex xl:flex-col fixed right-8 top-24 w-52 z-50 gap-3 max-h-[calc(100vh-120px)] overflow-y-auto">
           <TableOfContents headings={headings} />
           <ShareCard
             url={`https://near.org/blog/${post.slug}`}
