@@ -45,6 +45,20 @@ export default function BlockEditor({ content, onChange, autosaveLabel }: BlockE
     }),
     content,
     immediatelyRender: false,
+    editorProps: {
+      transformPastedHTML(html) {
+        const wrapper = document.createElement("div");
+        wrapper.innerHTML = html;
+        wrapper.querySelectorAll<HTMLElement>("[style]").forEach((el) => {
+          el.style.removeProperty("color");
+          el.style.removeProperty("background-color");
+          if (!el.getAttribute("style")?.trim()) {
+            el.removeAttribute("style");
+          }
+        });
+        return wrapper.innerHTML;
+      },
+    },
     onUpdate: ({ editor }) => {
       onChange(editor.getJSON());
       const text = editor.getText().trim();
