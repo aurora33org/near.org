@@ -26,19 +26,25 @@ export default function PostRenderer({ post, layout = "public" }: PostRendererPr
   const displayDate = layout === "admin" ? post.updatedAt : post.publishedAt || post.updatedAt;
   const readTime = readingTime(content);
 
+  // Always use dark gradient as base — overlay ensures title is readable over any image
   const heroStyle: React.CSSProperties = post.heroBgImage
     ? { backgroundImage: `url(${post.heroBgImage})`, backgroundSize: "cover", backgroundPosition: "center" }
     : post.heroBgColor
       ? { backgroundColor: post.heroBgColor }
       : { background: "linear-gradient(135deg, #4c1d95 0%, #7c3aed 50%, #a855f7 100%)" };
 
-  const textColorClass = "text-white";
+  // When heroBgColor is set but unknown (could be light), fall back to foreground color
+  const textColorClass = post.heroBgColor && !post.heroBgImage ? "text-foreground" : "text-white";
 
   return (
     <>
       {/* HERO */}
-      <div style={heroStyle}>
-        <div className="max-w-4xl mx-auto px-6 pt-16 pb-12">
+      <div style={heroStyle} className="relative">
+        {/* Dark scrim over images so white text is always readable */}
+        {post.heroBgImage && (
+          <div className="absolute inset-0 bg-black/50" aria-hidden="true" />
+        )}
+        <div className="relative z-10 max-w-4xl mx-auto px-6 pt-16 pb-12">
           {layout === "public" ? (
             <div className={`text-sm ${textColorClass} opacity-70 mb-6 flex items-center gap-1`}>
               <Link href="/blog" className="hover:opacity-100 transition">Blog</Link>
@@ -71,7 +77,7 @@ export default function PostRenderer({ post, layout = "public" }: PostRendererPr
 
       {/* CONTENT */}
       <div className="max-w-3xl mx-auto px-6 py-12">
-        <div className="prose prose-lg prose-purple max-w-none">
+        <div className="prose prose-lg prose-purple max-w-none text-gray-900">
           {renderBlocks(content?.content ?? [], components)}
         </div>
       </div>
