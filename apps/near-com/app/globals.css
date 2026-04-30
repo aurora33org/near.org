@@ -1,7 +1,7 @@
 @import "tailwindcss";
-@source "../../packages/cms-core/components/**/*.tsx";
-@source "../../packages/cms-core/pages/**/*.tsx";
-@source "../../packages/cms-core/routes/**/*.tsx";
+@source "../../../packages/cms-core/components/**/*.tsx";
+@source "../../../packages/cms-core/pages/**/*.tsx";
+@source "../../../packages/cms-core/routes/**/*.tsx";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @plugin "@tailwindcss/typography";
