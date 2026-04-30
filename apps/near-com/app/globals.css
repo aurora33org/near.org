@@ -5,7 +5,7 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @plugin "@tailwindcss/typography";
-@import "../../packages/cms-core/styles/admin.css";
+@import "../../../packages/cms-core/styles/admin.css";
 
 :root {
   --background: oklch(1.0000 0 0);
