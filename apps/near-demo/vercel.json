@@ -1,6 +1,6 @@
 {
-  "buildCommand": "cd ../.. && pnpm turbo run build --filter=@near/near-org",
-  "outputDirectory": "apps/near-org/.next",
+  "buildCommand": "cd ../.. && pnpm turbo run build --filter=@near/near-demo",
+  "outputDirectory": "apps/near-demo/.next",
   "installCommand": "pnpm install --frozen-lockfile",
   "framework": "nextjs",
   "crons": [
