@@ -86,7 +86,7 @@ export async function POST(req: Request) {
   const url = `${process.env.R2_PUBLIC_URL}/${key}`;
 
   try {
-    const { prisma } = await import("@near/cms-core/lib/prisma");
+    const { prisma } = await import("@cms/lib/prisma");
     await prisma.media.create({
       data: { url, filename: file.name, mimeType: file.type, size: file.size },
     });

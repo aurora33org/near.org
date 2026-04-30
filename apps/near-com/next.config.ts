@@ -14,7 +14,7 @@ function getTrustedImageHostnames(): { protocol: "https"; hostname: string }[] {
       patterns.push({ protocol: "https", hostname });
     } catch {}
   }
-  return patterns;
+  return patterns.length > 0 ? patterns : [];
 }
 
 const nextConfig: NextConfig = {

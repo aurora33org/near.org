@@ -1,0 +1,12 @@
+{
+  "buildCommand": "cd ../.. && pnpm turbo run build --filter=@near/near-ai",
+  "outputDirectory": "apps/near-ai/.next",
+  "installCommand": "pnpm install --frozen-lockfile",
+  "framework": "nextjs",
+  "crons": [
+    {
+      "path": "/api/cron/publish-scheduled",
+      "schedule": "* * * * *"
+    }
+  ]
+}
