@@ -5,7 +5,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
-      "@near/cms-core/*": ["../../packages/cms-core/*"]
+      "@near/cms-core/*": ["../../packages/cms-core/*"],
+      "@cms/*": ["../../packages/cms-core/*"]
     },
     "incremental": true,
     "plugins": [{ "name": "next" }]

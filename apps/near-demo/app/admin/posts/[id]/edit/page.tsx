@@ -1,10 +1,1 @@
-import { auth } from "@near/cms-core/lib/auth";
-import { redirect } from "next/navigation";
-import EditPostClient from "@near/cms-core/components/admin/EditPostClient";
-
-export default async function EditPostPage() {
-  const session = await auth();
-  if ((session?.user as any)?.role === "VIEWER") redirect("/admin/posts");
-  const userRole = (session?.user as any)?.role || "VIEWER";
-  return <EditPostClient userRole={userRole} />;
-}
+export { default } from "@near/cms-core/pages/admin/posts/[id]/edit/page";

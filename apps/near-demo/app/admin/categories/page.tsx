@@ -1,14 +1,1 @@
-import { auth } from "@near/cms-core/lib/auth";
-import { CategoriesClient } from "./CategoriesClient";
-
-export default async function CategoriesPage() {
-  const session = await auth();
-  const role = (session?.user as any)?.role ?? "EDITOR";
-
-  return (
-    <div className="space-y-8">
-      <h1 className="text-4xl font-bold">Categories &amp; Tags</h1>
-      <CategoriesClient isAdmin={role === "ADMIN"} />
-    </div>
-  );
-}
+export { default } from "@near/cms-core/pages/admin/categories/page";
