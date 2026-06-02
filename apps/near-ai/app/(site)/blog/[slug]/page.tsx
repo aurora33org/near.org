@@ -67,7 +67,7 @@ export default async function BlogPost({ params }: { params: Promise<{ slug: str
           <div className="max-w-3xl mx-auto px-6 py-8">
             <p className="text-sm font-semibold text-gray-500 mb-3">Tags</p>
             <div className="flex flex-wrap gap-2">
-              {post.tags.map((tag) => (
+              {post!.tags.map((tag: { id: string; slug: string; name: string }) => (
                 <Link key={tag.id} href={`/blog/tag/${tag.slug}`}
                   className="text-sm bg-purple-50 text-purple-700 px-3 py-1 rounded-full hover:bg-purple-100 transition">
                   #{tag.name}
@@ -84,7 +84,7 @@ export default async function BlogPost({ params }: { params: Promise<{ slug: str
           <div className="max-w-6xl mx-auto px-6 py-16">
             <h2 className="text-2xl font-bold mb-8 text-gray-900">Related posts</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {related.map((p) => (
+              {related.map((p: { id: string; slug: string; title: string; coverImage: string | null; publishedAt: Date | null; author: { name: string | null } }) => (
                 <article key={p.id} className="group flex flex-col rounded-xl overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow">
                   <Link href={`/blog/${p.slug}`} className="block">
                     {p.coverImage ? (

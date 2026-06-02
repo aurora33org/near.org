@@ -96,7 +96,7 @@ export default async function BlogIndex({
             >
               All
             </Link>
-            {categories.map((cat) => (
+            {categories.map((cat: { id: string; name: string; slug: string }) => (
               <Link
                 key={cat.id}
                 href={`/blog?category=${cat.slug}`}
@@ -161,7 +161,7 @@ export default async function BlogIndex({
 
             {/* GRID — remaining posts */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {(page === 1 && !q && !category ? posts.slice(1) : posts).map((post) => {
+              {(page === 1 && !q && !category ? posts.slice(1) : posts).map((post: { id: string; slug: string; title: string; coverImage: string | null; publishedAt: Date | null; excerpt: string | null; content: unknown; categories: { name: string; slug: string }[] }) => {
                 const excerpt = post.excerpt || extractExcerpt(post.content);
                 const date = new Date(post.publishedAt!).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
                 return (

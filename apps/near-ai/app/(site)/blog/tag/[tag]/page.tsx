@@ -52,7 +52,7 @@ export default async function TagPage({ params, searchParams }: {
         ) : (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {posts.map((post) => {
+              {posts.map((post: { id: string; slug: string; title: string; coverImage: string | null; publishedAt: Date | null; excerpt: string | null; content: unknown; author: { name: string | null } }) => {
                 const excerpt = post.excerpt || extractExcerpt(post.content);
                 return (
                   <article key={post.id} className="group flex flex-col rounded-2xl overflow-hidden border border-gray-200 bg-white hover:shadow-lg transition-shadow">
