@@ -1,8 +1,7 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 export async function sendPasswordResetEmail(to: string, resetUrl: string) {
+  const resend = new Resend(process.env.RESEND_API_KEY);
   await resend.emails.send({
     from: "noreply@aurora33.online",
     to,
@@ -26,6 +25,7 @@ export async function sendPasswordResetEmail(to: string, resetUrl: string) {
 }
 
 export async function sendInvitationEmail(to: string, name: string, inviteUrl: string) {
+  const resend = new Resend(process.env.RESEND_API_KEY);
   await resend.emails.send({
     from: "noreply@aurora33.online",
     to,
