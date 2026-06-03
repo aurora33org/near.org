@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { renderBlocks, RenderComponents } from "@near/cms-core/lib/tiptap-renderer";
 import { readingTime } from "@near/cms-core/lib/readingTime";
+import SiteHeader from "@/components/site/SiteHeader";
 
 interface PostRendererProps {
   post: {
@@ -26,27 +27,31 @@ export default function PostRenderer({ post, layout = "public" }: PostRendererPr
   const displayDate = layout === "admin" ? post.updatedAt : post.publishedAt || post.updatedAt;
   const readTime = readingTime(content);
 
-  // Always use dark gradient as base — overlay ensures title is readable over any image
   const heroStyle: React.CSSProperties = post.heroBgImage
     ? { backgroundImage: `url(${post.heroBgImage})`, backgroundSize: "cover", backgroundPosition: "center" }
     : post.heroBgColor
       ? { backgroundColor: post.heroBgColor }
-      : { background: "linear-gradient(135deg, #4c1d95 0%, #7c3aed 50%, #a855f7 100%)" };
+      : { backgroundColor: "#101010" };
 
-  // When heroBgColor is set but unknown (could be light), fall back to foreground color
   const textColorClass = post.heroBgColor && !post.heroBgImage ? "text-foreground" : "text-white";
 
   return (
     <>
       {/* HERO */}
       <div style={heroStyle} className="relative">
-        {/* Dark scrim over images so white text is always readable */}
         {post.heroBgImage && (
           <div className="absolute inset-0 bg-black/50" aria-hidden="true" />
         )}
-        <div className="relative z-10 max-w-4xl mx-auto px-6 pt-16 pb-12">
+
+        {layout === "public" && (
+          <div className="relative z-10 mx-auto w-full max-w-[1920px] px-5 sm:px-10 lg:px-20">
+            <SiteHeader />
+          </div>
+        )}
+
+        <div className="relative z-10 max-w-4xl mx-auto px-6 pt-8 pb-12">
           {layout === "public" ? (
-            <div className={`text-sm ${textColorClass} opacity-70 mb-6 flex items-center gap-1`}>
+            <div className={`text-sm ${textColorClass} opacity-70 mb-6 flex items-center gap-1 font-mono`}>
               <Link href="/blog" className="hover:opacity-100 transition">Blog</Link>
               {post.categories.length > 0 && (
                 <>
@@ -63,21 +68,24 @@ export default function PostRenderer({ post, layout = "public" }: PostRendererPr
               <span className="bg-yellow-200 text-yellow-800 text-xs font-semibold px-2 py-0.5 rounded">DRAFT</span>
             </div>
           )}
-          <h1 className={`text-4xl lg:text-5xl font-bold mb-4 ${textColorClass} leading-tight`}>{post.title}</h1>
-          <p className={`text-sm ${textColorClass} opacity-70 mb-8`}>
+          <h1
+            className={`font-medium mb-4 ${textColorClass} leading-[1.05] tracking-tight`}
+            style={{ fontSize: "var(--font-size-h1)" }}
+          >{post.title}</h1>
+          <p className={`text-sm font-mono ${textColorClass} opacity-70 mb-8`}>
             {new Date(displayDate).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
             {layout === "admin" ? " (last updated)" : ` · ${readTime}`}
             {" · "}{post.author.name}
           </p>
           {post.coverImage && (
-            <img src={post.coverImage} alt={post.title} className="w-full rounded-xl object-cover" />
+            <img src={post.coverImage} alt={post.title} className="w-full rounded-[1rem] object-cover" />
           )}
         </div>
       </div>
 
       {/* CONTENT */}
       <div className="max-w-3xl mx-auto px-6 py-12">
-        <div className="prose prose-lg prose-purple max-w-none text-gray-900">
+        <div className="prose prose-lg max-w-none text-[#101010]">
           {renderBlocks(content?.content ?? [], components)}
         </div>
       </div>
