@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate --schema=../../packages/cms-core/prisma/schema.prisma && next build",
     "start": "next start",
     "lint": "next lint",
     "prisma:migrate": "cd ../../packages/cms-core && prisma migrate deploy",
