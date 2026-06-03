@@ -3,6 +3,8 @@ import Image from "next/image";
 import { prisma } from "@near/cms-core/lib/prisma";
 import { extractExcerpt } from "@near/cms-core/lib/excerpt";
 import { Metadata } from "next";
+import SiteHeader from "@/components/site/SiteHeader";
+import SiteFooter from "@/components/site/SiteFooter";
 
 export const revalidate = 60;
 
@@ -57,22 +59,30 @@ export default async function BlogIndex({
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
   return (
-    <div className="bg-white text-black">
-
+    <>
       {/* HERO */}
-      <section className="bg-gradient-to-br from-violet-950 via-purple-900 to-fuchsia-900 py-24 px-6">
-        <div className="max-w-4xl mx-auto text-center">
-          <p className="text-purple-300 text-xs tracking-widest uppercase font-mono mb-4">NEAR AI Blog</p>
-          <h1 className="text-4xl lg:text-6xl font-bold text-white leading-tight mb-6">
-            The future of AI<br className="hidden sm:block" /> is open
-          </h1>
-          <p className="text-purple-200 text-lg max-w-xl mx-auto">
-            Insights on private AI, confidential compute, and building the open web.
-          </p>
+      <section className="relative bg-[#101010] min-h-[420px] flex flex-col">
+        <div className="relative z-10 flex flex-col flex-1 mx-auto w-full max-w-[1920px] px-5 sm:px-10 lg:px-20">
+          <SiteHeader />
+          <div className="flex flex-col flex-1 justify-end pb-16 lg:pb-24">
+            <span className="font-mono text-[0.7rem] uppercase tracking-[0.3em] text-white/50 mb-4">NEAR AI BLOG</span>
+            <h1
+              className="text-white font-medium leading-[1.05] tracking-tight"
+              style={{ fontSize: "var(--font-size-h1)" }}
+            >
+              The future of AI<br className="hidden sm:block" /> is open
+            </h1>
+            <p
+              className="mt-4 text-white/60 font-mono max-w-[520px] leading-relaxed"
+              style={{ fontSize: "var(--font-size-body)" }}
+            >
+              Insights on private AI, confidential compute, and building the open web.
+            </p>
+          </div>
         </div>
       </section>
 
-      <div className="max-w-6xl mx-auto px-6 py-16">
+      <div className="mx-auto w-full max-w-[1920px] px-5 sm:px-10 lg:px-20 py-16">
 
         {/* SEARCH */}
         <form method="GET" className="mb-8">
@@ -81,7 +91,7 @@ export default async function BlogIndex({
             name="q"
             placeholder="Search posts..."
             defaultValue={q ?? ""}
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            className="w-full px-4 py-3 border border-[#CAC8C8] rounded-xl bg-white/80 text-[#101010] placeholder-[#5A5A5A]/60 focus:outline-none focus:border-[#101010] transition-colors"
           />
         </form>
 
@@ -90,8 +100,8 @@ export default async function BlogIndex({
           <div className="mb-10 flex flex-wrap gap-2">
             <Link
               href="/blog"
-              className={`px-4 py-2 rounded-full text-sm font-medium transition ${
-                !category ? "bg-purple-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              className={`px-4 py-2 rounded-full text-sm font-mono transition ${
+                !category ? "bg-[#101010] text-white" : "bg-[#ECECEC] text-[#5A5A5A] hover:bg-[#CAC8C8]"
               }`}
             >
               All
@@ -100,8 +110,8 @@ export default async function BlogIndex({
               <Link
                 key={cat.id}
                 href={`/blog?category=${cat.slug}`}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition ${
-                  category === cat.slug ? "bg-purple-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                className={`px-4 py-2 rounded-full text-sm font-mono transition ${
+                  category === cat.slug ? "bg-[#101010] text-white" : "bg-[#ECECEC] text-[#5A5A5A] hover:bg-[#CAC8C8]"
                 }`}
               >
                 {cat.name}
@@ -111,48 +121,82 @@ export default async function BlogIndex({
         )}
 
         {(q || category) && (
-          <p className="text-sm text-gray-500 mb-6">
+          <p className="text-sm font-mono text-[#5A5A5A] mb-6">
             {total} result{total !== 1 ? "s" : ""}{q && ` for "${q}"`}
           </p>
         )}
 
         {posts.length === 0 ? (
-          <div className="text-center py-24 text-gray-400">
+          <div className="text-center py-24 text-[#CAC8C8]">
             <p className="text-5xl mb-4">✦</p>
-            <p className="text-lg">No posts yet. Check back soon.</p>
+            <p className="font-mono text-[#5A5A5A]" style={{ fontSize: "var(--font-size-body)" }}>No posts yet. Check back soon.</p>
           </div>
         ) : (
           <>
-            {/* FEATURED — first post full-width */}
+            {/* FEATURED — Editorial 30/70 */}
             {page === 1 && !q && !category && posts[0] && (() => {
               const featured = posts[0];
               const excerpt = featured.excerpt || extractExcerpt(featured.content);
               return (
                 <Link href={`/blog/${featured.slug}`} className="group block mb-12">
-                  <article className="grid sm:grid-cols-2 gap-0 rounded-2xl overflow-hidden border border-gray-200 hover:shadow-2xl transition-shadow duration-300">
-                    <div className="relative aspect-[4/3] sm:aspect-auto bg-gradient-to-br from-purple-100 to-fuchsia-50">
+                  <article className="flex flex-col sm:flex-row rounded-[2rem] overflow-hidden border border-[#CAC8C8] hover:shadow-xl transition-shadow duration-300 min-h-[480px]">
+
+                    {/* IMAGE — 60% */}
+                    <div className="relative w-full sm:w-[60%] shrink-0 aspect-[16/9] sm:aspect-auto bg-[#CAC8C8]">
                       {featured.coverImage ? (
-                        <Image src={featured.coverImage} alt={featured.title} fill className="object-cover" sizes="(max-width: 640px) 100vw, 50vw" />
+                        <Image
+                          src={featured.coverImage}
+                          alt={featured.title}
+                          fill
+                          className="object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+                          sizes="(max-width: 640px) 100vw, 30vw"
+                        />
                       ) : (
                         <div className="absolute inset-0 flex items-center justify-center">
-                          <span className="text-purple-200 text-8xl">✦</span>
+                          <span className="text-[#e4e4e4] text-6xl">✦</span>
                         </div>
                       )}
                     </div>
-                    <div className="p-8 lg:p-12 flex flex-col justify-center bg-white">
-                      {featured.categories[0] && (
-                        <span className="text-xs font-semibold text-purple-600 uppercase tracking-widest mb-3">{featured.categories[0].name}</span>
+
+                    {/* CONTENT — 70%, separated by a thin line */}
+                    <div className="flex flex-col flex-1 bg-[#ECECEC] border-t sm:border-t-0 sm:border-l border-[#CAC8C8] px-8 lg:px-12 py-8 lg:py-10">
+
+                      {/* Top label row */}
+                      <div className="flex items-center gap-3 mb-6">
+                        <span className="font-mono text-[0.65rem] uppercase tracking-[0.3em] text-[#5A5A5A]">Featured</span>
+                        <span className="font-mono text-[0.65rem] text-[#CAC8C8]">·</span>
+                        <span className="font-mono text-[0.65rem] uppercase tracking-[0.3em] text-[#CAC8C8]">01</span>
+                        {featured.categories[0] && (
+                          <>
+                            <span className="font-mono text-[0.65rem] text-[#CAC8C8]">·</span>
+                            <span className="font-mono text-[0.65rem] uppercase tracking-[0.3em] text-[#CAC8C8]">{featured.categories[0].name}</span>
+                          </>
+                        )}
+                      </div>
+
+                      {/* Title */}
+                      <h2
+                        className="font-medium leading-[1.1] tracking-tight text-[#101010] group-hover:text-[#525252] transition-colors mb-5"
+                        style={{ fontSize: "var(--font-size-h2)" }}
+                      >{featured.title}</h2>
+
+                      {/* Excerpt */}
+                      {excerpt && (
+                        <p className="font-mono text-[#5A5A5A] leading-relaxed line-clamp-5 flex-1 mb-8" style={{ fontSize: "var(--font-size-body)" }}>
+                          {excerpt}
+                        </p>
                       )}
-                      <h2 className="text-2xl lg:text-3xl font-bold leading-snug text-gray-900 group-hover:text-purple-700 transition-colors mb-4">{featured.title}</h2>
-                      {excerpt && <p className="text-gray-500 leading-relaxed line-clamp-3 mb-6">{excerpt}</p>}
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-400">
+
+                      {/* Bottom meta row */}
+                      <div className="flex items-center justify-between pt-6 border-t border-[#CAC8C8]">
+                        <span className="font-mono text-[0.75rem] text-[#5A5A5A]">
                           {new Date(featured.publishedAt!).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
                         </span>
-                        <span className="text-sm font-semibold text-purple-600 group-hover:text-purple-800 transition-colors">
+                        <span className="font-mono text-[0.75rem] text-[#5A5A5A] group-hover:text-[#101010] transition-colors">
                           Read more →
                         </span>
                       </div>
+
                     </div>
                   </article>
                 </Link>
@@ -165,29 +209,29 @@ export default async function BlogIndex({
                 const excerpt = post.excerpt || extractExcerpt(post.content);
                 const date = new Date(post.publishedAt!).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
                 return (
-                  <article key={post.id} className="group flex flex-col rounded-2xl overflow-hidden border border-gray-200 bg-white hover:shadow-lg transition-shadow duration-300">
+                  <article key={post.id} className="group flex flex-col rounded-[1.5rem] overflow-hidden border border-[#CAC8C8] bg-[#ECECEC] hover:shadow-lg transition-shadow duration-300">
                     <Link href={`/blog/${post.slug}`} className="block overflow-hidden">
                       {post.coverImage ? (
-                        <div className="relative aspect-[16/9] w-full bg-purple-50">
+                        <div className="relative aspect-[16/9] w-full bg-[#CAC8C8]">
                           <Image src={post.coverImage} alt={post.title} fill className="object-cover transition-transform duration-500 group-hover:scale-105" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" />
                         </div>
                       ) : (
-                        <div className="aspect-[16/9] w-full bg-gradient-to-br from-violet-50 to-fuchsia-50 flex items-center justify-center">
-                          <span className="text-purple-200 text-4xl">✦</span>
+                        <div className="aspect-[16/9] w-full bg-[#CAC8C8] flex items-center justify-center">
+                          <span className="text-[#e4e4e4] text-4xl">✦</span>
                         </div>
                       )}
                     </Link>
                     <div className="flex flex-col flex-1 p-5">
                       {post.categories[0] && (
-                        <span className="text-xs font-semibold text-purple-500 uppercase tracking-wider mb-2">{post.categories[0].name}</span>
+                        <span className="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-[#5A5A5A] mb-2">{post.categories[0].name}</span>
                       )}
                       <Link href={`/blog/${post.slug}`}>
-                        <h2 className="text-base font-bold leading-snug text-gray-900 group-hover:text-purple-700 transition-colors mb-2 line-clamp-2">{post.title}</h2>
+                        <h2 className="font-medium leading-snug text-[#101010] group-hover:text-[#525252] transition-colors mb-2 line-clamp-2" style={{ fontSize: "var(--font-size-body)" }}>{post.title}</h2>
                       </Link>
-                      {excerpt && <p className="text-gray-500 text-sm leading-relaxed line-clamp-2 flex-1">{excerpt}</p>}
-                      <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
-                        <span className="text-xs text-gray-400">{date}</span>
-                        <Link href={`/blog/${post.slug}`} className="text-xs font-semibold text-purple-600 hover:text-purple-800 transition-colors">
+                      {excerpt && <p className="font-mono text-[0.8rem] text-[#5A5A5A] leading-relaxed line-clamp-2 flex-1">{excerpt}</p>}
+                      <div className="flex items-center justify-between mt-4 pt-4 border-t border-[#CAC8C8]">
+                        <span className="font-mono text-[0.75rem] text-[#5A5A5A]">{date}</span>
+                        <Link href={`/blog/${post.slug}`} className="font-mono text-[0.75rem] text-[#5A5A5A] hover:text-[#101010] transition-colors">
                           Read →
                         </Link>
                       </div>
@@ -202,14 +246,14 @@ export default async function BlogIndex({
               <div className="flex items-center justify-center gap-4 mt-16">
                 {page > 1 && (
                   <Link href={`/blog?page=${page - 1}${q ? `&q=${encodeURIComponent(q)}` : ""}${category ? `&category=${category}` : ""}`}
-                    className="px-5 py-2 border border-gray-200 rounded-xl text-sm font-medium hover:bg-gray-50 transition">
+                    className="px-5 py-2 border border-[#CAC8C8] rounded-xl font-mono text-sm text-[#5A5A5A] hover:bg-[#ECECEC] transition">
                     ← Previous
                   </Link>
                 )}
-                <span className="text-sm text-gray-400">Page {page} of {totalPages}</span>
+                <span className="font-mono text-sm text-[#5A5A5A]">Page {page} of {totalPages}</span>
                 {page < totalPages && (
                   <Link href={`/blog?page=${page + 1}${q ? `&q=${encodeURIComponent(q)}` : ""}${category ? `&category=${category}` : ""}`}
-                    className="px-5 py-2 border border-gray-200 rounded-xl text-sm font-medium hover:bg-gray-50 transition">
+                    className="px-5 py-2 border border-[#CAC8C8] rounded-xl font-mono text-sm text-[#5A5A5A] hover:bg-[#ECECEC] transition">
                     Next →
                   </Link>
                 )}
@@ -218,6 +262,8 @@ export default async function BlogIndex({
           </>
         )}
       </div>
-    </div>
+
+      <SiteFooter />
+    </>
   );
 }
