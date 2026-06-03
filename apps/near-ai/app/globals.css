@@ -8,6 +8,14 @@
 @import "../../../packages/cms-core/styles/admin.css";
 
 :root {
+  /* ── near-ai-v2 marketing tokens ───────────────────────── */
+  --color-muted: #5A5A5A;
+  --font-size-h1:   clamp(2rem, 0.5rem + 3.125vw, 4.25rem);
+  --font-size-h2:   clamp(1.75rem, 0.583rem + 2.43vw, 3.5rem);
+  --font-size-h3:   clamp(1.25rem, 0.417rem + 1.736vw, 2.5rem);
+  --font-size-body: clamp(1rem, 0.764rem + 0.3012vw, 1.125rem);
+
+  /* ── shadcn/ui tokens ───────────────────────────────────── */
   --background: oklch(1.0000 0 0);
   --foreground: oklch(0 0 0);
   --card: oklch(0.9784 0.0011 197.1387);
@@ -103,8 +111,8 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-mono);
+  --font-sans: var(--font-montreal);
+  --font-mono: var(--font-montreal-mono);
   --font-serif: var(--font-serif);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -119,4 +127,59 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* ── near-ai-v2 marketing animations & utilities ─────────── */
+
+.text-muted {
+  color: var(--color-muted);
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+[data-reveal-hero-h1] {
+  animation: fadeUp 0.75s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+}
+
+[data-reveal-hero-card]:nth-of-type(1) {
+  animation: fadeUp 0.75s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both;
+}
+
+[data-reveal-hero-card]:nth-of-type(2) {
+  animation: fadeUp 0.75s cubic-bezier(0.16, 1, 0.3, 1) 0.52s both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal-hero-h1],
+  [data-reveal-hero-card] {
+    animation: none;
+  }
+}
+
+.prose-policy ul {
+  list-style: disc;
+  padding-left: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.lucide-plus {
+  display: inline-block;
+  transform-origin: center;
+  transition: transform 500ms cubic-bezier(0.76, 0, 0.24, 1);
+  will-change: transform;
+}
+
+a:hover .lucide-plus,
+button:hover .lucide-plus {
+  transform: rotate(270deg);
 }
