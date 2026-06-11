@@ -19,6 +19,7 @@ function getTrustedImageHostnames(): { protocol: "https"; hostname: string }[] {
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  serverExternalPackages: ["@prisma/client", ".prisma/client"],
   transpilePackages: ["@near/cms-core"],
   images: {
     remotePatterns: getTrustedImageHostnames(),
