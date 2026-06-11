@@ -35,13 +35,11 @@ const NAV_COLS = [
     title: "Terms and Policies",
     hidden: false,
     links: [
-      { label: "Privacy Policy", href: "/terms-and-policies/privacy-policy" },
-      { label: "NEAR AI Services Terms of Service", href: "/terms-and-policies/terms-of-service" },
-      { label: "Agent Market Terms of Service", href: "/terms-and-policies/near-ai-agent-market-terms-of-service" },
-      { label: "NEAR AI Cloud Terms of Service", href: "/terms-and-policies/near-ai-cloud-terms-of-service" },
-      { label: "Data Processing Agreement", href: "/terms-and-policies/near-ai-data-processing-agreement-for-customers" },
-      { label: "Cookie Policy", href: "/terms-and-policies/cookie-policy" },
-      { label: "Acceptable Use Policy", href: "/terms-and-policies/acceptable-use-policy" },
+      { label: "Privacy Policy", href: "/privacy-policy" },
+      { label: "NEAR AI Cloud Terms of Service", href: "/near-ai-cloud-terms-of-service" },
+      { label: "NEAR AI Private Chat Terms of Service", href: "/terms-of-service" },
+      { label: "Acceptable Use Policy", href: "/acceptable-use-policy" },
+      { label: "Cookie Policy", href: "/cookie-policy" },
     ],
   },
 ];

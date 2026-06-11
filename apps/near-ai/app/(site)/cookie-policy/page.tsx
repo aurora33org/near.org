@@ -78,7 +78,7 @@ export default function CookiePolicyPage() {
                   <p>(collectively, the &lsquo;Website&rsquo; or &lsquo;Websites&rsquo;).</p>
                   <p>This Cookie Policy primarily applies to our public marketing website (www.near.ai). Authenticated product interfaces (cloud.near.ai and private-chat.near.ai) use only strictly necessary cookies required for security and functionality and do not use third-party advertising cookies.</p>
                   <p>This Cookie Policy forms part of our broader Privacy Policy, which explains how we collect, use, and share your Personal Data (as defined therein). We are committed to handling your information in accordance with applicable privacy and data protection laws in the United States, the European Union, the United Kingdom, and other relevant jurisdictions.</p>
-                  <p>For how we process personal data more generally, see our <a href="/terms-and-policies/privacy-policy" className="text-[#101010] underline decoration-[#CAC8C8] underline-offset-2">here</a>.</p>
+                  <p>For how we process personal data more generally, see our <a href="/privacy-policy" className="text-[#101010] underline decoration-[#CAC8C8] underline-offset-2">here</a>.</p>
 
                   {/* Mobile TOC */}
                   <div className="lg:hidden mt-4 border border-[#CAC8C8] rounded-2xl p-6 flex flex-col gap-2">
@@ -231,7 +231,7 @@ export default function CookiePolicyPage() {
                 {/* Section 11 */}
                 <Section id="section-11" number="11" title="Contact Us">
                   <p>If you have any inquiries or concerns regarding this Policy, please do not hesitate to contact us at:</p>
-                  <p>Email: <a href="mailto:operations@nearprime.com" className="text-[#101010] underline decoration-[#CAC8C8] underline-offset-2">operations@nearprime.com</a> and <a href="mailto:legal@near.ai" className="text-[#101010] underline decoration-[#CAC8C8] underline-offset-2">legal@near.ai</a></p>
+                  <p>Email: <a href="/mailto:operations@nearprime.com" className="text-[#101010] underline decoration-[#CAC8C8] underline-offset-2">operations@nearprime.com</a> and <a href="/mailto:legal@near.ai" className="text-[#101010] underline decoration-[#CAC8C8] underline-offset-2">legal@near.ai</a></p>
                 </Section>
 
               </div>
