@@ -75,7 +75,6 @@ export default function PostRenderer({ post, layout = "public" }: PostRendererPr
           <p className={`text-sm font-mono ${textColorClass} opacity-70 mb-8`}>
             {new Date(displayDate).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
             {layout === "admin" ? " (last updated)" : ` · ${readTime}`}
-            {" · "}{post.author.name}
           </p>
           {post.coverImage && (
             <img src={post.coverImage} alt={post.title} className="w-full rounded-[1rem] object-cover" />

@@ -83,7 +83,7 @@ export default async function TagPage({ params, searchParams }: {
                     </Link>
                     <div className="flex flex-col flex-1 p-5">
                       <p className="font-mono text-[0.75rem] text-[#5A5A5A] mb-2">
-                        {new Date(post.publishedAt!).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })} · {post.author.name}
+                        {new Date(post.publishedAt!).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                       </p>
                       <Link href={`/blog/${post.slug}`}>
                         <h2 className="font-medium leading-snug text-[#101010] group-hover:text-[#525252] transition-colors mb-2 line-clamp-2" style={{ fontSize: "var(--font-size-body)" }}>{post.title}</h2>

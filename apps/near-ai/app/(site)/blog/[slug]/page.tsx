@@ -103,7 +103,7 @@ export default async function BlogPost({ params }: { params: Promise<{ slug: str
                   </Link>
                   <div className="p-5 flex flex-col flex-1">
                     <p className="font-mono text-[0.75rem] text-[#5A5A5A] mb-2">
-                      {new Date(p.publishedAt!).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })} · {p.author.name}
+                      {new Date(p.publishedAt!).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                     </p>
                     <Link href={`/blog/${p.slug}`}>
                       <h3 className="font-medium leading-snug text-[#101010] group-hover:text-[#525252] transition-colors mb-3 line-clamp-2" style={{ fontSize: "var(--font-size-body)" }}>{p.title}</h3>
