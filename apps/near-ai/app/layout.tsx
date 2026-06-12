@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
-import LenisProvider from "@/components/site/providers/LenisProvider";
 import "./globals.css";
 
 const montreal = localFont({
@@ -54,7 +53,7 @@ export default function RootLayout({
       className={`${montreal.variable} ${montrealMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <LenisProvider>{children}</LenisProvider>
+        {children}
       </body>
     </html>
   );
