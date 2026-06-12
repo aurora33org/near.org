@@ -272,8 +272,8 @@ export default function NotFound() {
           </h1>
 
           <p className="text-white/45 leading-relaxed" style={{ fontSize: "var(--font-size-body)" }}>
-            The page you&apos;re looking for doesn&apos;t exist in any known execution environment —
-            not even inside a Trusted Execution Environment.
+            You&apos;re in a secure environment. Whatever you were looking for
+            just isn&apos;t here.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center gap-4 mt-2">
@@ -299,13 +299,13 @@ export default function NotFound() {
             <p className="font-mono text-[0.6rem] uppercase tracking-[0.25em] text-white/25 mb-2">NEAR AI · Route Attestation</p>
             <div className="space-y-1">
               <div className="flex justify-between font-mono text-[0.6rem] text-white/20">
-                <span>STATUS</span><span className="text-red-400/60">UNRESOLVED</span>
+                <span>STATUS</span><span className="text-white/40">SECURE</span>
               </div>
               <div className="flex justify-between font-mono text-[0.6rem] text-white/20">
                 <span>ENVIRONMENT</span><span>TEE / NEAR AI CLOUD</span>
               </div>
               <div className="flex justify-between font-mono text-[0.6rem] text-white/20">
-                <span>THREAT LEVEL</span><span>NONE DETECTED</span>
+                <span>ROUTE</span><span>NOT FOUND</span>
               </div>
             </div>
           </div>
