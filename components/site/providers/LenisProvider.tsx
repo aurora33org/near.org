@@ -22,10 +22,17 @@ export default function LenisProvider({ children }: { children: React.ReactNode 
     gsap.ticker.lagSmoothing(0);
 
     // Recalculate scroll limit whenever the document height changes
-    // (fonts loading, images rendering, code blocks, dynamic content)
+    // (fonts loading, images rendering, code blocks, dynamic content).
+    // Debounced to coalesce rapid bursts (e.g. several images loading at once).
+    // ScrollTrigger.refresh() is intentionally omitted here: it temporarily
+    // manipulates window.scrollY to re-measure offsets, which desynchronises
+    // Lenis's virtual scroll position and causes scroll to freeze on long pages.
+    // Pages that use ScrollTrigger animations (home, company) mount their own
+    // AnimationsProvider which manages that lifecycle independently.
+    let resizeTimer: ReturnType<typeof setTimeout>;
     const ro = new ResizeObserver(() => {
-      lenis.resize();
-      ScrollTrigger.refresh();
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => lenis.resize(), 150);
     });
     ro.observe(document.documentElement);
 
@@ -44,6 +51,7 @@ export default function LenisProvider({ children }: { children: React.ReactNode 
       lenis.destroy();
       gsap.ticker.remove(rafCallback);
       ro.disconnect();
+      clearTimeout(resizeTimer);
       window.removeEventListener("load", onLoad);
     };
   }, []);
