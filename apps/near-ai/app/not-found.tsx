@@ -271,9 +271,8 @@ export default function NotFound() {
             Page Not Found
           </h1>
 
-          <p className="text-white/45 leading-relaxed" style={{ fontSize: "var(--font-size-body)" }}>
-            You&apos;re in a secure environment. Whatever you were looking for
-            just isn&apos;t here.
+          <p className="text-white/45 leading-relaxed text-balance" style={{ fontSize: "var(--font-size-body)" }}>
+            You&apos;re in a secure environment. Whatever you were looking for just isn&apos;t here.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center gap-4 mt-2">
