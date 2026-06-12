@@ -15,30 +15,25 @@ const CUBES: { x: number; y: number; scale: number; top: string; left: string; o
   { x: 0, y: 0, scale: 1.8, top: "50%", left: "55%",  opacity: 0.03 },
 ];
 
-// Easter egg #2: ↓↓←→↑
+// EE#2 — sequence: ↓ ↓ ← → ↑
 const OVERRIDE_SEQUENCE = ["ArrowDown", "ArrowDown", "ArrowLeft", "ArrowRight", "ArrowUp"];
 
-function glitchShadow(level: number): string {
-  if (level === 0) return "none";
-  const offset = level * 3;
-  const alpha = Math.min(0.4 + level * 0.15, 0.9);
-  return `${offset}px 0 rgba(255,0,60,${alpha}), -${offset}px 0 rgba(0,255,220,${alpha})`;
-}
+type GhostPhase = "idle" | "glitching" | "vanishing" | "gone";
 
 export default function NotFound() {
   const [mounted, setMounted] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  // Easter egg #1 — ghost 404 clicks
-  const [clickCount, setClickCount] = useState(0);
-  const [forbidden, setForbidden] = useState(false);
-  const forbiddenTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // EE#1
+  const [ghostPhase, setGhostPhase] = useState<GhostPhase>("idle");
+  const clickCountRef = useRef(0);
+  const phaseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Easter egg #2 — override sequence
-  const [showAttestation, setShowAttestation] = useState(false);
+  // EE#2
+  const [showOverride, setShowOverride] = useState(false);
   const seqIndexRef = useRef(0);
 
-  // Easter egg #3 — "a33" typed
+  // EE#3
   const [showDevTag, setShowDevTag] = useState(false);
   const keyBufferRef = useRef("");
   const devTagTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -85,24 +80,23 @@ export default function NotFound() {
     return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", resize); };
   }, []);
 
-  // Easter egg #2 & #3 — keydown listener
+  // EE#2 & EE#3 keydown listener
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      // Ignore keypresses when user is typing in an input/textarea
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
 
-      // EE#2 — override sequence
+      // EE#2
       if (e.key === OVERRIDE_SEQUENCE[seqIndexRef.current]) {
         seqIndexRef.current += 1;
         if (seqIndexRef.current === OVERRIDE_SEQUENCE.length) {
           seqIndexRef.current = 0;
-          setShowAttestation(true);
+          setShowOverride(true);
         }
       } else {
         seqIndexRef.current = e.key === OVERRIDE_SEQUENCE[0] ? 1 : 0;
       }
 
-      // EE#3 — "a33" buffer
+      // EE#3
       if (e.key.length === 1) {
         keyBufferRef.current = (keyBufferRef.current + e.key).slice(-3);
         if (keyBufferRef.current === "a33") {
@@ -117,58 +111,84 @@ export default function NotFound() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
-  // EE#1 — handle ghost 404 click
+  // EE#1 — ghost click handler
   const handleGhostClick = useCallback(() => {
-    if (forbidden) return;
-    const next = clickCount + 1;
-    if (next >= 4) {
-      setForbidden(true);
-      setClickCount(0);
-      if (forbiddenTimerRef.current) clearTimeout(forbiddenTimerRef.current);
-      forbiddenTimerRef.current = setTimeout(() => {
-        setForbidden(false);
-      }, 2200);
-    } else {
-      setClickCount(next);
-    }
-  }, [clickCount, forbidden]);
+    if (ghostPhase === "vanishing" || ghostPhase === "gone") return;
 
-  const ghostSkew = forbidden ? "skewX(-4deg)" : clickCount >= 3 ? "skewX(-2deg)" : "none";
-  const ghostColor = forbidden ? "rgba(255,50,50,0.55)" : `rgba(255,255,255,${0.025 + clickCount * 0.012})`;
-  const ghostShadow = forbidden
-    ? "8px 0 rgba(255,0,0,0.9), -8px 0 rgba(255,100,100,0.7), 0 0 60px rgba(255,0,0,0.4)"
-    : glitchShadow(clickCount);
+    clickCountRef.current += 1;
+    const count = clickCountRef.current;
+
+    if (count === 3) {
+      // 3rd click: start glitching
+      setGhostPhase("glitching");
+    } else if (count >= 4) {
+      // 4th click: vanish then gone
+      setGhostPhase("vanishing");
+      if (phaseTimerRef.current) clearTimeout(phaseTimerRef.current);
+      phaseTimerRef.current = setTimeout(() => setGhostPhase("gone"), 900);
+    }
+    // clicks 1 & 2: silent — no visual change
+  }, [ghostPhase]);
+
+  const ghostVisible = ghostPhase !== "gone";
+  const ghostOpacity =
+    ghostPhase === "vanishing" ? 0
+    : ghostPhase === "glitching" ? 0.055
+    : 0.025;
+  const ghostShadow =
+    ghostPhase === "glitching"
+      ? "6px 0 rgba(255,30,30,0.85), -6px 0 rgba(0,255,200,0.85), 0 0 30px rgba(255,255,255,0.1)"
+      : ghostPhase === "vanishing"
+      ? "12px 0 rgba(255,0,0,1), -12px 0 rgba(0,255,220,1), 0 0 80px rgba(255,80,80,0.5)"
+      : "none";
+  const ghostClass =
+    ghostPhase === "glitching" ? "ghost-glitch"
+    : ghostPhase === "vanishing" ? "ghost-vanish"
+    : "";
 
   return (
     <div className="relative min-h-screen flex flex-col bg-[#0B0B0B] text-white overflow-hidden">
 
       <style>{`
         @keyframes glitch-shake {
-          0%,100% { transform: skewX(-2deg) translateX(0); }
-          25% { transform: skewX(-4deg) translateX(-4px); }
-          75% { transform: skewX(2deg) translateX(4px); }
+          0%,100% { transform: skewX(-3deg) translateX(0); }
+          20%     { transform: skewX(-6deg) translateX(-6px); }
+          40%     { transform: skewX(4deg)  translateX(5px); }
+          60%     { transform: skewX(-5deg) translateX(-4px); }
+          80%     { transform: skewX(3deg)  translateX(6px); }
         }
-        @keyframes forbidden-pulse {
-          0%,100% { opacity: 0.55; }
-          50% { opacity: 0.75; }
+        @keyframes vanish-shake {
+          0%,100% { transform: skewX(-8deg) translateX(0) scaleX(1.02); }
+          15%     { transform: skewX(10deg)  translateX(-10px) scaleX(0.98); }
+          30%     { transform: skewX(-12deg) translateX(12px) scaleX(1.04); }
+          50%     { transform: skewX(8deg)   translateX(-8px) scaleX(0.97); }
+          70%     { transform: skewX(-10deg) translateX(10px) scaleX(1.03); }
+        }
+        @keyframes msg-appear {
+          from { opacity: 0; letter-spacing: 0.5em; }
+          to   { opacity: 1; letter-spacing: 0.25em; }
         }
         @keyframes overlay-in {
-          from { opacity: 0; transform: scale(0.96); }
-          to   { opacity: 1; transform: scale(1); }
-        }
-        @keyframes dev-tag-in {
-          from { opacity: 0; transform: translateY(6px); }
+          from { opacity: 0; transform: translateY(8px); }
           to   { opacity: 1; transform: translateY(0); }
         }
-        @keyframes dev-tag-out {
-          from { opacity: 1; }
-          to   { opacity: 0; }
+        @keyframes progress-bar {
+          from { width: 0%; }
+          to   { width: 100%; }
         }
-        .ghost-glitch { animation: glitch-shake 0.12s infinite; }
-        .ghost-forbidden { animation: forbidden-pulse 0.4s infinite; }
-        .attest-modal { animation: overlay-in 0.2s ease-out forwards; }
+        @keyframes blink {
+          0%,100% { opacity: 1; }
+          50%     { opacity: 0; }
+        }
+        @keyframes dev-tag-in {
+          from { opacity: 0; transform: translateY(4px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .ghost-glitch  { animation: glitch-shake 0.1s infinite; }
+        .ghost-vanish  { animation: vanish-shake 0.08s infinite; }
+        .top-msg       { animation: msg-appear 0.8s ease-out forwards; }
+        .attest-modal  { animation: overlay-in 0.25s ease-out forwards; }
         .dev-tag-enter { animation: dev-tag-in 0.3s ease-out forwards; }
-        .dev-tag-exit  { animation: dev-tag-out 0.4s ease-in forwards; }
       `}</style>
 
       {/* Particle field */}
@@ -191,6 +211,18 @@ export default function NotFound() {
         </div>
       ))}
 
+      {/* EE#1 — big top message after ghost disappears */}
+      {ghostPhase === "gone" && (
+        <div className="absolute top-0 left-0 right-0 z-20 flex items-end justify-center pointer-events-none" style={{ height: "50vh" }}>
+          <span
+            className="top-msg font-sans font-bold text-white/[0.07] uppercase select-none text-center px-4"
+            style={{ fontSize: "clamp(2rem, 8vw, 6rem)", letterSpacing: "0.25em" }}
+          >
+            THIS PAGE WAS<br />NEVER HERE.
+          </span>
+        </div>
+      )}
+
       {/* Header */}
       <header className="relative z-10 flex items-center justify-between py-8 px-5 sm:px-10 lg:px-[100px] text-[0.75rem] uppercase tracking-[0.2em] text-white/80">
         <a href="/"><Image src="/near-ai.png" alt="NEAR AI" width={120} height={24} style={{ width: "auto", height: "24px" }} /></a>
@@ -200,37 +232,29 @@ export default function NotFound() {
       {/* Main */}
       <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-5 text-center select-none">
 
-        {/* Ghost 404 — EE#1 target */}
-        <div className="absolute inset-0 flex items-center justify-center z-0">
-          <span
-            role="button"
-            tabIndex={0}
-            aria-hidden
-            onClick={handleGhostClick}
-            onKeyDown={(e) => e.key === "Enter" && handleGhostClick()}
-            className={`font-sans font-bold cursor-default ${forbidden ? "ghost-forbidden" : clickCount >= 3 ? "ghost-glitch" : ""}`}
-            style={{
-              fontSize: "clamp(18rem, 40vw, 52rem)",
-              lineHeight: 1,
-              color: ghostColor,
-              textShadow: ghostShadow,
-              letterSpacing: "-0.05em",
-              transform: ghostSkew,
-              transition: forbidden ? "none" : "color 0.15s, text-shadow 0.15s",
-              userSelect: "none",
-            }}
-          >
-            {forbidden ? "403" : "404"}
-          </span>
-          {forbidden && (
+        {/* Ghost 404 — EE#1 */}
+        {ghostVisible && (
+          <div className="absolute inset-0 flex items-center justify-center z-0">
             <span
-              className="absolute font-mono text-red-400/70 uppercase tracking-[0.4em] pointer-events-none"
-              style={{ fontSize: "clamp(0.8rem, 2vw, 1.1rem)", marginTop: "clamp(18rem, 40vw, 52rem)" }}
+              onClick={handleGhostClick}
+              className={`font-sans font-bold cursor-default ${ghostClass}`}
+              style={{
+                fontSize: "clamp(18rem, 40vw, 52rem)",
+                lineHeight: 1,
+                color: `rgba(255,255,255,${ghostOpacity})`,
+                textShadow: ghostShadow,
+                letterSpacing: "-0.05em",
+                opacity: ghostPhase === "vanishing" ? 0 : 1,
+                transition: ghostPhase === "vanishing" ? "opacity 0.7s ease-in, color 0.3s" : "color 0.2s, text-shadow 0.2s",
+                userSelect: "none",
+                WebkitUserSelect: "none",
+                outline: "none",
+              }}
             >
-              ACCESS DENIED 🔒
+              404
             </span>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Foreground content */}
         <div className="relative flex flex-col items-center gap-8 max-w-lg">
@@ -289,57 +313,66 @@ export default function NotFound() {
         </a>
       </footer>
 
-      {/* ── Easter Egg #2 — System Override Attestation modal ── */}
-      {showAttestation && (
+      {/* ── Easter Egg #2 — Secure environment overlay ── */}
+      {showOverride && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
-          onClick={() => setShowAttestation(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md"
+          onClick={() => setShowOverride(false)}
         >
           <div
-            className="attest-modal relative border border-green-400/30 rounded-lg bg-[#0a0f0a] max-w-sm w-full mx-4 p-6 font-mono text-[0.7rem] text-green-400/80"
+            className="attest-modal relative max-w-xs w-full mx-4 flex flex-col items-center gap-6 text-center"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center gap-2 mb-4 border-b border-green-400/15 pb-3">
-              <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-              <span className="uppercase tracking-[0.3em] text-green-400">System Override Initiated</span>
+            {/* Spinner */}
+            <div className="relative w-16 h-16">
+              <div className="absolute inset-0 rounded-full border border-white/10" />
+              <div
+                className="absolute inset-0 rounded-full border-t border-white/50"
+                style={{ animation: "spin 1.2s linear infinite" }}
+              />
+              <div className="absolute inset-[6px] rounded-full border border-white/[0.06]" />
+              <div
+                className="absolute inset-[6px] rounded-full border-t border-white/25"
+                style={{ animation: "spin 2s linear infinite reverse" }}
+              />
             </div>
 
-            <div className="space-y-2 mb-4">
-              {[
-                ["SUBJECT",       "unknown_user@void.null"],
-                ["SEQUENCE",      "↓↓←→↑  [ACCEPTED]"],
-                ["THREAT_LEVEL",  "HARMLESS"],
-                ["CURIOSITY",     "VERIFIED ✓"],
-                ["HARDWARE",      "IronClaw MK-0 (prototype)"],
-                ["ENVIRONMENT",   "NEAR AI CLOUD / TEE"],
-                ["SIGNATURE",     "0xDEADBEEF404CAFE..."],
-              ].map(([k, v]) => (
-                <div key={k} className="flex gap-3">
-                  <span className="text-green-400/40 w-28 shrink-0">{k}</span>
-                  <span className={v.includes("✓") ? "text-green-300" : "text-green-400/70"}>{v}</span>
-                </div>
-              ))}
+            <div className="flex flex-col gap-2">
+              <p className="font-mono text-[0.65rem] uppercase tracking-[0.35em] text-white/60">
+                Loading secure environment
+                <span style={{ animation: "blink 1s step-end infinite" }}>_</span>
+              </p>
+              <p className="font-mono text-[0.55rem] uppercase tracking-[0.2em] text-white/20">
+                Establishing TEE connection
+              </p>
             </div>
 
-            <div className="border-t border-green-400/15 pt-3 text-green-400/35 text-[0.6rem] leading-relaxed">
-              This was a simulated TEE breach. Your data is safe.
-              <br />No attestation was actually violated.
+            {/* Progress bar */}
+            <div className="w-full h-px bg-white/[0.06] overflow-hidden rounded-full">
+              <div
+                className="h-full bg-white/30 rounded-full"
+                style={{ animation: "progress-bar 3s ease-out forwards" }}
+              />
             </div>
 
-            <button
-              onClick={() => setShowAttestation(false)}
-              className="mt-4 w-full border border-green-400/20 rounded py-1.5 text-green-400/50 hover:text-green-400 hover:border-green-400/50 transition-colors uppercase tracking-[0.3em] text-[0.65rem]"
+            <a
+              href="/"
+              className="font-mono text-[0.65rem] uppercase tracking-[0.3em] text-white/30 hover:text-white/60 transition-colors border border-white/10 hover:border-white/25 rounded px-5 py-2"
             >
-              CLOSE TERMINAL
-            </button>
+              Go to home →
+            </a>
           </div>
+
+          <style>{`
+            @keyframes spin { to { transform: rotate(360deg); } }
+          `}</style>
         </div>
       )}
 
-      {/* ── Easter Egg #3 — dev by Aurora33 tag ── */}
+      {/* ── Easter Egg #3 — dev by Aurora33 ── */}
       {showDevTag && (
         <div className="fixed bottom-6 right-6 z-50 pointer-events-none dev-tag-enter">
-          <span className="font-mono text-[0.65rem] uppercase tracking-[0.3em] text-white/30 border border-white/10 rounded px-3 py-1.5 bg-[#0B0B0B]/80 backdrop-blur-sm">
+          <span className="font-mono text-[0.6rem] uppercase tracking-[0.3em] text-white/25 border border-white/10 rounded px-3 py-1.5 bg-[#0B0B0B]/80 backdrop-blur-sm block">
             dev by Aurora33
           </span>
         </div>
