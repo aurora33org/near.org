@@ -49,13 +49,14 @@ export default function BlockEditor({ content, onChange, autosaveLabel }: BlockE
       transformPastedHTML(html) {
         const wrapper = document.createElement("div");
         wrapper.innerHTML = html;
+        // Strip all inline styles — external pages (GitHub, Notion, etc.) paste
+        // layout-breaking CSS (overflow:hidden, position:fixed, height:100%) that
+        // can prevent page scrolling. Text formatting is preserved via semantic tags.
         wrapper.querySelectorAll<HTMLElement>("[style]").forEach((el) => {
-          el.style.removeProperty("color");
-          el.style.removeProperty("background-color");
-          if (!el.getAttribute("style")?.trim()) {
-            el.removeAttribute("style");
-          }
+          el.removeAttribute("style");
         });
+        // Remove <style> and <script> blocks that can leak global CSS/JS.
+        wrapper.querySelectorAll("style, script").forEach((el) => el.remove());
         return wrapper.innerHTML;
       },
     },
